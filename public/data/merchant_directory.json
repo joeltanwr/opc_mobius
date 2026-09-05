@@ -1,0 +1,2002 @@
+[
+  {
+    "merchant_id": "M0001",
+    "canonical_name": "The Daily Grind",
+    "category": "cafe",
+    "postal_district": 2,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0002",
+    "canonical_name": "Leaf & Pearl",
+    "category": "bubble_tea",
+    "postal_district": 11,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0003",
+    "canonical_name": "Stitch Society",
+    "category": "apparel",
+    "postal_district": 11,
+    "price_band": 4,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0004",
+    "canonical_name": "Third Wave Coffee",
+    "category": "cafe",
+    "postal_district": 2,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0005",
+    "canonical_name": "CityLink Transit",
+    "category": "ride_hailing_transit",
+    "postal_district": 26,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0006",
+    "canonical_name": "The Tipsy Fox",
+    "category": "bar_pub",
+    "postal_district": 18,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0007",
+    "canonical_name": "Uncle Tans Corner",
+    "category": "hawker_kopitiam",
+    "postal_district": 26,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0008",
+    "canonical_name": "The Cake Studio",
+    "category": "bakery_dessert",
+    "postal_district": 20,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0009",
+    "canonical_name": "Pawfect Grooming @ Junction 8",
+    "category": "pet_services",
+    "postal_district": 20,
+    "price_band": 4,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0010",
+    "canonical_name": "Sin Sin Kopitiam @ Plaza Sing",
+    "category": "hawker_kopitiam",
+    "postal_district": 4,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0011",
+    "canonical_name": "Hoppy Hour",
+    "category": "bar_pub",
+    "postal_district": 6,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0012",
+    "canonical_name": "Chapter One Books",
+    "category": "books_gifts",
+    "postal_district": 1,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0013",
+    "canonical_name": "EasyBuy Mart",
+    "category": "convenience_grocery",
+    "postal_district": 25,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0014",
+    "canonical_name": "Furry Friends Care",
+    "category": "pet_services",
+    "postal_district": 18,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0015",
+    "canonical_name": "Keepsake Corner",
+    "category": "books_gifts",
+    "postal_district": 24,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0016",
+    "canonical_name": "MoveNow Transit",
+    "category": "ride_hailing_transit",
+    "postal_district": 7,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0017",
+    "canonical_name": "The Vanity Chair @ Causeway Point",
+    "category": "hair_nail_salon",
+    "postal_district": 2,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0018",
+    "canonical_name": "Polished Nail Studio",
+    "category": "hair_nail_salon",
+    "postal_district": 19,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0019",
+    "canonical_name": "Tea Alley @ Clementi Mall",
+    "category": "bubble_tea",
+    "postal_district": 13,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0020",
+    "canonical_name": "EverBuy Marketplace",
+    "category": "online_marketplace",
+    "postal_district": 12,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0021",
+    "canonical_name": "GadgetWorks",
+    "category": "electronics",
+    "postal_district": 7,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0022",
+    "canonical_name": "PocketMart",
+    "category": "convenience_grocery",
+    "postal_district": 3,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0023",
+    "canonical_name": "Golden Dragon Zichar @ Jurong Point",
+    "category": "zichar_chinese_casual",
+    "postal_district": 13,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0024",
+    "canonical_name": "TransitLink Express",
+    "category": "ride_hailing_transit",
+    "postal_district": 27,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0025",
+    "canonical_name": "The Bookmark",
+    "category": "books_gifts",
+    "postal_district": 8,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0026",
+    "canonical_name": "ByteStore",
+    "category": "electronics",
+    "postal_district": 25,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0027",
+    "canonical_name": "Vital Health Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 23,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0028",
+    "canonical_name": "Kim Heng Zichar",
+    "category": "zichar_chinese_casual",
+    "postal_district": 15,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0029",
+    "canonical_name": "Rooftop 8",
+    "category": "bar_pub",
+    "postal_district": 12,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0030",
+    "canonical_name": "Robata Grill",
+    "category": "japanese",
+    "postal_district": 8,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0031",
+    "canonical_name": "Barrel and Vine",
+    "category": "bar_pub",
+    "postal_district": 28,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0032",
+    "canonical_name": "SwiftRide",
+    "category": "ride_hailing_transit",
+    "postal_district": 12,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0033",
+    "canonical_name": "The Screening Room",
+    "category": "cinema_arcade",
+    "postal_district": 25,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0034",
+    "canonical_name": "Fry Co",
+    "category": "fast_food",
+    "postal_district": 3,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0035",
+    "canonical_name": "Heng Heng Kopitiam",
+    "category": "hawker_kopitiam",
+    "postal_district": 13,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0036",
+    "canonical_name": "The Pet Nook",
+    "category": "pet_services",
+    "postal_district": 22,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0037",
+    "canonical_name": "ChipTown Electronics",
+    "category": "electronics",
+    "postal_district": 12,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0038",
+    "canonical_name": "Izakaya Ume @ Northpoint",
+    "category": "japanese",
+    "postal_district": 9,
+    "price_band": 4,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0039",
+    "canonical_name": "Gelato Grove",
+    "category": "bakery_dessert",
+    "postal_district": 26,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0040",
+    "canonical_name": "Ah Boy Zichar @ Tampines Mall",
+    "category": "zichar_chinese_casual",
+    "postal_district": 23,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0041",
+    "canonical_name": "Studio 88 Hair",
+    "category": "hair_nail_salon",
+    "postal_district": 24,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0042",
+    "canonical_name": "Tea Trail",
+    "category": "bubble_tea",
+    "postal_district": 11,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0043",
+    "canonical_name": "Fu Lai Coffeeshop",
+    "category": "hawker_kopitiam",
+    "postal_district": 1,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0044",
+    "canonical_name": "The Gift Nook",
+    "category": "books_gifts",
+    "postal_district": 12,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0045",
+    "canonical_name": "ZoomCar Rides",
+    "category": "ride_hailing_transit",
+    "postal_district": 6,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0046",
+    "canonical_name": "Snip and Style @ Causeway Point",
+    "category": "hair_nail_salon",
+    "postal_district": 25,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0047",
+    "canonical_name": "Neighbours Mart @ Tampines Mall",
+    "category": "convenience_grocery",
+    "postal_district": 16,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0048",
+    "canonical_name": "Edomae Sushi",
+    "category": "japanese",
+    "postal_district": 20,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0049",
+    "canonical_name": "Sweet Crumb Bakery",
+    "category": "bakery_dessert",
+    "postal_district": 16,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0050",
+    "canonical_name": "The Nail Bar",
+    "category": "hair_nail_salon",
+    "postal_district": 10,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0051",
+    "canonical_name": "BuyHive",
+    "category": "online_marketplace",
+    "postal_district": 6,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0052",
+    "canonical_name": "Ascend Fitness Studio",
+    "category": "gym_fitness",
+    "postal_district": 28,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0053",
+    "canonical_name": "Balance Clinic @ Tampines Mall",
+    "category": "clinic_wellness",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0054",
+    "canonical_name": "Flicker Cinema",
+    "category": "cinema_arcade",
+    "postal_district": 26,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0055",
+    "canonical_name": "The Roastery",
+    "category": "cafe",
+    "postal_district": 4,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0056",
+    "canonical_name": "NextGen Gadgets",
+    "category": "electronics",
+    "postal_district": 14,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0057",
+    "canonical_name": "Whisker Wellness",
+    "category": "pet_services",
+    "postal_district": 20,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0058",
+    "canonical_name": "Cocoa Lane",
+    "category": "bakery_dessert",
+    "postal_district": 22,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0059",
+    "canonical_name": "The Blush Room",
+    "category": "beauty_cosmetics",
+    "postal_district": 19,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0060",
+    "canonical_name": "Neon Arcade",
+    "category": "cinema_arcade",
+    "postal_district": 2,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0061",
+    "canonical_name": "CircuitHub",
+    "category": "electronics",
+    "postal_district": 7,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0062",
+    "canonical_name": "Pixel Arcade @ AMK Hub",
+    "category": "cinema_arcade",
+    "postal_district": 10,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0063",
+    "canonical_name": "Skin Society",
+    "category": "beauty_cosmetics",
+    "postal_district": 10,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0064",
+    "canonical_name": "Kim Guan Coffeeshop",
+    "category": "hawker_kopitiam",
+    "postal_district": 5,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0065",
+    "canonical_name": "Glaze Nail Lounge",
+    "category": "hair_nail_salon",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0066",
+    "canonical_name": "Pulse Fitness Studio",
+    "category": "gym_fitness",
+    "postal_district": 13,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0067",
+    "canonical_name": "Silk Strands Salon",
+    "category": "hair_nail_salon",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0068",
+    "canonical_name": "The Grocery Nook",
+    "category": "convenience_grocery",
+    "postal_district": 5,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0069",
+    "canonical_name": "The Strength Room",
+    "category": "gym_fitness",
+    "postal_district": 7,
+    "price_band": 4,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0070",
+    "canonical_name": "Boba Loca",
+    "category": "bubble_tea",
+    "postal_district": 13,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0071",
+    "canonical_name": "Good Fortune Coffeeshop",
+    "category": "hawker_kopitiam",
+    "postal_district": 9,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0072",
+    "canonical_name": "Milk & Bean",
+    "category": "cafe",
+    "postal_district": 24,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0073",
+    "canonical_name": "ShopLoop",
+    "category": "online_marketplace",
+    "postal_district": 9,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0074",
+    "canonical_name": "Kopi & Co @ VivoCity",
+    "category": "cafe",
+    "postal_district": 22,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0075",
+    "canonical_name": "Glow Room",
+    "category": "beauty_cosmetics",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0076",
+    "canonical_name": "QuickBite Diner",
+    "category": "fast_food",
+    "postal_district": 20,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0077",
+    "canonical_name": "Crispy Bite",
+    "category": "fast_food",
+    "postal_district": 12,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0078",
+    "canonical_name": "Smoke and Barrel",
+    "category": "bar_pub",
+    "postal_district": 13,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0079",
+    "canonical_name": "TradeLane",
+    "category": "online_marketplace",
+    "postal_district": 25,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0080",
+    "canonical_name": "Chuan Kee Kopitiam @ Jurong Point",
+    "category": "hawker_kopitiam",
+    "postal_district": 26,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0081",
+    "canonical_name": "Dewy Beauty Bar @ Compass One",
+    "category": "beauty_cosmetics",
+    "postal_district": 27,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0082",
+    "canonical_name": "The Copper Still",
+    "category": "bar_pub",
+    "postal_district": 23,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0083",
+    "canonical_name": "Lush Palette",
+    "category": "beauty_cosmetics",
+    "postal_district": 12,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0084",
+    "canonical_name": "Core and Barbell",
+    "category": "gym_fitness",
+    "postal_district": 4,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0085",
+    "canonical_name": "Wok Hei Zichar @ Junction 8",
+    "category": "zichar_chinese_casual",
+    "postal_district": 2,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0086",
+    "canonical_name": "Storyline Books @ Suntec",
+    "category": "books_gifts",
+    "postal_district": 11,
+    "price_band": 4,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0087",
+    "canonical_name": "ClickBasket",
+    "category": "online_marketplace",
+    "postal_district": 14,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0088",
+    "canonical_name": "Starlight Cinema",
+    "category": "cinema_arcade",
+    "postal_district": 1,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0089",
+    "canonical_name": "Thread and Co",
+    "category": "apparel",
+    "postal_district": 12,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0090",
+    "canonical_name": "GoHop Rides",
+    "category": "ride_hailing_transit",
+    "postal_district": 15,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0091",
+    "canonical_name": "Lacquer Nail Bar",
+    "category": "hair_nail_salon",
+    "postal_district": 11,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0092",
+    "canonical_name": "Grill Express @ Bugis Junction",
+    "category": "fast_food",
+    "postal_district": 15,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0093",
+    "canonical_name": "The Pet Parlour",
+    "category": "pet_services",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0094",
+    "canonical_name": "Koi The",
+    "category": "bubble_tea",
+    "postal_district": 7,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0095",
+    "canonical_name": "MarketNest",
+    "category": "online_marketplace",
+    "postal_district": 18,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0096",
+    "canonical_name": "Nami Ramen",
+    "category": "japanese",
+    "postal_district": 28,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0097",
+    "canonical_name": "Tail Waggers Grooming",
+    "category": "pet_services",
+    "postal_district": 24,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0098",
+    "canonical_name": "CineHub",
+    "category": "cinema_arcade",
+    "postal_district": 13,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0099",
+    "canonical_name": "Pure Glow Beauty",
+    "category": "beauty_cosmetics",
+    "postal_district": 17,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0100",
+    "canonical_name": "Pet Haven",
+    "category": "pet_services",
+    "postal_district": 14,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0101",
+    "canonical_name": "Morning Ritual",
+    "category": "cafe",
+    "postal_district": 28,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0102",
+    "canonical_name": "Wardrobe Lab",
+    "category": "apparel",
+    "postal_district": 5,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0103",
+    "canonical_name": "Muse Apparel",
+    "category": "apparel",
+    "postal_district": 6,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0104",
+    "canonical_name": "Tea Society",
+    "category": "bubble_tea",
+    "postal_district": 9,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0105",
+    "canonical_name": "Golden Fry",
+    "category": "fast_food",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0106",
+    "canonical_name": "Munch House",
+    "category": "fast_food",
+    "postal_district": 24,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0107",
+    "canonical_name": "24Seven Grocer",
+    "category": "convenience_grocery",
+    "postal_district": 11,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0108",
+    "canonical_name": "Wafu Kitchen",
+    "category": "japanese",
+    "postal_district": 14,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0109",
+    "canonical_name": "Fortune Kitchen",
+    "category": "zichar_chinese_casual",
+    "postal_district": 25,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0110",
+    "canonical_name": "Alley Cat Bar",
+    "category": "bar_pub",
+    "postal_district": 9,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0111",
+    "canonical_name": "Daily Needs Grocer",
+    "category": "convenience_grocery",
+    "postal_district": 18,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0112",
+    "canonical_name": "Harmony Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 13,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0113",
+    "canonical_name": "Wellview Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 15,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0114",
+    "canonical_name": "Volt Electronics",
+    "category": "electronics",
+    "postal_district": 3,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0115",
+    "canonical_name": "Renew Wellness",
+    "category": "clinic_wellness",
+    "postal_district": 28,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0116",
+    "canonical_name": "Fold Studio",
+    "category": "apparel",
+    "postal_district": 16,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0117",
+    "canonical_name": "Sugar Rush Desserts",
+    "category": "bakery_dessert",
+    "postal_district": 20,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0118",
+    "canonical_name": "The Dessert Bar",
+    "category": "bakery_dessert",
+    "postal_district": 4,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0119",
+    "canonical_name": "Honeycomb Patisserie",
+    "category": "bakery_dessert",
+    "postal_district": 27,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0120",
+    "canonical_name": "Momentum Fitness @ Junction 8",
+    "category": "gym_fitness",
+    "postal_district": 22,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0121",
+    "canonical_name": "Linen and Lime",
+    "category": "apparel",
+    "postal_district": 21,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0122",
+    "canonical_name": "CityLink Transit",
+    "category": "ride_hailing_transit",
+    "postal_district": 11,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0123",
+    "canonical_name": "Retro Arcade Bar @ Northpoint",
+    "category": "cinema_arcade",
+    "postal_district": 18,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0124",
+    "canonical_name": "CityLink Transit",
+    "category": "ride_hailing_transit",
+    "postal_district": 21,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0125",
+    "canonical_name": "The Reel House",
+    "category": "cinema_arcade",
+    "postal_district": 21,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0126",
+    "canonical_name": "The Rep Room",
+    "category": "gym_fitness",
+    "postal_district": 15,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0127",
+    "canonical_name": "Urban Weave",
+    "category": "apparel",
+    "postal_district": 15,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0128",
+    "canonical_name": "Pearl & Milk",
+    "category": "bubble_tea",
+    "postal_district": 5,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0129",
+    "canonical_name": "The Coffee Post",
+    "category": "cafe",
+    "postal_district": 25,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0130",
+    "canonical_name": "Iron Circuit Gym",
+    "category": "gym_fitness",
+    "postal_district": 13,
+    "price_band": 4,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0131",
+    "canonical_name": "The Fit Lab",
+    "category": "gym_fitness",
+    "postal_district": 13,
+    "price_band": 4,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0132",
+    "canonical_name": "Signal Electronics",
+    "category": "electronics",
+    "postal_district": 27,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0133",
+    "canonical_name": "Jade Wok",
+    "category": "zichar_chinese_casual",
+    "postal_district": 28,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0134",
+    "canonical_name": "Pixel and Watt @ Clementi Mall",
+    "category": "electronics",
+    "postal_district": 3,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0135",
+    "canonical_name": "The Vanity Bar @ Century Sq",
+    "category": "beauty_cosmetics",
+    "postal_district": 2,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0136",
+    "canonical_name": "Everwell Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 9,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0137",
+    "canonical_name": "QuickMart",
+    "category": "convenience_grocery",
+    "postal_district": 15,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0138",
+    "canonical_name": "SwiftRide",
+    "category": "ride_hailing_transit",
+    "postal_district": 27,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0139",
+    "canonical_name": "Fringe Hair Studio",
+    "category": "hair_nail_salon",
+    "postal_district": 8,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0140",
+    "canonical_name": "Tori Yaki",
+    "category": "japanese",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0141",
+    "canonical_name": "Milkfoam",
+    "category": "bubble_tea",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0142",
+    "canonical_name": "Radiance Studio",
+    "category": "beauty_cosmetics",
+    "postal_district": 18,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0143",
+    "canonical_name": "Bubble Bros @ Northpoint",
+    "category": "bubble_tea",
+    "postal_district": 6,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0144",
+    "canonical_name": "Ink and Page",
+    "category": "books_gifts",
+    "postal_district": 6,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0145",
+    "canonical_name": "Wrapped With Love",
+    "category": "books_gifts",
+    "postal_district": 8,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0146",
+    "canonical_name": "The Fit Room",
+    "category": "apparel",
+    "postal_district": 15,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0147",
+    "canonical_name": "Flour Power Bakery @ Northpoint",
+    "category": "bakery_dessert",
+    "postal_district": 24,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0148",
+    "canonical_name": "Sakura Sushi",
+    "category": "japanese",
+    "postal_district": 25,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0149",
+    "canonical_name": "Ah Huat Eating House",
+    "category": "hawker_kopitiam",
+    "postal_district": 12,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0150",
+    "canonical_name": "Starlight Cinema",
+    "category": "cinema_arcade",
+    "postal_district": 17,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0151",
+    "canonical_name": "Paper Trail Books",
+    "category": "books_gifts",
+    "postal_district": 28,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0152",
+    "canonical_name": "Latte House",
+    "category": "cafe",
+    "postal_district": 8,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0153",
+    "canonical_name": "TechNest",
+    "category": "electronics",
+    "postal_district": 10,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0154",
+    "canonical_name": "Denim Draft",
+    "category": "apparel",
+    "postal_district": 5,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0155",
+    "canonical_name": "Burger Loft",
+    "category": "fast_food",
+    "postal_district": 27,
+    "price_band": 1,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0156",
+    "canonical_name": "Bite Stop",
+    "category": "fast_food",
+    "postal_district": 26,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0157",
+    "canonical_name": "Sushi Doraku",
+    "category": "japanese",
+    "postal_district": 23,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0158",
+    "canonical_name": "Family Care Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 3,
+    "price_band": 4,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0159",
+    "canonical_name": "The Device Shop",
+    "category": "electronics",
+    "postal_district": 19,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0160",
+    "canonical_name": "The Brass Tap",
+    "category": "bar_pub",
+    "postal_district": 19,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0161",
+    "canonical_name": "Corner Grocer",
+    "category": "convenience_grocery",
+    "postal_district": 2,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0162",
+    "canonical_name": "The Clip House",
+    "category": "hair_nail_salon",
+    "postal_district": 24,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0163",
+    "canonical_name": "Happy Paws Studio @ Century Sq",
+    "category": "pet_services",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0164",
+    "canonical_name": "Furry Friends Care",
+    "category": "pet_services",
+    "postal_district": 7,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0165",
+    "canonical_name": "The Last Round",
+    "category": "bar_pub",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0166",
+    "canonical_name": "BuyHive",
+    "category": "online_marketplace",
+    "postal_district": 5,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0167",
+    "canonical_name": "Home Taste Zichar",
+    "category": "zichar_chinese_casual",
+    "postal_district": 7,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0168",
+    "canonical_name": "The Nightcap",
+    "category": "bar_pub",
+    "postal_district": 12,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0169",
+    "canonical_name": "Butter and Bloom @ Bugis Junction",
+    "category": "bakery_dessert",
+    "postal_district": 13,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0170",
+    "canonical_name": "Nook Cafe",
+    "category": "cafe",
+    "postal_district": 10,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0171",
+    "canonical_name": "The Closet Edit",
+    "category": "apparel",
+    "postal_district": 20,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0172",
+    "canonical_name": "The Health Post",
+    "category": "clinic_wellness",
+    "postal_district": 21,
+    "price_band": 2,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0173",
+    "canonical_name": "Sweat Society",
+    "category": "gym_fitness",
+    "postal_district": 22,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0174",
+    "canonical_name": "Ramen Ichiban",
+    "category": "japanese",
+    "postal_district": 10,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0175",
+    "canonical_name": "Warm Oven Bakery",
+    "category": "bakery_dessert",
+    "postal_district": 19,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0176",
+    "canonical_name": "Lao Ban Zichar",
+    "category": "zichar_chinese_casual",
+    "postal_district": 19,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0177",
+    "canonical_name": "Village Zichar",
+    "category": "zichar_chinese_casual",
+    "postal_district": 20,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0178",
+    "canonical_name": "Petal Cosmetics",
+    "category": "beauty_cosmetics",
+    "postal_district": 24,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0179",
+    "canonical_name": "Handy Mart",
+    "category": "convenience_grocery",
+    "postal_district": 21,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0180",
+    "canonical_name": "Full House Zichar",
+    "category": "zichar_chinese_casual",
+    "postal_district": 14,
+    "price_band": 4,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0181",
+    "canonical_name": "TransitLink Express @ Jurong Point",
+    "category": "ride_hailing_transit",
+    "postal_district": 14,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0182",
+    "canonical_name": "FreshStop Grocer",
+    "category": "convenience_grocery",
+    "postal_district": 13,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0183",
+    "canonical_name": "Little Wonders Gifts",
+    "category": "books_gifts",
+    "postal_district": 28,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0184",
+    "canonical_name": "Sunrise Cafe",
+    "category": "cafe",
+    "postal_district": 20,
+    "price_band": 3,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0185",
+    "canonical_name": "Hup Seng Hawker Centre",
+    "category": "hawker_kopitiam",
+    "postal_district": 7,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0186",
+    "canonical_name": "BuyHive",
+    "category": "online_marketplace",
+    "postal_district": 28,
+    "price_band": 2,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0187",
+    "canonical_name": "Lucky Star Eating House",
+    "category": "hawker_kopitiam",
+    "postal_district": 6,
+    "price_band": 1,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0188",
+    "canonical_name": "EverBuy Marketplace",
+    "category": "online_marketplace",
+    "postal_district": 16,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0189",
+    "canonical_name": "Neon Arcade",
+    "category": "cinema_arcade",
+    "postal_district": 18,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": true,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0190",
+    "canonical_name": "Bare Skin Studio",
+    "category": "beauty_cosmetics",
+    "postal_district": 10,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0191",
+    "canonical_name": "Trinket Box",
+    "category": "books_gifts",
+    "postal_district": 5,
+    "price_band": 2,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0192",
+    "canonical_name": "Whisker Wellness",
+    "category": "pet_services",
+    "postal_district": 13,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0193",
+    "canonical_name": "EverBuy Marketplace",
+    "category": "online_marketplace",
+    "postal_district": 16,
+    "price_band": 3,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": true
+  },
+  {
+    "merchant_id": "M0194",
+    "canonical_name": "FlexZone Gym",
+    "category": "gym_fitness",
+    "postal_district": 11,
+    "price_band": 4,
+    "catchment_type": "destination",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0195",
+    "canonical_name": "Chill Tea Bar @ Compass One",
+    "category": "bubble_tea",
+    "postal_district": 24,
+    "price_band": 1,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0196",
+    "canonical_name": "CityCare Clinic",
+    "category": "clinic_wellness",
+    "postal_district": 26,
+    "price_band": 4,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0197",
+    "canonical_name": "Kaisen Don House",
+    "category": "japanese",
+    "postal_district": 20,
+    "price_band": 3,
+    "catchment_type": "transit",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0198",
+    "canonical_name": "Speedy Meals",
+    "category": "fast_food",
+    "postal_district": 4,
+    "price_band": 1,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0199",
+    "canonical_name": "The Wellness Room",
+    "category": "clinic_wellness",
+    "postal_district": 27,
+    "price_band": 3,
+    "catchment_type": "neighbourhood",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  },
+  {
+    "merchant_id": "M0200",
+    "canonical_name": "Snap Chicken @ Clementi Mall",
+    "category": "fast_food",
+    "postal_district": 21,
+    "price_band": 2,
+    "catchment_type": "office",
+    "is_ocbc_acquired": false,
+    "is_aggregator": false
+  }
+]

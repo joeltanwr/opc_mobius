@@ -1945,6 +1945,16 @@ def main():
         cardholders_df, card_txns_df, cohorts, merchants_df, facts, target_cohort_m1_ids)
     _dump_json(showcase_personas, os.path.join(PUB_DIR, "showcase_personas.json"))
 
+    print("18. Merchant directory (business names — not cardholder data)")
+    merchant_directory = [
+        dict(merchant_id=m["merchant_id"], canonical_name=m["canonical_name"], category=m["category"],
+             postal_district=int(m["postal_district"]), price_band=int(m["price_band"]),
+             catchment_type=m["catchment_type"], is_ocbc_acquired=bool(m["is_ocbc_acquired"]),
+             is_aggregator=bool(m["is_aggregator"]))
+        for _, m in merchants_df.iterrows()
+    ]
+    _dump_json(merchant_directory, os.path.join(PUB_DIR, "merchant_directory.json"))
+
     elapsed = (datetime.now() - t0).total_seconds()
 
     # ---------------------------------------------------------------- summary
@@ -1967,6 +1977,7 @@ def main():
         "taxonomy.json", "deposit_flows.json", "affinity.json", "segments.json",
         "demand_gaps.json", "benchmarks.json", "merchant_profiles.json",
         "rationales.json", "campaign_results.json", "showcase_personas.json",
+        "merchant_directory.json",
     ]
     total_pub_bytes = 0
     print()
