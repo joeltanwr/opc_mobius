@@ -240,7 +240,8 @@ def main():
 
     before = hash_tree(RAW, PUB)
     print("Re-running generate.py once more to verify reproducibility (this takes a while)...")
-    result = subprocess.run([sys.executable, "generate.py"], capture_output=True, text=True)
+    generate_script = os.path.join(os.path.dirname(os.path.abspath(gen.__file__)), "generate.py")
+    result = subprocess.run([sys.executable, generate_script], capture_output=True, text=True)
     check("generate.py re-run exits cleanly", result.returncode == 0, result.stderr[-2000:])
     after = hash_tree(RAW, PUB)
     check("two consecutive generate.py runs produce identical output hashes", before == after)

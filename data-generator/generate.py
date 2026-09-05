@@ -33,8 +33,15 @@ TXN_PER_CARDHOLDER_MEAN = 60
 DESCRIPTOR_NOISE_RATE = 0.15
 MIN_SEGMENT_SIZE = 250
 
-RAW_DIR = "data/raw"
-PUB_DIR = "public/data"
+# Paths are resolved relative to this script's own location (not the caller's
+# cwd), so `python generate.py` works the same whether invoked from
+# data-generator/ or from the repo root. data/raw/ is a local build artifact;
+# public/data/ is shipped one level up, at the repo root, where a future
+# frontend (Next.js/Vite-style `public/` convention) actually serves it from.
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
+RAW_DIR = os.path.join(_SCRIPT_DIR, "data", "raw")
+PUB_DIR = os.path.join(_REPO_ROOT, "public", "data")
 
 os.makedirs(RAW_DIR, exist_ok=True)
 os.makedirs(PUB_DIR, exist_ok=True)

@@ -1,3 +1,7 @@
-data/raw/
+data-generator/data/raw/
 __pycache__/
 *.pyc
+node_modules/
+.next/
+dist/
+build/
