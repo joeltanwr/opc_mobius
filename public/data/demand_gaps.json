@@ -1,0 +1,22 @@
+[
+  {
+    "merchant_id": "M0001",
+    "type": "off_peak_gap",
+    "daypart_window": "Tue-Thu 14:00-17:00",
+    "own_baseline_ratio": 0.564,
+    "magnitude_vs_own_baseline_pct": -43.6,
+    "district_peer_median_ratio": 0.827,
+    "magnitude_vs_district_peers_pct": -31.8,
+    "confidence": "medium"
+  },
+  {
+    "merchant_id": "M0003",
+    "type": "seasonal_trough",
+    "window": "2026-03 to 2026-04",
+    "trough_avg_monthly_txns": 217.0,
+    "baseline_avg_monthly_txns": 336.8,
+    "magnitude_vs_own_baseline_pct": -35.6,
+    "confidence": "high",
+    "note": "Consistent with post-CNY apparel seasonality; recovers to baseline by June, not a merchant-specific anomaly."
+  }
+]

@@ -1,0 +1,248 @@
+{
+  "M0001": [
+    {
+      "segment_id": "M0001_lift_M0055",
+      "label": "M0055 regulars not yet at M0001",
+      "source": "lift",
+      "candidate_merchant": "M0055",
+      "lift": 2.688,
+      "support": 70,
+      "size": 547,
+      "suppressed": false,
+      "reason": null,
+      "profile": {
+        "avg_price_band_pref": 2.51,
+        "top_daypart": "morning",
+        "top_home_districts": [
+          2,
+          1,
+          3
+        ],
+        "over_indexing": [
+          {
+            "value": "high",
+            "index": 1.31
+          },
+          {
+            "value": "25-34",
+            "index": 1.97
+          }
+        ],
+        "under_indexing": [
+          {
+            "value": "low",
+            "index": 0.66
+          },
+          {
+            "value": "dormant",
+            "index": 0.5
+          },
+          {
+            "value": "45-54",
+            "index": 0.0
+          },
+          {
+            "value": "55-64",
+            "index": 0.0
+          },
+          {
+            "value": "65+",
+            "index": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "segment_id": "M0001_lift_M0198",
+      "label": "M0198 regulars not yet at M0001",
+      "source": "lift",
+      "candidate_merchant": "M0198",
+      "lift": 2.089,
+      "support": 45,
+      "size": 462,
+      "suppressed": false,
+      "reason": null,
+      "profile": {
+        "avg_price_band_pref": 2.06,
+        "top_daypart": "morning",
+        "top_home_districts": [
+          20,
+          19,
+          13
+        ],
+        "over_indexing": [
+          {
+            "value": "high",
+            "index": 1.5
+          },
+          {
+            "value": "18-24",
+            "index": 2.34
+          }
+        ],
+        "under_indexing": [
+          {
+            "value": "low",
+            "index": 0.67
+          },
+          {
+            "value": "dormant",
+            "index": 0.21
+          },
+          {
+            "value": "45-54",
+            "index": 0.4
+          },
+          {
+            "value": "65+",
+            "index": 0.22
+          },
+          {
+            "value": "55-64",
+            "index": 0.15
+          }
+        ]
+      }
+    },
+    {
+      "segment_id": "M0001_lift_M0118",
+      "label": "M0118 regulars not yet at M0001",
+      "source": "lift",
+      "candidate_merchant": "M0118",
+      "lift": 2.048,
+      "support": 75,
+      "size": 724,
+      "suppressed": false,
+      "reason": null,
+      "profile": {
+        "avg_price_band_pref": 2.44,
+        "top_daypart": "morning",
+        "top_home_districts": [
+          3,
+          4,
+          2
+        ],
+        "over_indexing": [
+          {
+            "value": "high",
+            "index": 1.35
+          },
+          {
+            "value": "35-44",
+            "index": 1.31
+          }
+        ],
+        "under_indexing": [
+          {
+            "value": "low",
+            "index": 0.64
+          },
+          {
+            "value": "dormant",
+            "index": 0.23
+          },
+          {
+            "value": "55-64",
+            "index": 0.65
+          },
+          {
+            "value": "45-54",
+            "index": 0.4
+          },
+          {
+            "value": "18-24",
+            "index": 0.16
+          }
+        ]
+      }
+    }
+  ],
+  "M0002": [
+    {
+      "segment_id": "M0002_category_catchment_fallback",
+      "label": "Bubble Tea shoppers at peer merchants, not yet at M0002",
+      "source": "category_catchment_fallback",
+      "based_on_merchants": [
+        "M0019",
+        "M0042",
+        "M0070",
+        "M0094",
+        "M0104",
+        "M0128",
+        "M0141",
+        "M0143",
+        "M0195"
+      ],
+      "size": 1212,
+      "suppressed": false,
+      "reason": null,
+      "profile": {
+        "avg_price_band_pref": 1.58,
+        "top_daypart": "afternoon",
+        "top_home_districts": [
+          28,
+          14,
+          19
+        ],
+        "over_indexing": [
+          {
+            "value": "18-24",
+            "index": 3.89
+          }
+        ],
+        "under_indexing": [
+          {
+            "value": "dormant",
+            "index": 0.53
+          },
+          {
+            "value": "45-54",
+            "index": 0.66
+          },
+          {
+            "value": "35-44",
+            "index": 0.45
+          }
+        ]
+      }
+    }
+  ],
+  "M0003": [
+    {
+      "segment_id": "M0003_lift_M0102",
+      "label": "M0102 regulars not yet at M0003",
+      "source": "lift",
+      "candidate_merchant": "M0102",
+      "lift": 2.421,
+      "support": 303,
+      "size": null,
+      "suppressed": true,
+      "reason": "below minimum segment size",
+      "profile": null
+    },
+    {
+      "segment_id": "M0003_lift_M0089",
+      "label": "M0089 regulars not yet at M0003",
+      "source": "lift",
+      "candidate_merchant": "M0089",
+      "lift": 2.276,
+      "support": 727,
+      "size": null,
+      "suppressed": true,
+      "reason": "below minimum segment size",
+      "profile": null
+    },
+    {
+      "segment_id": "M0003_lift_M0121",
+      "label": "M0121 regulars not yet at M0003",
+      "source": "lift",
+      "candidate_merchant": "M0121",
+      "lift": 2.268,
+      "support": 454,
+      "size": null,
+      "suppressed": true,
+      "reason": "below minimum segment size",
+      "profile": null
+    }
+  ]
+}

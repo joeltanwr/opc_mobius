@@ -1,0 +1,6 @@
+{
+  "M0001": "Cardholders who regularly shop at M0055 are 2.7x more likely than average to also shop at M0001 (support=70), but 547 cardholders of them have never transacted here. Their own Tue-Thu 14:00-17:00 volume already runs 44% below its weekday baseline, which is exactly the window this cohort could fill.",
+  "M0002": "M0002 has too little acquiring history of its own to rank lookalike merchants with confidence, so this recommendation falls back to its category peers. 1,212 cardholders who regularly visit the other bubble tea merchants in this benchmark set have never transacted at M0002.",
+  "M0003": "Cardholders who regularly shop at M0102 are 2.4x more likely than average to also shop at M0003 (support=303), but a cohort of them have never transacted here.",
+  "M0004": "M0004 is not yet an OCBC-acquired merchant, so this view uses district and category benchmarks only. Onboarding as an OCBC merchant unlocks personalised lift-based targeting."
+}

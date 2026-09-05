@@ -1,0 +1,154 @@
+{
+  "M0001": {
+    "available": true,
+    "cold_start_fallback": false,
+    "pairs": [
+      {
+        "merchant_id": "M0055",
+        "category": "cafe",
+        "lift": 2.688,
+        "support": 70
+      },
+      {
+        "merchant_id": "M0198",
+        "category": "fast_food",
+        "lift": 2.089,
+        "support": 45
+      },
+      {
+        "merchant_id": "M0118",
+        "category": "bakery_dessert",
+        "lift": 2.048,
+        "support": 75
+      },
+      {
+        "merchant_id": "M0103",
+        "category": "apparel",
+        "lift": 1.968,
+        "support": 93
+      },
+      {
+        "merchant_id": "M0154",
+        "category": "apparel",
+        "lift": 1.949,
+        "support": 60
+      },
+      {
+        "merchant_id": "M0084",
+        "category": "gym_fitness",
+        "lift": 1.89,
+        "support": 74
+      },
+      {
+        "merchant_id": "M0128",
+        "category": "bubble_tea",
+        "lift": 1.887,
+        "support": 73
+      },
+      {
+        "merchant_id": "M0034",
+        "category": "fast_food",
+        "lift": 1.884,
+        "support": 89
+      },
+      {
+        "merchant_id": "M0017",
+        "category": "hair_nail_salon",
+        "lift": 1.88,
+        "support": 86
+      },
+      {
+        "merchant_id": "M0135",
+        "category": "beauty_cosmetics",
+        "lift": 1.849,
+        "support": 100
+      }
+    ]
+  },
+  "M0002": {
+    "available": true,
+    "cold_start_fallback": true,
+    "based_on_category_peers": [
+      "M0019",
+      "M0042",
+      "M0070",
+      "M0094",
+      "M0104",
+      "M0128",
+      "M0141",
+      "M0143",
+      "M0195"
+    ],
+    "pairs": []
+  },
+  "M0003": {
+    "available": true,
+    "cold_start_fallback": false,
+    "pairs": [
+      {
+        "merchant_id": "M0102",
+        "category": "apparel",
+        "lift": 2.421,
+        "support": 303
+      },
+      {
+        "merchant_id": "M0089",
+        "category": "apparel",
+        "lift": 2.276,
+        "support": 727
+      },
+      {
+        "merchant_id": "M0121",
+        "category": "apparel",
+        "lift": 2.268,
+        "support": 454
+      },
+      {
+        "merchant_id": "M0106",
+        "category": "fast_food",
+        "lift": 2.259,
+        "support": 24
+      },
+      {
+        "merchant_id": "M0154",
+        "category": "apparel",
+        "lift": 2.166,
+        "support": 527
+      },
+      {
+        "merchant_id": "M0036",
+        "category": "pet_services",
+        "lift": 2.165,
+        "support": 23
+      },
+      {
+        "merchant_id": "M0103",
+        "category": "apparel",
+        "lift": 2.099,
+        "support": 784
+      },
+      {
+        "merchant_id": "M0171",
+        "category": "apparel",
+        "lift": 2.079,
+        "support": 285
+      },
+      {
+        "merchant_id": "M0127",
+        "category": "apparel",
+        "lift": 2.072,
+        "support": 604
+      },
+      {
+        "merchant_id": "M0116",
+        "category": "apparel",
+        "lift": 1.971,
+        "support": 388
+      }
+    ]
+  },
+  "M0004": {
+    "available": false,
+    "reason": "not_ocbc_acquired_preview_mode"
+  }
+}

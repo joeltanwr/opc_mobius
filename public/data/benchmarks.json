@@ -1,0 +1,1402 @@
+[
+  {
+    "category": "apparel",
+    "district": 5,
+    "n_merchants": 2,
+    "txn_count": 1618,
+    "avg_ticket_sgd": 101.99,
+    "unique_cardholders": 936
+  },
+  {
+    "category": "apparel",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 2749,
+    "avg_ticket_sgd": 116.49,
+    "unique_cardholders": 1125
+  },
+  {
+    "category": "apparel",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 3802,
+    "avg_ticket_sgd": 117.05,
+    "unique_cardholders": 1660
+  },
+  {
+    "category": "apparel",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 1578,
+    "avg_ticket_sgd": 118.4,
+    "unique_cardholders": 962
+  },
+  {
+    "category": "apparel",
+    "district": 15,
+    "n_merchants": 2,
+    "txn_count": 4386,
+    "avg_ticket_sgd": 86.77,
+    "unique_cardholders": 1623
+  },
+  {
+    "category": "apparel",
+    "district": 16,
+    "n_merchants": 1,
+    "txn_count": 990,
+    "avg_ticket_sgd": 99.24,
+    "unique_cardholders": 593
+  },
+  {
+    "category": "apparel",
+    "district": 20,
+    "n_merchants": 1,
+    "txn_count": 652,
+    "avg_ticket_sgd": 117.41,
+    "unique_cardholders": 413
+  },
+  {
+    "category": "apparel",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 845,
+    "avg_ticket_sgd": 116.79,
+    "unique_cardholders": 603
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 4,
+    "n_merchants": 1,
+    "txn_count": 1514,
+    "avg_ticket_sgd": 11.14,
+    "unique_cardholders": 872
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 877,
+    "avg_ticket_sgd": 9.49,
+    "unique_cardholders": 623
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 16,
+    "n_merchants": 1,
+    "txn_count": 2074,
+    "avg_ticket_sgd": 11.13,
+    "unique_cardholders": 1227
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 1984,
+    "avg_ticket_sgd": 9.45,
+    "unique_cardholders": 1140
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 20,
+    "n_merchants": 2,
+    "txn_count": 2680,
+    "avg_ticket_sgd": 9.85,
+    "unique_cardholders": 1298
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 22,
+    "n_merchants": 1,
+    "txn_count": 1852,
+    "avg_ticket_sgd": 11.13,
+    "unique_cardholders": 1088
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 1017,
+    "avg_ticket_sgd": 9.44,
+    "unique_cardholders": 650
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 26,
+    "n_merchants": 1,
+    "txn_count": 508,
+    "avg_ticket_sgd": 10.88,
+    "unique_cardholders": 389
+  },
+  {
+    "category": "bakery_dessert",
+    "district": 27,
+    "n_merchants": 1,
+    "txn_count": 513,
+    "avg_ticket_sgd": 9.52,
+    "unique_cardholders": 354
+  },
+  {
+    "category": "bar_pub",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 4029,
+    "avg_ticket_sgd": 37.36,
+    "unique_cardholders": 1690
+  },
+  {
+    "category": "bar_pub",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 4587,
+    "avg_ticket_sgd": 36.97,
+    "unique_cardholders": 1793
+  },
+  {
+    "category": "bar_pub",
+    "district": 12,
+    "n_merchants": 2,
+    "txn_count": 4004,
+    "avg_ticket_sgd": 33.96,
+    "unique_cardholders": 1757
+  },
+  {
+    "category": "bar_pub",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 2379,
+    "avg_ticket_sgd": 37.07,
+    "unique_cardholders": 1267
+  },
+  {
+    "category": "bar_pub",
+    "district": 18,
+    "n_merchants": 1,
+    "txn_count": 307,
+    "avg_ticket_sgd": 35.91,
+    "unique_cardholders": 222
+  },
+  {
+    "category": "bar_pub",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 544,
+    "avg_ticket_sgd": 31.1,
+    "unique_cardholders": 339
+  },
+  {
+    "category": "bar_pub",
+    "district": 22,
+    "n_merchants": 1,
+    "txn_count": 1803,
+    "avg_ticket_sgd": 37.03,
+    "unique_cardholders": 1137
+  },
+  {
+    "category": "bar_pub",
+    "district": 23,
+    "n_merchants": 1,
+    "txn_count": 701,
+    "avg_ticket_sgd": 36.83,
+    "unique_cardholders": 562
+  },
+  {
+    "category": "bar_pub",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 3080,
+    "avg_ticket_sgd": 31.28,
+    "unique_cardholders": 1604
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 2,
+    "n_merchants": 1,
+    "txn_count": 3838,
+    "avg_ticket_sgd": 63.93,
+    "unique_cardholders": 1288
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 10,
+    "n_merchants": 2,
+    "txn_count": 8481,
+    "avg_ticket_sgd": 72.22,
+    "unique_cardholders": 1970
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 1089,
+    "avg_ticket_sgd": 92.72,
+    "unique_cardholders": 651
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 17,
+    "n_merchants": 1,
+    "txn_count": 129,
+    "avg_ticket_sgd": 77.12,
+    "unique_cardholders": 105
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 18,
+    "n_merchants": 1,
+    "txn_count": 354,
+    "avg_ticket_sgd": 95.31,
+    "unique_cardholders": 267
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 272,
+    "avg_ticket_sgd": 94.64,
+    "unique_cardholders": 218
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 22,
+    "n_merchants": 1,
+    "txn_count": 114,
+    "avg_ticket_sgd": 82.27,
+    "unique_cardholders": 93
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 561,
+    "avg_ticket_sgd": 77.92,
+    "unique_cardholders": 441
+  },
+  {
+    "category": "beauty_cosmetics",
+    "district": 27,
+    "n_merchants": 1,
+    "txn_count": 350,
+    "avg_ticket_sgd": 78.31,
+    "unique_cardholders": 245
+  },
+  {
+    "category": "books_gifts",
+    "district": 1,
+    "n_merchants": 1,
+    "txn_count": 3178,
+    "avg_ticket_sgd": 33.22,
+    "unique_cardholders": 1405
+  },
+  {
+    "category": "books_gifts",
+    "district": 5,
+    "n_merchants": 1,
+    "txn_count": 273,
+    "avg_ticket_sgd": 32.33,
+    "unique_cardholders": 244
+  },
+  {
+    "category": "books_gifts",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 1217,
+    "avg_ticket_sgd": 32.86,
+    "unique_cardholders": 838
+  },
+  {
+    "category": "books_gifts",
+    "district": 8,
+    "n_merchants": 2,
+    "txn_count": 810,
+    "avg_ticket_sgd": 37.83,
+    "unique_cardholders": 587
+  },
+  {
+    "category": "books_gifts",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 926,
+    "avg_ticket_sgd": 47.2,
+    "unique_cardholders": 620
+  },
+  {
+    "category": "books_gifts",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 1133,
+    "avg_ticket_sgd": 33.3,
+    "unique_cardholders": 767
+  },
+  {
+    "category": "books_gifts",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 108,
+    "avg_ticket_sgd": 34.88,
+    "unique_cardholders": 89
+  },
+  {
+    "category": "books_gifts",
+    "district": 28,
+    "n_merchants": 2,
+    "txn_count": 2037,
+    "avg_ticket_sgd": 36.0,
+    "unique_cardholders": 809
+  },
+  {
+    "category": "bubble_tea",
+    "district": 5,
+    "n_merchants": 1,
+    "txn_count": 1719,
+    "avg_ticket_sgd": 6.48,
+    "unique_cardholders": 921
+  },
+  {
+    "category": "bubble_tea",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 4340,
+    "avg_ticket_sgd": 6.56,
+    "unique_cardholders": 1541
+  },
+  {
+    "category": "bubble_tea",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 2291,
+    "avg_ticket_sgd": 5.82,
+    "unique_cardholders": 1127
+  },
+  {
+    "category": "bubble_tea",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 1614,
+    "avg_ticket_sgd": 5.76,
+    "unique_cardholders": 892
+  },
+  {
+    "category": "bubble_tea",
+    "district": 11,
+    "n_merchants": 2,
+    "txn_count": 2316,
+    "avg_ticket_sgd": 6.55,
+    "unique_cardholders": 1179
+  },
+  {
+    "category": "bubble_tea",
+    "district": 13,
+    "n_merchants": 2,
+    "txn_count": 2732,
+    "avg_ticket_sgd": 5.89,
+    "unique_cardholders": 990
+  },
+  {
+    "category": "bubble_tea",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 3792,
+    "avg_ticket_sgd": 6.56,
+    "unique_cardholders": 1495
+  },
+  {
+    "category": "bubble_tea",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 16,
+    "avg_ticket_sgd": 6.24,
+    "unique_cardholders": 15
+  },
+  {
+    "category": "cafe",
+    "district": 2,
+    "n_merchants": 2,
+    "txn_count": 15456,
+    "avg_ticket_sgd": 12.13,
+    "unique_cardholders": 2557
+  },
+  {
+    "category": "cafe",
+    "district": 4,
+    "n_merchants": 1,
+    "txn_count": 17507,
+    "avg_ticket_sgd": 15.76,
+    "unique_cardholders": 620
+  },
+  {
+    "category": "cafe",
+    "district": 8,
+    "n_merchants": 1,
+    "txn_count": 8055,
+    "avg_ticket_sgd": 11.47,
+    "unique_cardholders": 2446
+  },
+  {
+    "category": "cafe",
+    "district": 10,
+    "n_merchants": 1,
+    "txn_count": 7869,
+    "avg_ticket_sgd": 15.92,
+    "unique_cardholders": 2181
+  },
+  {
+    "category": "cafe",
+    "district": 20,
+    "n_merchants": 1,
+    "txn_count": 5313,
+    "avg_ticket_sgd": 15.88,
+    "unique_cardholders": 2046
+  },
+  {
+    "category": "cafe",
+    "district": 22,
+    "n_merchants": 1,
+    "txn_count": 159,
+    "avg_ticket_sgd": 13.88,
+    "unique_cardholders": 135
+  },
+  {
+    "category": "cafe",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 368,
+    "avg_ticket_sgd": 16.02,
+    "unique_cardholders": 313
+  },
+  {
+    "category": "cafe",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 3350,
+    "avg_ticket_sgd": 11.37,
+    "unique_cardholders": 1846
+  },
+  {
+    "category": "cafe",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 1153,
+    "avg_ticket_sgd": 11.48,
+    "unique_cardholders": 705
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 1,
+    "n_merchants": 1,
+    "txn_count": 1233,
+    "avg_ticket_sgd": 19.92,
+    "unique_cardholders": 712
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 2,
+    "n_merchants": 1,
+    "txn_count": 1115,
+    "avg_ticket_sgd": 24.11,
+    "unique_cardholders": 647
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 10,
+    "n_merchants": 1,
+    "txn_count": 470,
+    "avg_ticket_sgd": 19.86,
+    "unique_cardholders": 361
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 3403,
+    "avg_ticket_sgd": 23.98,
+    "unique_cardholders": 1274
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 17,
+    "n_merchants": 1,
+    "txn_count": 331,
+    "avg_ticket_sgd": 18.93,
+    "unique_cardholders": 253
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 18,
+    "n_merchants": 2,
+    "txn_count": 1287,
+    "avg_ticket_sgd": 24.22,
+    "unique_cardholders": 692
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 559,
+    "avg_ticket_sgd": 24.2,
+    "unique_cardholders": 290
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 42,
+    "avg_ticket_sgd": 32.83,
+    "unique_cardholders": 33
+  },
+  {
+    "category": "cinema_arcade",
+    "district": 26,
+    "n_merchants": 1,
+    "txn_count": 652,
+    "avg_ticket_sgd": 29.07,
+    "unique_cardholders": 435
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 3,
+    "n_merchants": 1,
+    "txn_count": 1831,
+    "avg_ticket_sgd": 120.45,
+    "unique_cardholders": 857
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 3353,
+    "avg_ticket_sgd": 102.78,
+    "unique_cardholders": 1368
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 939,
+    "avg_ticket_sgd": 102.87,
+    "unique_cardholders": 636
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 688,
+    "avg_ticket_sgd": 121.67,
+    "unique_cardholders": 411
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 4026,
+    "avg_ticket_sgd": 86.84,
+    "unique_cardholders": 1405
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 2067,
+    "avg_ticket_sgd": 86.59,
+    "unique_cardholders": 1019
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 23,
+    "n_merchants": 1,
+    "txn_count": 656,
+    "avg_ticket_sgd": 87.66,
+    "unique_cardholders": 294
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 26,
+    "n_merchants": 1,
+    "txn_count": 342,
+    "avg_ticket_sgd": 120.67,
+    "unique_cardholders": 249
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 27,
+    "n_merchants": 1,
+    "txn_count": 514,
+    "avg_ticket_sgd": 104.04,
+    "unique_cardholders": 273
+  },
+  {
+    "category": "clinic_wellness",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 1114,
+    "avg_ticket_sgd": 103.11,
+    "unique_cardholders": 621
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 2,
+    "n_merchants": 1,
+    "txn_count": 1374,
+    "avg_ticket_sgd": 21.22,
+    "unique_cardholders": 851
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 3,
+    "n_merchants": 1,
+    "txn_count": 2107,
+    "avg_ticket_sgd": 21.34,
+    "unique_cardholders": 1298
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 5,
+    "n_merchants": 1,
+    "txn_count": 457,
+    "avg_ticket_sgd": 21.69,
+    "unique_cardholders": 388
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 995,
+    "avg_ticket_sgd": 21.43,
+    "unique_cardholders": 727
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 1441,
+    "avg_ticket_sgd": 16.3,
+    "unique_cardholders": 810
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 2946,
+    "avg_ticket_sgd": 21.26,
+    "unique_cardholders": 1582
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 16,
+    "n_merchants": 1,
+    "txn_count": 2495,
+    "avg_ticket_sgd": 21.58,
+    "unique_cardholders": 1364
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 18,
+    "n_merchants": 1,
+    "txn_count": 2331,
+    "avg_ticket_sgd": 21.27,
+    "unique_cardholders": 1240
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 3397,
+    "avg_ticket_sgd": 21.29,
+    "unique_cardholders": 1583
+  },
+  {
+    "category": "convenience_grocery",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 2773,
+    "avg_ticket_sgd": 21.21,
+    "unique_cardholders": 1229
+  },
+  {
+    "category": "electronics",
+    "district": 3,
+    "n_merchants": 2,
+    "txn_count": 1976,
+    "avg_ticket_sgd": 326.2,
+    "unique_cardholders": 972
+  },
+  {
+    "category": "electronics",
+    "district": 7,
+    "n_merchants": 2,
+    "txn_count": 1166,
+    "avg_ticket_sgd": 378.39,
+    "unique_cardholders": 670
+  },
+  {
+    "category": "electronics",
+    "district": 10,
+    "n_merchants": 1,
+    "txn_count": 759,
+    "avg_ticket_sgd": 371.82,
+    "unique_cardholders": 468
+  },
+  {
+    "category": "electronics",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 656,
+    "avg_ticket_sgd": 369.47,
+    "unique_cardholders": 477
+  },
+  {
+    "category": "electronics",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 465,
+    "avg_ticket_sgd": 389.75,
+    "unique_cardholders": 332
+  },
+  {
+    "category": "electronics",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 232,
+    "avg_ticket_sgd": 387.86,
+    "unique_cardholders": 184
+  },
+  {
+    "category": "electronics",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 171,
+    "avg_ticket_sgd": 375.6,
+    "unique_cardholders": 119
+  },
+  {
+    "category": "electronics",
+    "district": 27,
+    "n_merchants": 1,
+    "txn_count": 274,
+    "avg_ticket_sgd": 316.97,
+    "unique_cardholders": 185
+  },
+  {
+    "category": "fast_food",
+    "district": 3,
+    "n_merchants": 1,
+    "txn_count": 2245,
+    "avg_ticket_sgd": 10.63,
+    "unique_cardholders": 1125
+  },
+  {
+    "category": "fast_food",
+    "district": 4,
+    "n_merchants": 1,
+    "txn_count": 678,
+    "avg_ticket_sgd": 9.18,
+    "unique_cardholders": 513
+  },
+  {
+    "category": "fast_food",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 1352,
+    "avg_ticket_sgd": 9.33,
+    "unique_cardholders": 802
+  },
+  {
+    "category": "fast_food",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 2813,
+    "avg_ticket_sgd": 11.68,
+    "unique_cardholders": 1363
+  },
+  {
+    "category": "fast_food",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 2258,
+    "avg_ticket_sgd": 10.48,
+    "unique_cardholders": 1129
+  },
+  {
+    "category": "fast_food",
+    "district": 20,
+    "n_merchants": 1,
+    "txn_count": 3318,
+    "avg_ticket_sgd": 10.47,
+    "unique_cardholders": 1501
+  },
+  {
+    "category": "fast_food",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 814,
+    "avg_ticket_sgd": 10.56,
+    "unique_cardholders": 496
+  },
+  {
+    "category": "fast_food",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 35,
+    "avg_ticket_sgd": 8.71,
+    "unique_cardholders": 32
+  },
+  {
+    "category": "fast_food",
+    "district": 26,
+    "n_merchants": 1,
+    "txn_count": 640,
+    "avg_ticket_sgd": 9.27,
+    "unique_cardholders": 386
+  },
+  {
+    "category": "fast_food",
+    "district": 27,
+    "n_merchants": 1,
+    "txn_count": 1206,
+    "avg_ticket_sgd": 9.16,
+    "unique_cardholders": 684
+  },
+  {
+    "category": "gym_fitness",
+    "district": 4,
+    "n_merchants": 1,
+    "txn_count": 2537,
+    "avg_ticket_sgd": 126.96,
+    "unique_cardholders": 932
+  },
+  {
+    "category": "gym_fitness",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 2761,
+    "avg_ticket_sgd": 154.56,
+    "unique_cardholders": 1112
+  },
+  {
+    "category": "gym_fitness",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 3256,
+    "avg_ticket_sgd": 152.1,
+    "unique_cardholders": 1234
+  },
+  {
+    "category": "gym_fitness",
+    "district": 13,
+    "n_merchants": 3,
+    "txn_count": 5673,
+    "avg_ticket_sgd": 146.1,
+    "unique_cardholders": 1654
+  },
+  {
+    "category": "gym_fitness",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 872,
+    "avg_ticket_sgd": 127.89,
+    "unique_cardholders": 489
+  },
+  {
+    "category": "gym_fitness",
+    "district": 22,
+    "n_merchants": 2,
+    "txn_count": 220,
+    "avg_ticket_sgd": 126.78,
+    "unique_cardholders": 127
+  },
+  {
+    "category": "gym_fitness",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 174,
+    "avg_ticket_sgd": 152.03,
+    "unique_cardholders": 148
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 2,
+    "n_merchants": 1,
+    "txn_count": 2541,
+    "avg_ticket_sgd": 67.3,
+    "unique_cardholders": 1089
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 8,
+    "n_merchants": 1,
+    "txn_count": 2371,
+    "avg_ticket_sgd": 67.07,
+    "unique_cardholders": 1210
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 10,
+    "n_merchants": 1,
+    "txn_count": 917,
+    "avg_ticket_sgd": 96.28,
+    "unique_cardholders": 513
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 906,
+    "avg_ticket_sgd": 95.02,
+    "unique_cardholders": 561
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 19,
+    "n_merchants": 2,
+    "txn_count": 2793,
+    "avg_ticket_sgd": 68.93,
+    "unique_cardholders": 1384
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 22,
+    "n_merchants": 1,
+    "txn_count": 54,
+    "avg_ticket_sgd": 80.43,
+    "unique_cardholders": 42
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 24,
+    "n_merchants": 2,
+    "txn_count": 1237,
+    "avg_ticket_sgd": 66.8,
+    "unique_cardholders": 860
+  },
+  {
+    "category": "hair_nail_salon",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 192,
+    "avg_ticket_sgd": 81.88,
+    "unique_cardholders": 170
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 1,
+    "n_merchants": 1,
+    "txn_count": 3576,
+    "avg_ticket_sgd": 6.37,
+    "unique_cardholders": 1549
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 4,
+    "n_merchants": 1,
+    "txn_count": 3103,
+    "avg_ticket_sgd": 6.36,
+    "unique_cardholders": 1442
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 5,
+    "n_merchants": 1,
+    "txn_count": 1146,
+    "avg_ticket_sgd": 5.42,
+    "unique_cardholders": 711
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 2692,
+    "avg_ticket_sgd": 5.34,
+    "unique_cardholders": 1225
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 337,
+    "avg_ticket_sgd": 5.44,
+    "unique_cardholders": 288
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 855,
+    "avg_ticket_sgd": 5.43,
+    "unique_cardholders": 653
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 3797,
+    "avg_ticket_sgd": 5.42,
+    "unique_cardholders": 1379
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 1716,
+    "avg_ticket_sgd": 6.35,
+    "unique_cardholders": 951
+  },
+  {
+    "category": "hawker_kopitiam",
+    "district": 26,
+    "n_merchants": 2,
+    "txn_count": 3646,
+    "avg_ticket_sgd": 6.41,
+    "unique_cardholders": 1226
+  },
+  {
+    "category": "japanese",
+    "district": 8,
+    "n_merchants": 1,
+    "txn_count": 2815,
+    "avg_ticket_sgd": 30.9,
+    "unique_cardholders": 1343
+  },
+  {
+    "category": "japanese",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 3286,
+    "avg_ticket_sgd": 48.82,
+    "unique_cardholders": 1457
+  },
+  {
+    "category": "japanese",
+    "district": 10,
+    "n_merchants": 1,
+    "txn_count": 1663,
+    "avg_ticket_sgd": 42.33,
+    "unique_cardholders": 946
+  },
+  {
+    "category": "japanese",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 6564,
+    "avg_ticket_sgd": 42.64,
+    "unique_cardholders": 2254
+  },
+  {
+    "category": "japanese",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 819,
+    "avg_ticket_sgd": 36.19,
+    "unique_cardholders": 506
+  },
+  {
+    "category": "japanese",
+    "district": 20,
+    "n_merchants": 2,
+    "txn_count": 4414,
+    "avg_ticket_sgd": 42.44,
+    "unique_cardholders": 1941
+  },
+  {
+    "category": "japanese",
+    "district": 23,
+    "n_merchants": 1,
+    "txn_count": 585,
+    "avg_ticket_sgd": 36.51,
+    "unique_cardholders": 440
+  },
+  {
+    "category": "japanese",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 991,
+    "avg_ticket_sgd": 42.96,
+    "unique_cardholders": 682
+  },
+  {
+    "category": "japanese",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 649,
+    "avg_ticket_sgd": 35.76,
+    "unique_cardholders": 454
+  },
+  {
+    "category": "online_marketplace",
+    "district": 5,
+    "n_merchants": 1,
+    "txn_count": 3062,
+    "avg_ticket_sgd": 65.01,
+    "unique_cardholders": 1573
+  },
+  {
+    "category": "online_marketplace",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 3601,
+    "avg_ticket_sgd": 51.16,
+    "unique_cardholders": 1755
+  },
+  {
+    "category": "online_marketplace",
+    "district": 9,
+    "n_merchants": 1,
+    "txn_count": 3592,
+    "avg_ticket_sgd": 64.31,
+    "unique_cardholders": 1719
+  },
+  {
+    "category": "online_marketplace",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 3831,
+    "avg_ticket_sgd": 52.02,
+    "unique_cardholders": 1850
+  },
+  {
+    "category": "online_marketplace",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 2866,
+    "avg_ticket_sgd": 64.22,
+    "unique_cardholders": 1543
+  },
+  {
+    "category": "online_marketplace",
+    "district": 16,
+    "n_merchants": 2,
+    "txn_count": 5039,
+    "avg_ticket_sgd": 64.34,
+    "unique_cardholders": 2037
+  },
+  {
+    "category": "online_marketplace",
+    "district": 18,
+    "n_merchants": 1,
+    "txn_count": 1670,
+    "avg_ticket_sgd": 64.7,
+    "unique_cardholders": 1130
+  },
+  {
+    "category": "online_marketplace",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 1521,
+    "avg_ticket_sgd": 51.44,
+    "unique_cardholders": 1043
+  },
+  {
+    "category": "online_marketplace",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 1944,
+    "avg_ticket_sgd": 51.38,
+    "unique_cardholders": 1233
+  },
+  {
+    "category": "pet_services",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 1066,
+    "avg_ticket_sgd": 57.5,
+    "unique_cardholders": 699
+  },
+  {
+    "category": "pet_services",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 1642,
+    "avg_ticket_sgd": 69.7,
+    "unique_cardholders": 958
+  },
+  {
+    "category": "pet_services",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 458,
+    "avg_ticket_sgd": 57.08,
+    "unique_cardholders": 344
+  },
+  {
+    "category": "pet_services",
+    "district": 18,
+    "n_merchants": 1,
+    "txn_count": 939,
+    "avg_ticket_sgd": 57.79,
+    "unique_cardholders": 583
+  },
+  {
+    "category": "pet_services",
+    "district": 20,
+    "n_merchants": 2,
+    "txn_count": 1491,
+    "avg_ticket_sgd": 65.62,
+    "unique_cardholders": 802
+  },
+  {
+    "category": "pet_services",
+    "district": 22,
+    "n_merchants": 3,
+    "txn_count": 1171,
+    "avg_ticket_sgd": 69.29,
+    "unique_cardholders": 710
+  },
+  {
+    "category": "pet_services",
+    "district": 24,
+    "n_merchants": 1,
+    "txn_count": 415,
+    "avg_ticket_sgd": 70.27,
+    "unique_cardholders": 305
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 6,
+    "n_merchants": 1,
+    "txn_count": 3934,
+    "avg_ticket_sgd": 16.83,
+    "unique_cardholders": 1590
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 1611,
+    "avg_ticket_sgd": 13.14,
+    "unique_cardholders": 985
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 11,
+    "n_merchants": 1,
+    "txn_count": 1464,
+    "avg_ticket_sgd": 13.33,
+    "unique_cardholders": 924
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 12,
+    "n_merchants": 1,
+    "txn_count": 3288,
+    "avg_ticket_sgd": 16.63,
+    "unique_cardholders": 1435
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 3237,
+    "avg_ticket_sgd": 20.18,
+    "unique_cardholders": 1254
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 1966,
+    "avg_ticket_sgd": 16.78,
+    "unique_cardholders": 1098
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 21,
+    "n_merchants": 1,
+    "txn_count": 1523,
+    "avg_ticket_sgd": 16.67,
+    "unique_cardholders": 978
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 26,
+    "n_merchants": 1,
+    "txn_count": 918,
+    "avg_ticket_sgd": 13.17,
+    "unique_cardholders": 686
+  },
+  {
+    "category": "ride_hailing_transit",
+    "district": 27,
+    "n_merchants": 2,
+    "txn_count": 2116,
+    "avg_ticket_sgd": 16.81,
+    "unique_cardholders": 1103
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 2,
+    "n_merchants": 1,
+    "txn_count": 1314,
+    "avg_ticket_sgd": 33.67,
+    "unique_cardholders": 692
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 7,
+    "n_merchants": 1,
+    "txn_count": 2221,
+    "avg_ticket_sgd": 33.75,
+    "unique_cardholders": 877
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 13,
+    "n_merchants": 1,
+    "txn_count": 670,
+    "avg_ticket_sgd": 33.34,
+    "unique_cardholders": 423
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 14,
+    "n_merchants": 1,
+    "txn_count": 668,
+    "avg_ticket_sgd": 38.09,
+    "unique_cardholders": 364
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 15,
+    "n_merchants": 1,
+    "txn_count": 2325,
+    "avg_ticket_sgd": 33.7,
+    "unique_cardholders": 972
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 19,
+    "n_merchants": 1,
+    "txn_count": 486,
+    "avg_ticket_sgd": 33.95,
+    "unique_cardholders": 273
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 20,
+    "n_merchants": 1,
+    "txn_count": 340,
+    "avg_ticket_sgd": 25.42,
+    "unique_cardholders": 247
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 23,
+    "n_merchants": 1,
+    "txn_count": 121,
+    "avg_ticket_sgd": 29.13,
+    "unique_cardholders": 83
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 25,
+    "n_merchants": 1,
+    "txn_count": 105,
+    "avg_ticket_sgd": 29.48,
+    "unique_cardholders": 71
+  },
+  {
+    "category": "zichar_chinese_casual",
+    "district": 28,
+    "n_merchants": 1,
+    "txn_count": 540,
+    "avg_ticket_sgd": 25.18,
+    "unique_cardholders": 350
+  }
+]

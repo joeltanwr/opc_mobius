@@ -1,0 +1,5552 @@
+[
+  {
+    "merchant_id": "M0001",
+    "month": "2025-12",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 7736.09,
+    "card_settlement_sgd": 4269.68,
+    "outflow_sgd": 10325.66,
+    "closing_balance_sgd": 4975.95,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-01",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7046.16,
+    "card_settlement_sgd": 3908.87,
+    "outflow_sgd": 8750.34,
+    "closing_balance_sgd": 7180.64,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-02",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7299.94,
+    "card_settlement_sgd": 5052.55,
+    "outflow_sgd": 9553.8,
+    "closing_balance_sgd": 9979.33,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-03",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 7072.72,
+    "card_settlement_sgd": 4026.76,
+    "outflow_sgd": 9411.21,
+    "closing_balance_sgd": 11667.6,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-04",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6591.13,
+    "card_settlement_sgd": 3768.51,
+    "outflow_sgd": 8802.55,
+    "closing_balance_sgd": 13224.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-05",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 6350.12,
+    "card_settlement_sgd": 4972.42,
+    "outflow_sgd": 9725.4,
+    "closing_balance_sgd": 14821.83,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0001",
+    "month": "2026-06",
+    "paynow_inflow_count": 30,
+    "paynow_inflow_sgd": 6639.31,
+    "card_settlement_sgd": 4152.75,
+    "outflow_sgd": 9401.81,
+    "closing_balance_sgd": 16212.08,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0002",
+    "month": "2026-06",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6240.21,
+    "card_settlement_sgd": 4015.05,
+    "outflow_sgd": 8666.84,
+    "closing_balance_sgd": 4554.67,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2025-08",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 8527.44,
+    "card_settlement_sgd": 5755.74,
+    "outflow_sgd": 11203.63,
+    "closing_balance_sgd": 7034.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2025-09",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7671.3,
+    "card_settlement_sgd": 6435.02,
+    "outflow_sgd": 11944.25,
+    "closing_balance_sgd": 9196.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2025-10",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7933.77,
+    "card_settlement_sgd": 5265.74,
+    "outflow_sgd": 11591.99,
+    "closing_balance_sgd": 10804.14,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2025-11",
+    "paynow_inflow_count": 56,
+    "paynow_inflow_sgd": 8138.41,
+    "card_settlement_sgd": 5346.62,
+    "outflow_sgd": 11518.61,
+    "closing_balance_sgd": 12770.56,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2025-12",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 9000.95,
+    "card_settlement_sgd": 5464.95,
+    "outflow_sgd": 12911.0,
+    "closing_balance_sgd": 14325.46,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-01",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 8240.97,
+    "card_settlement_sgd": 6426.97,
+    "outflow_sgd": 13691.47,
+    "closing_balance_sgd": 15301.93,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-02",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 9381.27,
+    "card_settlement_sgd": 6706.02,
+    "outflow_sgd": 14143.58,
+    "closing_balance_sgd": 17245.64,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-03",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7644.16,
+    "card_settlement_sgd": 6187.31,
+    "outflow_sgd": 11932.66,
+    "closing_balance_sgd": 19144.45,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-04",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7559.55,
+    "card_settlement_sgd": 4573.62,
+    "outflow_sgd": 9775.07,
+    "closing_balance_sgd": 21502.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-05",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7842.98,
+    "card_settlement_sgd": 5587.48,
+    "outflow_sgd": 11776.62,
+    "closing_balance_sgd": 23156.39,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0003",
+    "month": "2026-06",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 8235.59,
+    "card_settlement_sgd": 4841.62,
+    "outflow_sgd": 11565.3,
+    "closing_balance_sgd": 24668.3,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-07",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 6617.18,
+    "card_settlement_sgd": 5104.97,
+    "outflow_sgd": 9311.8,
+    "closing_balance_sgd": 5706.19,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-08",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6447.46,
+    "card_settlement_sgd": 3895.61,
+    "outflow_sgd": 8631.75,
+    "closing_balance_sgd": 7417.51,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-09",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 5891.86,
+    "card_settlement_sgd": 4345.35,
+    "outflow_sgd": 8021.77,
+    "closing_balance_sgd": 9632.95,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-10",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 8032.57,
+    "card_settlement_sgd": 6624.6,
+    "outflow_sgd": 11294.7,
+    "closing_balance_sgd": 12995.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6822.37,
+    "card_settlement_sgd": 4185.97,
+    "outflow_sgd": 8371.63,
+    "closing_balance_sgd": 15632.13,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2025-12",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7601.23,
+    "card_settlement_sgd": 4483.62,
+    "outflow_sgd": 9875.96,
+    "closing_balance_sgd": 17841.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-01",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7361.23,
+    "card_settlement_sgd": 4512.61,
+    "outflow_sgd": 10875.95,
+    "closing_balance_sgd": 18838.91,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7540.72,
+    "card_settlement_sgd": 4958.54,
+    "outflow_sgd": 10019.82,
+    "closing_balance_sgd": 21318.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-03",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6160.9,
+    "card_settlement_sgd": 3596.43,
+    "outflow_sgd": 7409.87,
+    "closing_balance_sgd": 23665.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-04",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6690.17,
+    "card_settlement_sgd": 4979.62,
+    "outflow_sgd": 9478.25,
+    "closing_balance_sgd": 25857.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6785.3,
+    "card_settlement_sgd": 5699.1,
+    "outflow_sgd": 11415.9,
+    "closing_balance_sgd": 26925.85,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0008",
+    "month": "2026-06",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7677.49,
+    "card_settlement_sgd": 4619.87,
+    "outflow_sgd": 10950.0,
+    "closing_balance_sgd": 28273.21,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2025-12",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 8470.82,
+    "card_settlement_sgd": 6361.97,
+    "outflow_sgd": 11318.81,
+    "closing_balance_sgd": 6809.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-01",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 6131.24,
+    "card_settlement_sgd": 4874.68,
+    "outflow_sgd": 8257.98,
+    "closing_balance_sgd": 9557.76,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 6746.68,
+    "card_settlement_sgd": 4093.09,
+    "outflow_sgd": 9653.09,
+    "closing_balance_sgd": 10744.44,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-03",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 7252.27,
+    "card_settlement_sgd": 4765.01,
+    "outflow_sgd": 10432.43,
+    "closing_balance_sgd": 12329.29,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-04",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 5856.38,
+    "card_settlement_sgd": 4419.0,
+    "outflow_sgd": 8535.87,
+    "closing_balance_sgd": 14068.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6828.7,
+    "card_settlement_sgd": 5738.1,
+    "outflow_sgd": 10690.98,
+    "closing_balance_sgd": 15944.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0013",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7154.99,
+    "card_settlement_sgd": 5797.68,
+    "outflow_sgd": 9716.72,
+    "closing_balance_sgd": 19180.57,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0018",
+    "month": "2026-02",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 9459.62,
+    "card_settlement_sgd": 7428.59,
+    "outflow_sgd": 13170.79,
+    "closing_balance_sgd": 7672.42,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0018",
+    "month": "2026-03",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 8105.38,
+    "card_settlement_sgd": 4721.12,
+    "outflow_sgd": 10059.58,
+    "closing_balance_sgd": 10439.34,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0018",
+    "month": "2026-04",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7688.88,
+    "card_settlement_sgd": 4572.72,
+    "outflow_sgd": 10219.05,
+    "closing_balance_sgd": 12481.89,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0018",
+    "month": "2026-05",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 8239.16,
+    "card_settlement_sgd": 4911.19,
+    "outflow_sgd": 11389.5,
+    "closing_balance_sgd": 14242.74,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0018",
+    "month": "2026-06",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8541.85,
+    "card_settlement_sgd": 6610.33,
+    "outflow_sgd": 13417.71,
+    "closing_balance_sgd": 15977.21,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-07",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 5806.9,
+    "card_settlement_sgd": 3533.64,
+    "outflow_sgd": 7561.27,
+    "closing_balance_sgd": 5734.27,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-08",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 9220.39,
+    "card_settlement_sgd": 6178.39,
+    "outflow_sgd": 13212.77,
+    "closing_balance_sgd": 7920.28,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-09",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 7631.59,
+    "card_settlement_sgd": 4458.26,
+    "outflow_sgd": 10343.23,
+    "closing_balance_sgd": 9666.9,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-10",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7677.07,
+    "card_settlement_sgd": 5418.91,
+    "outflow_sgd": 12203.96,
+    "closing_balance_sgd": 10558.92,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 9056.87,
+    "card_settlement_sgd": 5648.11,
+    "outflow_sgd": 13278.65,
+    "closing_balance_sgd": 11985.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2025-12",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 9910.25,
+    "card_settlement_sgd": 7483.93,
+    "outflow_sgd": 14648.7,
+    "closing_balance_sgd": 14730.73,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-01",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7680.19,
+    "card_settlement_sgd": 4284.11,
+    "outflow_sgd": 10353.66,
+    "closing_balance_sgd": 16341.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 9617.81,
+    "card_settlement_sgd": 7060.68,
+    "outflow_sgd": 13431.7,
+    "closing_balance_sgd": 19588.16,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-03",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7434.77,
+    "card_settlement_sgd": 5347.67,
+    "outflow_sgd": 9699.72,
+    "closing_balance_sgd": 22670.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-04",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7276.45,
+    "card_settlement_sgd": 4218.0,
+    "outflow_sgd": 8998.91,
+    "closing_balance_sgd": 25166.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-05",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 8927.46,
+    "card_settlement_sgd": 5148.53,
+    "outflow_sgd": 12264.72,
+    "closing_balance_sgd": 26977.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0021",
+    "month": "2026-06",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 8536.55,
+    "card_settlement_sgd": 6486.87,
+    "outflow_sgd": 12622.94,
+    "closing_balance_sgd": 29378.17,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0030",
+    "month": "2026-02",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 5707.08,
+    "card_settlement_sgd": 4202.4,
+    "outflow_sgd": 8450.13,
+    "closing_balance_sgd": 4425.6,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0030",
+    "month": "2026-03",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 5660.35,
+    "card_settlement_sgd": 4578.91,
+    "outflow_sgd": 8711.86,
+    "closing_balance_sgd": 5953.0,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0030",
+    "month": "2026-04",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 6267.75,
+    "card_settlement_sgd": 3901.38,
+    "outflow_sgd": 9323.71,
+    "closing_balance_sgd": 6798.42,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0030",
+    "month": "2026-05",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 6592.81,
+    "card_settlement_sgd": 4772.0,
+    "outflow_sgd": 10526.96,
+    "closing_balance_sgd": 7636.27,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0030",
+    "month": "2026-06",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6116.86,
+    "card_settlement_sgd": 3778.65,
+    "outflow_sgd": 8120.61,
+    "closing_balance_sgd": 9411.17,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-07",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6002.37,
+    "card_settlement_sgd": 4942.94,
+    "outflow_sgd": 10315.19,
+    "closing_balance_sgd": 3925.96,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-08",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 5705.78,
+    "card_settlement_sgd": 4463.58,
+    "outflow_sgd": 9344.16,
+    "closing_balance_sgd": 4751.16,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-09",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6059.91,
+    "card_settlement_sgd": 3687.83,
+    "outflow_sgd": 7727.08,
+    "closing_balance_sgd": 6771.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-10",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 5648.03,
+    "card_settlement_sgd": 3846.79,
+    "outflow_sgd": 8555.27,
+    "closing_balance_sgd": 7711.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-11",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 7261.02,
+    "card_settlement_sgd": 4903.11,
+    "outflow_sgd": 11362.55,
+    "closing_balance_sgd": 8512.95,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2025-12",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 8461.07,
+    "card_settlement_sgd": 7164.8,
+    "outflow_sgd": 13143.28,
+    "closing_balance_sgd": 10995.54,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6128.64,
+    "card_settlement_sgd": 3533.53,
+    "outflow_sgd": 9112.17,
+    "closing_balance_sgd": 11545.54,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-02",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7470.75,
+    "card_settlement_sgd": 5846.85,
+    "outflow_sgd": 12561.55,
+    "closing_balance_sgd": 12301.59,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-03",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 5813.16,
+    "card_settlement_sgd": 4307.14,
+    "outflow_sgd": 8189.82,
+    "closing_balance_sgd": 14232.07,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-04",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 6195.24,
+    "card_settlement_sgd": 5241.77,
+    "outflow_sgd": 9181.06,
+    "closing_balance_sgd": 16488.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-05",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 6109.57,
+    "card_settlement_sgd": 4187.63,
+    "outflow_sgd": 9635.97,
+    "closing_balance_sgd": 17149.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0031",
+    "month": "2026-06",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 5739.12,
+    "card_settlement_sgd": 3828.73,
+    "outflow_sgd": 9063.55,
+    "closing_balance_sgd": 17653.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2025-10",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7612.85,
+    "card_settlement_sgd": 5099.32,
+    "outflow_sgd": 11291.74,
+    "closing_balance_sgd": 5375.43,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2025-11",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7863.2,
+    "card_settlement_sgd": 6656.05,
+    "outflow_sgd": 10931.28,
+    "closing_balance_sgd": 8963.4,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2025-12",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 9374.37,
+    "card_settlement_sgd": 7938.56,
+    "outflow_sgd": 15046.35,
+    "closing_balance_sgd": 11229.98,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-01",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 8391.35,
+    "card_settlement_sgd": 4845.96,
+    "outflow_sgd": 12171.54,
+    "closing_balance_sgd": 12295.75,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-02",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 9177.77,
+    "card_settlement_sgd": 6246.99,
+    "outflow_sgd": 12860.26,
+    "closing_balance_sgd": 14860.25,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-03",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 8654.05,
+    "card_settlement_sgd": 5808.14,
+    "outflow_sgd": 11352.83,
+    "closing_balance_sgd": 17969.61,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-04",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 8307.42,
+    "card_settlement_sgd": 6233.0,
+    "outflow_sgd": 12033.28,
+    "closing_balance_sgd": 20476.75,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-05",
+    "paynow_inflow_count": 56,
+    "paynow_inflow_sgd": 7133.34,
+    "card_settlement_sgd": 5652.98,
+    "outflow_sgd": 10747.04,
+    "closing_balance_sgd": 22516.03,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0033",
+    "month": "2026-06",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8959.02,
+    "card_settlement_sgd": 5781.59,
+    "outflow_sgd": 11701.17,
+    "closing_balance_sgd": 25555.47,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-07",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 7855.53,
+    "card_settlement_sgd": 6237.73,
+    "outflow_sgd": 10741.47,
+    "closing_balance_sgd": 6647.63,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-08",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6888.18,
+    "card_settlement_sgd": 5829.3,
+    "outflow_sgd": 11258.24,
+    "closing_balance_sgd": 8106.87,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-09",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6960.39,
+    "card_settlement_sgd": 4455.21,
+    "outflow_sgd": 9727.37,
+    "closing_balance_sgd": 9795.1,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-10",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 6593.46,
+    "card_settlement_sgd": 3763.09,
+    "outflow_sgd": 8203.19,
+    "closing_balance_sgd": 11948.46,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-11",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 5972.98,
+    "card_settlement_sgd": 4032.27,
+    "outflow_sgd": 9496.71,
+    "closing_balance_sgd": 12457.0,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2025-12",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7615.22,
+    "card_settlement_sgd": 4655.39,
+    "outflow_sgd": 10779.36,
+    "closing_balance_sgd": 13948.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-01",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6587.21,
+    "card_settlement_sgd": 5141.8,
+    "outflow_sgd": 9147.07,
+    "closing_balance_sgd": 16530.19,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-02",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7552.21,
+    "card_settlement_sgd": 5942.74,
+    "outflow_sgd": 11617.75,
+    "closing_balance_sgd": 18407.39,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-03",
+    "paynow_inflow_count": 25,
+    "paynow_inflow_sgd": 6590.47,
+    "card_settlement_sgd": 4115.13,
+    "outflow_sgd": 9725.9,
+    "closing_balance_sgd": 19387.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-04",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7029.12,
+    "card_settlement_sgd": 4427.16,
+    "outflow_sgd": 9293.32,
+    "closing_balance_sgd": 21550.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-05",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6133.09,
+    "card_settlement_sgd": 4745.65,
+    "outflow_sgd": 9079.09,
+    "closing_balance_sgd": 23349.7,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0035",
+    "month": "2026-06",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6790.99,
+    "card_settlement_sgd": 3947.2,
+    "outflow_sgd": 9460.42,
+    "closing_balance_sgd": 24627.47,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2025-12",
+    "paynow_inflow_count": 58,
+    "paynow_inflow_sgd": 24851.49,
+    "card_settlement_sgd": 15873.76,
+    "outflow_sgd": 35571.48,
+    "closing_balance_sgd": 15135.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 18242.61,
+    "card_settlement_sgd": 10623.79,
+    "outflow_sgd": 24331.13,
+    "closing_balance_sgd": 19670.36,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 25058.86,
+    "card_settlement_sgd": 15957.59,
+    "outflow_sgd": 35061.34,
+    "closing_balance_sgd": 25625.47,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-03",
+    "paynow_inflow_count": 30,
+    "paynow_inflow_sgd": 19980.5,
+    "card_settlement_sgd": 11930.36,
+    "outflow_sgd": 27787.31,
+    "closing_balance_sgd": 29749.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-04",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 20058.99,
+    "card_settlement_sgd": 17023.34,
+    "outflow_sgd": 33154.66,
+    "closing_balance_sgd": 33676.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-05",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 20612.49,
+    "card_settlement_sgd": 14596.43,
+    "outflow_sgd": 29124.36,
+    "closing_balance_sgd": 39761.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0038",
+    "month": "2026-06",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 20972.78,
+    "card_settlement_sgd": 15156.15,
+    "outflow_sgd": 29006.1,
+    "closing_balance_sgd": 46884.08,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-07",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 22592.65,
+    "card_settlement_sgd": 17876.4,
+    "outflow_sgd": 36754.89,
+    "closing_balance_sgd": 14546.91,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-08",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 23442.87,
+    "card_settlement_sgd": 16990.67,
+    "outflow_sgd": 32567.65,
+    "closing_balance_sgd": 22412.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-09",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 24182.78,
+    "card_settlement_sgd": 16477.59,
+    "outflow_sgd": 38371.5,
+    "closing_balance_sgd": 24701.67,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-10",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 23385.19,
+    "card_settlement_sgd": 18489.38,
+    "outflow_sgd": 31898.19,
+    "closing_balance_sgd": 34678.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-11",
+    "paynow_inflow_count": 52,
+    "paynow_inflow_sgd": 21199.97,
+    "card_settlement_sgd": 15889.33,
+    "outflow_sgd": 28296.24,
+    "closing_balance_sgd": 43471.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2025-12",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 28565.35,
+    "card_settlement_sgd": 22570.18,
+    "outflow_sgd": 39099.71,
+    "closing_balance_sgd": 55506.93,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-01",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 25855.23,
+    "card_settlement_sgd": 18790.05,
+    "outflow_sgd": 41394.25,
+    "closing_balance_sgd": 58757.96,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 22463.71,
+    "card_settlement_sgd": 15534.82,
+    "outflow_sgd": 34767.09,
+    "closing_balance_sgd": 61989.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-03",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 23058.84,
+    "card_settlement_sgd": 14478.78,
+    "outflow_sgd": 30588.24,
+    "closing_balance_sgd": 68938.78,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-04",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 15793.19,
+    "card_settlement_sgd": 12453.51,
+    "outflow_sgd": 22422.28,
+    "closing_balance_sgd": 74763.2,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-05",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 23630.85,
+    "card_settlement_sgd": 18028.05,
+    "outflow_sgd": 37230.03,
+    "closing_balance_sgd": 79192.07,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0040",
+    "month": "2026-06",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 22061.1,
+    "card_settlement_sgd": 13670.5,
+    "outflow_sgd": 26919.54,
+    "closing_balance_sgd": 88004.13,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-07",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 18635.66,
+    "card_settlement_sgd": 13595.88,
+    "outflow_sgd": 24485.69,
+    "closing_balance_sgd": 18047.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-08",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 21363.34,
+    "card_settlement_sgd": 18034.58,
+    "outflow_sgd": 34298.19,
+    "closing_balance_sgd": 23147.54,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-09",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 19371.1,
+    "card_settlement_sgd": 15210.85,
+    "outflow_sgd": 28595.94,
+    "closing_balance_sgd": 29133.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-10",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 21468.3,
+    "card_settlement_sgd": 17974.95,
+    "outflow_sgd": 34190.44,
+    "closing_balance_sgd": 34386.36,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-11",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 21380.06,
+    "card_settlement_sgd": 16237.46,
+    "outflow_sgd": 33572.05,
+    "closing_balance_sgd": 38431.83,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2025-12",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 25217.97,
+    "card_settlement_sgd": 18352.22,
+    "outflow_sgd": 34604.32,
+    "closing_balance_sgd": 47397.7,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-01",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 22222.89,
+    "card_settlement_sgd": 14961.17,
+    "outflow_sgd": 32283.77,
+    "closing_balance_sgd": 52297.99,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-02",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 20072.62,
+    "card_settlement_sgd": 14327.64,
+    "outflow_sgd": 27412.73,
+    "closing_balance_sgd": 59285.52,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-03",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 17839.3,
+    "card_settlement_sgd": 12821.52,
+    "outflow_sgd": 25378.4,
+    "closing_balance_sgd": 64567.94,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-04",
+    "paynow_inflow_count": 21,
+    "paynow_inflow_sgd": 17319.21,
+    "card_settlement_sgd": 10309.8,
+    "outflow_sgd": 25490.67,
+    "closing_balance_sgd": 66706.28,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-05",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 22714.19,
+    "card_settlement_sgd": 13751.79,
+    "outflow_sgd": 33868.86,
+    "closing_balance_sgd": 69303.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0047",
+    "month": "2026-06",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 22692.53,
+    "card_settlement_sgd": 13479.49,
+    "outflow_sgd": 29895.61,
+    "closing_balance_sgd": 75579.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2025-10",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6190.05,
+    "card_settlement_sgd": 4999.85,
+    "outflow_sgd": 9076.95,
+    "closing_balance_sgd": 5408.79,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2025-11",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7290.61,
+    "card_settlement_sgd": 5565.48,
+    "outflow_sgd": 10562.42,
+    "closing_balance_sgd": 7702.46,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2025-12",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 8170.65,
+    "card_settlement_sgd": 6648.91,
+    "outflow_sgd": 11268.95,
+    "closing_balance_sgd": 11253.07,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-01",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 7132.43,
+    "card_settlement_sgd": 5627.69,
+    "outflow_sgd": 10216.43,
+    "closing_balance_sgd": 13796.76,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-02",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7792.94,
+    "card_settlement_sgd": 5012.95,
+    "outflow_sgd": 10168.77,
+    "closing_balance_sgd": 16433.88,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-03",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7667.69,
+    "card_settlement_sgd": 4915.87,
+    "outflow_sgd": 10131.66,
+    "closing_balance_sgd": 18885.78,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-04",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 5632.12,
+    "card_settlement_sgd": 3652.06,
+    "outflow_sgd": 8524.35,
+    "closing_balance_sgd": 19645.61,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-05",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6501.87,
+    "card_settlement_sgd": 3796.39,
+    "outflow_sgd": 9653.78,
+    "closing_balance_sgd": 20290.09,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0057",
+    "month": "2026-06",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 8167.68,
+    "card_settlement_sgd": 5262.2,
+    "outflow_sgd": 10434.03,
+    "closing_balance_sgd": 23285.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-07",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 7238.34,
+    "card_settlement_sgd": 5312.02,
+    "outflow_sgd": 9840.58,
+    "closing_balance_sgd": 6005.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-08",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6157.07,
+    "card_settlement_sgd": 4663.94,
+    "outflow_sgd": 9594.75,
+    "closing_balance_sgd": 7231.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-09",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7052.49,
+    "card_settlement_sgd": 4707.92,
+    "outflow_sgd": 10025.0,
+    "closing_balance_sgd": 8967.29,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-10",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 6300.22,
+    "card_settlement_sgd": 3702.99,
+    "outflow_sgd": 7684.51,
+    "closing_balance_sgd": 11285.99,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7857.86,
+    "card_settlement_sgd": 5846.2,
+    "outflow_sgd": 12692.62,
+    "closing_balance_sgd": 12297.43,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2025-12",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8011.58,
+    "card_settlement_sgd": 4472.32,
+    "outflow_sgd": 9945.61,
+    "closing_balance_sgd": 14835.72,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-01",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5957.27,
+    "card_settlement_sgd": 3371.42,
+    "outflow_sgd": 7695.14,
+    "closing_balance_sgd": 16469.27,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-02",
+    "paynow_inflow_count": 52,
+    "paynow_inflow_sgd": 7716.61,
+    "card_settlement_sgd": 4793.83,
+    "outflow_sgd": 10488.99,
+    "closing_balance_sgd": 18490.72,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-03",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 7010.82,
+    "card_settlement_sgd": 3952.17,
+    "outflow_sgd": 8505.99,
+    "closing_balance_sgd": 20947.72,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-04",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 7218.52,
+    "card_settlement_sgd": 4224.67,
+    "outflow_sgd": 8773.76,
+    "closing_balance_sgd": 23617.15,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6200.88,
+    "card_settlement_sgd": 4240.47,
+    "outflow_sgd": 9046.13,
+    "closing_balance_sgd": 25012.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0058",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7046.93,
+    "card_settlement_sgd": 4171.22,
+    "outflow_sgd": 9779.02,
+    "closing_balance_sgd": 26451.5,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2025-12",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 21465.93,
+    "card_settlement_sgd": 13331.4,
+    "outflow_sgd": 27139.45,
+    "closing_balance_sgd": 16454.74,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-01",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 22447.79,
+    "card_settlement_sgd": 12697.85,
+    "outflow_sgd": 26637.45,
+    "closing_balance_sgd": 24962.93,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-02",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 22274.18,
+    "card_settlement_sgd": 15648.64,
+    "outflow_sgd": 28461.9,
+    "closing_balance_sgd": 34423.85,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-03",
+    "paynow_inflow_count": 22,
+    "paynow_inflow_sgd": 17085.31,
+    "card_settlement_sgd": 12640.73,
+    "outflow_sgd": 24481.03,
+    "closing_balance_sgd": 39668.86,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-04",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 16106.93,
+    "card_settlement_sgd": 12017.76,
+    "outflow_sgd": 24782.88,
+    "closing_balance_sgd": 43010.67,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-05",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 18100.09,
+    "card_settlement_sgd": 14685.39,
+    "outflow_sgd": 30997.9,
+    "closing_balance_sgd": 44798.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0062",
+    "month": "2026-06",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 19363.64,
+    "card_settlement_sgd": 11345.22,
+    "outflow_sgd": 27488.87,
+    "closing_balance_sgd": 48018.24,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-07",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 5777.88,
+    "card_settlement_sgd": 3331.41,
+    "outflow_sgd": 7944.63,
+    "closing_balance_sgd": 4790.08,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-08",
+    "paynow_inflow_count": 55,
+    "paynow_inflow_sgd": 7707.02,
+    "card_settlement_sgd": 5937.16,
+    "outflow_sgd": 10659.42,
+    "closing_balance_sgd": 7774.84,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-09",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 7805.4,
+    "card_settlement_sgd": 4456.55,
+    "outflow_sgd": 9203.95,
+    "closing_balance_sgd": 10832.84,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-10",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 6541.07,
+    "card_settlement_sgd": 5500.18,
+    "outflow_sgd": 9188.51,
+    "closing_balance_sgd": 13685.58,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-11",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 8292.0,
+    "card_settlement_sgd": 6472.31,
+    "outflow_sgd": 13460.41,
+    "closing_balance_sgd": 14989.48,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2025-12",
+    "paynow_inflow_count": 59,
+    "paynow_inflow_sgd": 8514.52,
+    "card_settlement_sgd": 6310.81,
+    "outflow_sgd": 13908.24,
+    "closing_balance_sgd": 15906.57,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-01",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 8529.55,
+    "card_settlement_sgd": 5225.72,
+    "outflow_sgd": 12989.64,
+    "closing_balance_sgd": 16672.2,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-02",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 8364.51,
+    "card_settlement_sgd": 6447.05,
+    "outflow_sgd": 12031.25,
+    "closing_balance_sgd": 19452.51,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-03",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 7478.29,
+    "card_settlement_sgd": 6189.98,
+    "outflow_sgd": 10806.98,
+    "closing_balance_sgd": 22313.8,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-04",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 5974.27,
+    "card_settlement_sgd": 3522.41,
+    "outflow_sgd": 7708.97,
+    "closing_balance_sgd": 24101.51,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6548.65,
+    "card_settlement_sgd": 5052.4,
+    "outflow_sgd": 10620.11,
+    "closing_balance_sgd": 25082.45,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0063",
+    "month": "2026-06",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 6430.39,
+    "card_settlement_sgd": 4224.81,
+    "outflow_sgd": 8596.19,
+    "closing_balance_sgd": 27141.46,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2025-09",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6358.5,
+    "card_settlement_sgd": 5091.69,
+    "outflow_sgd": 9251.47,
+    "closing_balance_sgd": 5494.56,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2025-10",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6903.49,
+    "card_settlement_sgd": 4493.34,
+    "outflow_sgd": 8930.34,
+    "closing_balance_sgd": 7961.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7525.03,
+    "card_settlement_sgd": 5524.03,
+    "outflow_sgd": 11679.31,
+    "closing_balance_sgd": 9330.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2025-12",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7410.69,
+    "card_settlement_sgd": 6080.05,
+    "outflow_sgd": 10476.56,
+    "closing_balance_sgd": 12344.98,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7280.78,
+    "card_settlement_sgd": 4277.83,
+    "outflow_sgd": 9443.68,
+    "closing_balance_sgd": 14459.91,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 7358.08,
+    "card_settlement_sgd": 4375.22,
+    "outflow_sgd": 10109.87,
+    "closing_balance_sgd": 16083.34,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-03",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5938.5,
+    "card_settlement_sgd": 4786.1,
+    "outflow_sgd": 9579.13,
+    "closing_balance_sgd": 17228.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-04",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7036.01,
+    "card_settlement_sgd": 5206.51,
+    "outflow_sgd": 10988.76,
+    "closing_balance_sgd": 18482.57,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-05",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6655.5,
+    "card_settlement_sgd": 4310.68,
+    "outflow_sgd": 10098.73,
+    "closing_balance_sgd": 19350.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0065",
+    "month": "2026-06",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 7051.42,
+    "card_settlement_sgd": 5298.52,
+    "outflow_sgd": 9733.27,
+    "closing_balance_sgd": 21966.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-07",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 6212.47,
+    "card_settlement_sgd": 5053.64,
+    "outflow_sgd": 8450.21,
+    "closing_balance_sgd": 6111.74,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-08",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 5945.98,
+    "card_settlement_sgd": 3542.61,
+    "outflow_sgd": 8200.32,
+    "closing_balance_sgd": 7400.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-09",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 5871.3,
+    "card_settlement_sgd": 3394.85,
+    "outflow_sgd": 8031.46,
+    "closing_balance_sgd": 8634.7,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-10",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6231.18,
+    "card_settlement_sgd": 5036.9,
+    "outflow_sgd": 9078.05,
+    "closing_balance_sgd": 10824.73,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-11",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 6715.33,
+    "card_settlement_sgd": 4494.53,
+    "outflow_sgd": 10180.82,
+    "closing_balance_sgd": 11853.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2025-12",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 6451.24,
+    "card_settlement_sgd": 4700.39,
+    "outflow_sgd": 9465.29,
+    "closing_balance_sgd": 13540.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7121.52,
+    "card_settlement_sgd": 4703.45,
+    "outflow_sgd": 9653.33,
+    "closing_balance_sgd": 15711.75,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-02",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7636.29,
+    "card_settlement_sgd": 6043.06,
+    "outflow_sgd": 10486.0,
+    "closing_balance_sgd": 18905.1,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-03",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 6380.54,
+    "card_settlement_sgd": 5234.54,
+    "outflow_sgd": 9296.01,
+    "closing_balance_sgd": 21224.17,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7046.5,
+    "card_settlement_sgd": 4460.58,
+    "outflow_sgd": 8919.81,
+    "closing_balance_sgd": 23811.44,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-05",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6781.87,
+    "card_settlement_sgd": 3755.28,
+    "outflow_sgd": 8771.96,
+    "closing_balance_sgd": 25576.63,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0068",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6427.68,
+    "card_settlement_sgd": 3553.38,
+    "outflow_sgd": 8506.39,
+    "closing_balance_sgd": 27051.3,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-07",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 5530.08,
+    "card_settlement_sgd": 4580.39,
+    "outflow_sgd": 7669.06,
+    "closing_balance_sgd": 5407.66,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-08",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 5601.34,
+    "card_settlement_sgd": 3762.1,
+    "outflow_sgd": 7867.37,
+    "closing_balance_sgd": 6903.73,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-09",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 5482.92,
+    "card_settlement_sgd": 3608.82,
+    "outflow_sgd": 7830.89,
+    "closing_balance_sgd": 8164.58,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-10",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 5813.15,
+    "card_settlement_sgd": 4931.85,
+    "outflow_sgd": 8789.64,
+    "closing_balance_sgd": 10119.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-11",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 5615.22,
+    "card_settlement_sgd": 3856.22,
+    "outflow_sgd": 8327.75,
+    "closing_balance_sgd": 11263.63,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2025-12",
+    "paynow_inflow_count": 55,
+    "paynow_inflow_sgd": 8092.03,
+    "card_settlement_sgd": 5109.17,
+    "outflow_sgd": 11155.33,
+    "closing_balance_sgd": 13309.5,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-01",
+    "paynow_inflow_count": 54,
+    "paynow_inflow_sgd": 5286.83,
+    "card_settlement_sgd": 3646.7,
+    "outflow_sgd": 6980.71,
+    "closing_balance_sgd": 15262.32,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 5107.19,
+    "card_settlement_sgd": 3514.34,
+    "outflow_sgd": 7127.5,
+    "closing_balance_sgd": 16756.35,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-03",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6026.04,
+    "card_settlement_sgd": 3323.86,
+    "outflow_sgd": 7199.31,
+    "closing_balance_sgd": 18906.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-04",
+    "paynow_inflow_count": 30,
+    "paynow_inflow_sgd": 6821.97,
+    "card_settlement_sgd": 4295.32,
+    "outflow_sgd": 10473.65,
+    "closing_balance_sgd": 19550.58,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-05",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 5433.27,
+    "card_settlement_sgd": 3368.59,
+    "outflow_sgd": 7772.21,
+    "closing_balance_sgd": 20580.23,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0071",
+    "month": "2026-06",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6358.37,
+    "card_settlement_sgd": 4145.58,
+    "outflow_sgd": 8868.49,
+    "closing_balance_sgd": 22215.69,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-07",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 9267.09,
+    "card_settlement_sgd": 7200.8,
+    "outflow_sgd": 12760.52,
+    "closing_balance_sgd": 7332.79,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-08",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7272.4,
+    "card_settlement_sgd": 5848.25,
+    "outflow_sgd": 10583.01,
+    "closing_balance_sgd": 9870.43,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-09",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 7271.16,
+    "card_settlement_sgd": 5084.94,
+    "outflow_sgd": 10722.44,
+    "closing_balance_sgd": 11504.09,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-10",
+    "paynow_inflow_count": 52,
+    "paynow_inflow_sgd": 7669.1,
+    "card_settlement_sgd": 5173.5,
+    "outflow_sgd": 10965.57,
+    "closing_balance_sgd": 13381.12,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-11",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 8137.19,
+    "card_settlement_sgd": 6556.49,
+    "outflow_sgd": 11962.88,
+    "closing_balance_sgd": 16111.92,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2025-12",
+    "paynow_inflow_count": 53,
+    "paynow_inflow_sgd": 9206.77,
+    "card_settlement_sgd": 5509.77,
+    "outflow_sgd": 12385.48,
+    "closing_balance_sgd": 18442.98,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7542.18,
+    "card_settlement_sgd": 5404.47,
+    "outflow_sgd": 9796.53,
+    "closing_balance_sgd": 21593.1,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 6839.76,
+    "card_settlement_sgd": 4526.07,
+    "outflow_sgd": 9377.48,
+    "closing_balance_sgd": 23581.45,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-03",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6831.92,
+    "card_settlement_sgd": 5242.12,
+    "outflow_sgd": 9495.93,
+    "closing_balance_sgd": 26159.56,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-04",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 7904.07,
+    "card_settlement_sgd": 6405.33,
+    "outflow_sgd": 12321.71,
+    "closing_balance_sgd": 28147.25,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-05",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5768.99,
+    "card_settlement_sgd": 3577.77,
+    "outflow_sgd": 8702.42,
+    "closing_balance_sgd": 28791.59,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0072",
+    "month": "2026-06",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7500.09,
+    "card_settlement_sgd": 4250.76,
+    "outflow_sgd": 9186.04,
+    "closing_balance_sgd": 31356.4,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-07",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 5513.8,
+    "card_settlement_sgd": 3392.16,
+    "outflow_sgd": 7674.35,
+    "closing_balance_sgd": 4527.45,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-08",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 5275.6,
+    "card_settlement_sgd": 3708.48,
+    "outflow_sgd": 8387.3,
+    "closing_balance_sgd": 5124.23,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-09",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 4968.44,
+    "card_settlement_sgd": 2859.32,
+    "outflow_sgd": 6413.44,
+    "closing_balance_sgd": 6538.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-10",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6115.87,
+    "card_settlement_sgd": 5138.7,
+    "outflow_sgd": 10151.77,
+    "closing_balance_sgd": 7641.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-11",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7235.93,
+    "card_settlement_sgd": 5164.64,
+    "outflow_sgd": 9597.5,
+    "closing_balance_sgd": 10444.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2025-12",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7476.95,
+    "card_settlement_sgd": 5592.03,
+    "outflow_sgd": 9982.63,
+    "closing_balance_sgd": 13530.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-01",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6899.02,
+    "card_settlement_sgd": 3870.0,
+    "outflow_sgd": 8806.7,
+    "closing_balance_sgd": 15493.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-02",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 8871.49,
+    "card_settlement_sgd": 6485.14,
+    "outflow_sgd": 12240.17,
+    "closing_balance_sgd": 18609.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-03",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 6145.07,
+    "card_settlement_sgd": 4943.53,
+    "outflow_sgd": 9403.35,
+    "closing_balance_sgd": 20294.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-04",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 5762.93,
+    "card_settlement_sgd": 3956.8,
+    "outflow_sgd": 9015.63,
+    "closing_balance_sgd": 20998.9,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-05",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 4601.72,
+    "card_settlement_sgd": 3306.52,
+    "outflow_sgd": 6112.26,
+    "closing_balance_sgd": 22794.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0076",
+    "month": "2026-06",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7044.8,
+    "card_settlement_sgd": 4871.75,
+    "outflow_sgd": 9633.32,
+    "closing_balance_sgd": 25078.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0077",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 6549.19,
+    "card_settlement_sgd": 4000.84,
+    "outflow_sgd": 9427.02,
+    "closing_balance_sgd": 4089.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0077",
+    "month": "2026-03",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6124.23,
+    "card_settlement_sgd": 3605.88,
+    "outflow_sgd": 7435.09,
+    "closing_balance_sgd": 6384.28,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0077",
+    "month": "2026-04",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 5522.63,
+    "card_settlement_sgd": 3197.59,
+    "outflow_sgd": 7695.08,
+    "closing_balance_sgd": 7409.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0077",
+    "month": "2026-05",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5815.44,
+    "card_settlement_sgd": 3253.62,
+    "outflow_sgd": 6913.26,
+    "closing_balance_sgd": 9565.22,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0077",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 4952.96,
+    "card_settlement_sgd": 3454.15,
+    "outflow_sgd": 7794.68,
+    "closing_balance_sgd": 10177.65,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2025-12",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 8761.94,
+    "card_settlement_sgd": 4835.88,
+    "outflow_sgd": 10953.62,
+    "closing_balance_sgd": 6269.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7666.18,
+    "card_settlement_sgd": 6123.19,
+    "outflow_sgd": 11396.19,
+    "closing_balance_sgd": 8662.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-02",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 8560.78,
+    "card_settlement_sgd": 6825.09,
+    "outflow_sgd": 13269.67,
+    "closing_balance_sgd": 10779.0,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-03",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6050.87,
+    "card_settlement_sgd": 3827.5,
+    "outflow_sgd": 7622.63,
+    "closing_balance_sgd": 13034.74,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-04",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7112.75,
+    "card_settlement_sgd": 5851.56,
+    "outflow_sgd": 10834.29,
+    "closing_balance_sgd": 15164.76,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-05",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6658.24,
+    "card_settlement_sgd": 4652.86,
+    "outflow_sgd": 9237.95,
+    "closing_balance_sgd": 17237.91,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0078",
+    "month": "2026-06",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6553.76,
+    "card_settlement_sgd": 3993.64,
+    "outflow_sgd": 9804.5,
+    "closing_balance_sgd": 17980.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-07",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 18117.85,
+    "card_settlement_sgd": 11700.13,
+    "outflow_sgd": 25643.65,
+    "closing_balance_sgd": 13712.56,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-08",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 16009.47,
+    "card_settlement_sgd": 10069.21,
+    "outflow_sgd": 23697.75,
+    "closing_balance_sgd": 16093.49,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-09",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 18037.2,
+    "card_settlement_sgd": 13835.19,
+    "outflow_sgd": 24257.58,
+    "closing_balance_sgd": 23708.3,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-10",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 22358.94,
+    "card_settlement_sgd": 18665.89,
+    "outflow_sgd": 36343.42,
+    "closing_balance_sgd": 28389.71,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-11",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 20540.8,
+    "card_settlement_sgd": 17359.63,
+    "outflow_sgd": 35394.42,
+    "closing_balance_sgd": 30895.72,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2025-12",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 22479.93,
+    "card_settlement_sgd": 14006.09,
+    "outflow_sgd": 32370.23,
+    "closing_balance_sgd": 35011.51,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 20655.31,
+    "card_settlement_sgd": 12831.8,
+    "outflow_sgd": 28595.12,
+    "closing_balance_sgd": 39903.5,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 21810.12,
+    "card_settlement_sgd": 13226.43,
+    "outflow_sgd": 29613.59,
+    "closing_balance_sgd": 45326.46,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-03",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 18089.25,
+    "card_settlement_sgd": 13654.77,
+    "outflow_sgd": 27694.28,
+    "closing_balance_sgd": 49376.2,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-04",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 17795.39,
+    "card_settlement_sgd": 13559.86,
+    "outflow_sgd": 27098.31,
+    "closing_balance_sgd": 53633.14,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-05",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 21916.94,
+    "card_settlement_sgd": 16294.33,
+    "outflow_sgd": 31768.32,
+    "closing_balance_sgd": 60076.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0081",
+    "month": "2026-06",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 19652.13,
+    "card_settlement_sgd": 16027.2,
+    "outflow_sgd": 33808.0,
+    "closing_balance_sgd": 61947.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0086",
+    "month": "2026-05",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 25337.31,
+    "card_settlement_sgd": 15423.17,
+    "outflow_sgd": 35546.3,
+    "closing_balance_sgd": 18494.15,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0086",
+    "month": "2026-06",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 31030.33,
+    "card_settlement_sgd": 20347.29,
+    "outflow_sgd": 46133.89,
+    "closing_balance_sgd": 23737.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0091",
+    "month": "2026-02",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 9665.43,
+    "card_settlement_sgd": 5560.74,
+    "outflow_sgd": 11932.55,
+    "closing_balance_sgd": 7248.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0091",
+    "month": "2026-03",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7206.17,
+    "card_settlement_sgd": 4126.82,
+    "outflow_sgd": 10632.55,
+    "closing_balance_sgd": 7949.06,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0091",
+    "month": "2026-04",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 9158.02,
+    "card_settlement_sgd": 6652.2,
+    "outflow_sgd": 13727.59,
+    "closing_balance_sgd": 10031.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0091",
+    "month": "2026-05",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7092.49,
+    "card_settlement_sgd": 4037.55,
+    "outflow_sgd": 10431.72,
+    "closing_balance_sgd": 10730.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0091",
+    "month": "2026-06",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6427.26,
+    "card_settlement_sgd": 4515.68,
+    "outflow_sgd": 9876.48,
+    "closing_balance_sgd": 11796.47,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-07",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 21628.44,
+    "card_settlement_sgd": 15986.25,
+    "outflow_sgd": 31809.73,
+    "closing_balance_sgd": 17028.91,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-08",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 20719.59,
+    "card_settlement_sgd": 14958.29,
+    "outflow_sgd": 27308.44,
+    "closing_balance_sgd": 25398.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-09",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 23661.24,
+    "card_settlement_sgd": 17705.38,
+    "outflow_sgd": 35841.11,
+    "closing_balance_sgd": 30923.86,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-10",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 24921.27,
+    "card_settlement_sgd": 16034.21,
+    "outflow_sgd": 32622.39,
+    "closing_balance_sgd": 39256.95,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-11",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 21179.3,
+    "card_settlement_sgd": 16787.36,
+    "outflow_sgd": 29042.16,
+    "closing_balance_sgd": 48181.45,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2025-12",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 26344.78,
+    "card_settlement_sgd": 16860.68,
+    "outflow_sgd": 37741.87,
+    "closing_balance_sgd": 53645.04,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-01",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 23398.46,
+    "card_settlement_sgd": 16711.64,
+    "outflow_sgd": 31131.77,
+    "closing_balance_sgd": 62623.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-02",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 28039.36,
+    "card_settlement_sgd": 16172.83,
+    "outflow_sgd": 36006.7,
+    "closing_balance_sgd": 70828.86,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-03",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 23172.45,
+    "card_settlement_sgd": 13945.23,
+    "outflow_sgd": 29202.83,
+    "closing_balance_sgd": 78743.71,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-04",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 22797.37,
+    "card_settlement_sgd": 13690.01,
+    "outflow_sgd": 33651.22,
+    "closing_balance_sgd": 81579.87,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-05",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 23666.97,
+    "card_settlement_sgd": 19487.66,
+    "outflow_sgd": 38464.16,
+    "closing_balance_sgd": 86270.34,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0092",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 21669.01,
+    "card_settlement_sgd": 16981.15,
+    "outflow_sgd": 32190.47,
+    "closing_balance_sgd": 92730.03,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-07",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 6171.26,
+    "card_settlement_sgd": 3683.69,
+    "outflow_sgd": 7428.89,
+    "closing_balance_sgd": 5392.31,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-08",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 5442.24,
+    "card_settlement_sgd": 3620.58,
+    "outflow_sgd": 7706.95,
+    "closing_balance_sgd": 6748.18,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-09",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6834.24,
+    "card_settlement_sgd": 5503.34,
+    "outflow_sgd": 9875.55,
+    "closing_balance_sgd": 9210.21,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-10",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6495.43,
+    "card_settlement_sgd": 4673.39,
+    "outflow_sgd": 8775.51,
+    "closing_balance_sgd": 11603.52,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-11",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6497.91,
+    "card_settlement_sgd": 5152.53,
+    "outflow_sgd": 9293.92,
+    "closing_balance_sgd": 13960.04,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2025-12",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7059.16,
+    "card_settlement_sgd": 4387.37,
+    "outflow_sgd": 8677.15,
+    "closing_balance_sgd": 16729.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6630.17,
+    "card_settlement_sgd": 5582.04,
+    "outflow_sgd": 9376.62,
+    "closing_balance_sgd": 19565.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7062.43,
+    "card_settlement_sgd": 4102.38,
+    "outflow_sgd": 8860.59,
+    "closing_balance_sgd": 21869.23,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-03",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6189.18,
+    "card_settlement_sgd": 4255.69,
+    "outflow_sgd": 8813.09,
+    "closing_balance_sgd": 23501.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-04",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6220.05,
+    "card_settlement_sgd": 3454.66,
+    "outflow_sgd": 8060.57,
+    "closing_balance_sgd": 25115.15,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-05",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 5779.66,
+    "card_settlement_sgd": 4129.53,
+    "outflow_sgd": 9096.91,
+    "closing_balance_sgd": 25927.43,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0094",
+    "month": "2026-06",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6020.75,
+    "card_settlement_sgd": 4723.68,
+    "outflow_sgd": 9745.19,
+    "closing_balance_sgd": 26926.67,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2025-10",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 8737.05,
+    "card_settlement_sgd": 7335.8,
+    "outflow_sgd": 12789.64,
+    "closing_balance_sgd": 7238.21,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2025-11",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 9356.37,
+    "card_settlement_sgd": 6946.98,
+    "outflow_sgd": 12618.32,
+    "closing_balance_sgd": 10923.24,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2025-12",
+    "paynow_inflow_count": 52,
+    "paynow_inflow_sgd": 7562.38,
+    "card_settlement_sgd": 5215.95,
+    "outflow_sgd": 10987.87,
+    "closing_balance_sgd": 12713.7,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 8136.88,
+    "card_settlement_sgd": 5552.1,
+    "outflow_sgd": 12052.48,
+    "closing_balance_sgd": 14350.2,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8574.5,
+    "card_settlement_sgd": 4955.67,
+    "outflow_sgd": 12847.26,
+    "closing_balance_sgd": 15033.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-03",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 9101.82,
+    "card_settlement_sgd": 5937.68,
+    "outflow_sgd": 12598.08,
+    "closing_balance_sgd": 17474.53,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-04",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 7413.87,
+    "card_settlement_sgd": 4568.46,
+    "outflow_sgd": 10202.25,
+    "closing_balance_sgd": 19254.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-05",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 8437.04,
+    "card_settlement_sgd": 5264.42,
+    "outflow_sgd": 10760.34,
+    "closing_balance_sgd": 22195.73,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0102",
+    "month": "2026-06",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 8557.65,
+    "card_settlement_sgd": 7159.51,
+    "outflow_sgd": 11906.89,
+    "closing_balance_sgd": 26006.0,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2025-09",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 8175.68,
+    "card_settlement_sgd": 5917.41,
+    "outflow_sgd": 11815.88,
+    "closing_balance_sgd": 5902.63,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2025-10",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 8257.21,
+    "card_settlement_sgd": 4571.66,
+    "outflow_sgd": 10154.25,
+    "closing_balance_sgd": 8577.25,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7930.3,
+    "card_settlement_sgd": 5832.55,
+    "outflow_sgd": 12379.65,
+    "closing_balance_sgd": 9960.45,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2025-12",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 8725.01,
+    "card_settlement_sgd": 6666.01,
+    "outflow_sgd": 13315.7,
+    "closing_balance_sgd": 12035.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7067.04,
+    "card_settlement_sgd": 3962.62,
+    "outflow_sgd": 9644.43,
+    "closing_balance_sgd": 13421.0,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-02",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 8254.84,
+    "card_settlement_sgd": 4695.69,
+    "outflow_sgd": 9830.12,
+    "closing_balance_sgd": 16541.41,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-03",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6247.63,
+    "card_settlement_sgd": 3456.5,
+    "outflow_sgd": 8431.06,
+    "closing_balance_sgd": 17814.48,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-04",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 5504.27,
+    "card_settlement_sgd": 4586.38,
+    "outflow_sgd": 9278.87,
+    "closing_balance_sgd": 18626.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-05",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 8152.85,
+    "card_settlement_sgd": 5817.41,
+    "outflow_sgd": 12349.7,
+    "closing_balance_sgd": 20246.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0112",
+    "month": "2026-06",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7109.33,
+    "card_settlement_sgd": 4026.19,
+    "outflow_sgd": 10001.29,
+    "closing_balance_sgd": 21381.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-07",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6786.6,
+    "card_settlement_sgd": 5210.5,
+    "outflow_sgd": 10412.62,
+    "closing_balance_sgd": 5209.9,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-08",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 8023.76,
+    "card_settlement_sgd": 5769.33,
+    "outflow_sgd": 12089.12,
+    "closing_balance_sgd": 6913.87,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-09",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6957.03,
+    "card_settlement_sgd": 4094.35,
+    "outflow_sgd": 10005.22,
+    "closing_balance_sgd": 7960.03,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-10",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 9046.13,
+    "card_settlement_sgd": 7288.8,
+    "outflow_sgd": 13873.14,
+    "closing_balance_sgd": 10421.82,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-11",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6735.85,
+    "card_settlement_sgd": 4638.27,
+    "outflow_sgd": 9484.46,
+    "closing_balance_sgd": 12311.48,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2025-12",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 8884.12,
+    "card_settlement_sgd": 7526.64,
+    "outflow_sgd": 13186.02,
+    "closing_balance_sgd": 15536.22,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-01",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 7616.63,
+    "card_settlement_sgd": 6133.82,
+    "outflow_sgd": 12969.16,
+    "closing_balance_sgd": 16317.51,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-02",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 8277.38,
+    "card_settlement_sgd": 5816.33,
+    "outflow_sgd": 11016.45,
+    "closing_balance_sgd": 19394.77,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-03",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7439.09,
+    "card_settlement_sgd": 5522.48,
+    "outflow_sgd": 11265.49,
+    "closing_balance_sgd": 21090.85,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-04",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6932.66,
+    "card_settlement_sgd": 5163.81,
+    "outflow_sgd": 9627.74,
+    "closing_balance_sgd": 23559.58,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-05",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7122.29,
+    "card_settlement_sgd": 4231.84,
+    "outflow_sgd": 10631.43,
+    "closing_balance_sgd": 24282.28,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0114",
+    "month": "2026-06",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7596.59,
+    "card_settlement_sgd": 5666.59,
+    "outflow_sgd": 10627.45,
+    "closing_balance_sgd": 26918.01,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-07",
+    "paynow_inflow_count": 55,
+    "paynow_inflow_sgd": 5952.19,
+    "card_settlement_sgd": 4091.55,
+    "outflow_sgd": 9339.9,
+    "closing_balance_sgd": 4329.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-08",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7411.18,
+    "card_settlement_sgd": 5815.43,
+    "outflow_sgd": 11270.48,
+    "closing_balance_sgd": 6285.39,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-09",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6617.3,
+    "card_settlement_sgd": 3739.45,
+    "outflow_sgd": 7892.02,
+    "closing_balance_sgd": 8750.12,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-10",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6705.01,
+    "card_settlement_sgd": 4429.43,
+    "outflow_sgd": 8629.29,
+    "closing_balance_sgd": 11255.27,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-11",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 8449.87,
+    "card_settlement_sgd": 6498.79,
+    "outflow_sgd": 14019.65,
+    "closing_balance_sgd": 12184.28,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2025-12",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 8070.45,
+    "card_settlement_sgd": 6216.88,
+    "outflow_sgd": 13444.84,
+    "closing_balance_sgd": 13026.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-01",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 8530.45,
+    "card_settlement_sgd": 5416.12,
+    "outflow_sgd": 12040.21,
+    "closing_balance_sgd": 14933.13,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-02",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 8821.38,
+    "card_settlement_sgd": 5753.01,
+    "outflow_sgd": 11922.95,
+    "closing_balance_sgd": 17584.57,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-03",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 7922.07,
+    "card_settlement_sgd": 5455.11,
+    "outflow_sgd": 10623.38,
+    "closing_balance_sgd": 20338.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7654.82,
+    "card_settlement_sgd": 5365.96,
+    "outflow_sgd": 10086.22,
+    "closing_balance_sgd": 23272.93,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-05",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 6972.56,
+    "card_settlement_sgd": 5744.48,
+    "outflow_sgd": 10457.46,
+    "closing_balance_sgd": 25532.51,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0115",
+    "month": "2026-06",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7257.4,
+    "card_settlement_sgd": 4909.39,
+    "outflow_sgd": 10586.51,
+    "closing_balance_sgd": 27112.79,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-07",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7176.08,
+    "card_settlement_sgd": 5427.71,
+    "outflow_sgd": 9943.41,
+    "closing_balance_sgd": 6285.8,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-08",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5757.4,
+    "card_settlement_sgd": 3720.82,
+    "outflow_sgd": 8059.03,
+    "closing_balance_sgd": 7704.99,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-09",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7886.12,
+    "card_settlement_sgd": 6327.58,
+    "outflow_sgd": 12713.95,
+    "closing_balance_sgd": 9204.74,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-10",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7473.08,
+    "card_settlement_sgd": 4373.13,
+    "outflow_sgd": 10810.29,
+    "closing_balance_sgd": 10240.66,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-11",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 7581.0,
+    "card_settlement_sgd": 5681.72,
+    "outflow_sgd": 11433.57,
+    "closing_balance_sgd": 12069.81,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2025-12",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 9236.44,
+    "card_settlement_sgd": 7464.73,
+    "outflow_sgd": 14756.42,
+    "closing_balance_sgd": 14014.56,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-01",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 8828.16,
+    "card_settlement_sgd": 6840.94,
+    "outflow_sgd": 12920.71,
+    "closing_balance_sgd": 16762.95,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-02",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 8963.89,
+    "card_settlement_sgd": 5403.18,
+    "outflow_sgd": 12940.65,
+    "closing_balance_sgd": 18189.37,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-03",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6697.26,
+    "card_settlement_sgd": 4265.3,
+    "outflow_sgd": 10388.39,
+    "closing_balance_sgd": 18763.54,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-04",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5301.75,
+    "card_settlement_sgd": 4175.17,
+    "outflow_sgd": 8673.2,
+    "closing_balance_sgd": 19567.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-05",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 8077.14,
+    "card_settlement_sgd": 4837.8,
+    "outflow_sgd": 10645.11,
+    "closing_balance_sgd": 21837.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0116",
+    "month": "2026-06",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5609.8,
+    "card_settlement_sgd": 3873.48,
+    "outflow_sgd": 8659.29,
+    "closing_balance_sgd": 22661.08,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-07",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6376.92,
+    "card_settlement_sgd": 3798.3,
+    "outflow_sgd": 9348.9,
+    "closing_balance_sgd": 4122.16,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-08",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 5470.61,
+    "card_settlement_sgd": 4262.66,
+    "outflow_sgd": 7369.93,
+    "closing_balance_sgd": 6485.5,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-09",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 5786.09,
+    "card_settlement_sgd": 3317.79,
+    "outflow_sgd": 8372.12,
+    "closing_balance_sgd": 7217.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-10",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7433.21,
+    "card_settlement_sgd": 5514.33,
+    "outflow_sgd": 11348.88,
+    "closing_balance_sgd": 8815.92,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-11",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 8227.72,
+    "card_settlement_sgd": 6501.64,
+    "outflow_sgd": 11473.67,
+    "closing_balance_sgd": 12071.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2025-12",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 8631.32,
+    "card_settlement_sgd": 5018.74,
+    "outflow_sgd": 11344.24,
+    "closing_balance_sgd": 14377.43,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-01",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6810.13,
+    "card_settlement_sgd": 4853.48,
+    "outflow_sgd": 9230.02,
+    "closing_balance_sgd": 16811.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-02",
+    "paynow_inflow_count": 52,
+    "paynow_inflow_sgd": 7379.41,
+    "card_settlement_sgd": 4797.21,
+    "outflow_sgd": 9200.63,
+    "closing_balance_sgd": 19787.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-03",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6308.47,
+    "card_settlement_sgd": 4342.81,
+    "outflow_sgd": 8576.42,
+    "closing_balance_sgd": 21861.87,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-04",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6245.94,
+    "card_settlement_sgd": 3435.4,
+    "outflow_sgd": 8660.22,
+    "closing_balance_sgd": 22882.99,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-05",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6471.93,
+    "card_settlement_sgd": 4714.18,
+    "outflow_sgd": 9558.7,
+    "closing_balance_sgd": 24510.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0118",
+    "month": "2026-06",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 7896.53,
+    "card_settlement_sgd": 4918.05,
+    "outflow_sgd": 11361.74,
+    "closing_balance_sgd": 25963.24,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-07",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 5316.65,
+    "card_settlement_sgd": 3198.19,
+    "outflow_sgd": 7907.9,
+    "closing_balance_sgd": 3573.19,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-08",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6230.03,
+    "card_settlement_sgd": 3542.97,
+    "outflow_sgd": 7664.96,
+    "closing_balance_sgd": 5681.23,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-09",
+    "paynow_inflow_count": 26,
+    "paynow_inflow_sgd": 6067.01,
+    "card_settlement_sgd": 4776.64,
+    "outflow_sgd": 9613.0,
+    "closing_balance_sgd": 6911.88,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-10",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7149.8,
+    "card_settlement_sgd": 4359.74,
+    "outflow_sgd": 9606.03,
+    "closing_balance_sgd": 8815.39,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-11",
+    "paynow_inflow_count": 56,
+    "paynow_inflow_sgd": 6352.79,
+    "card_settlement_sgd": 5394.39,
+    "outflow_sgd": 9766.0,
+    "closing_balance_sgd": 10796.57,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2025-12",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7044.45,
+    "card_settlement_sgd": 5967.13,
+    "outflow_sgd": 12337.71,
+    "closing_balance_sgd": 11470.44,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-01",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6795.44,
+    "card_settlement_sgd": 5229.41,
+    "outflow_sgd": 9021.15,
+    "closing_balance_sgd": 14474.14,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6379.5,
+    "card_settlement_sgd": 4455.65,
+    "outflow_sgd": 10279.63,
+    "closing_balance_sgd": 15029.66,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-03",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 6392.66,
+    "card_settlement_sgd": 5177.07,
+    "outflow_sgd": 9242.11,
+    "closing_balance_sgd": 17357.28,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-04",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 5702.57,
+    "card_settlement_sgd": 3740.16,
+    "outflow_sgd": 7226.58,
+    "closing_balance_sgd": 19573.43,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-05",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6230.52,
+    "card_settlement_sgd": 4624.93,
+    "outflow_sgd": 8292.68,
+    "closing_balance_sgd": 22136.2,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0119",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6514.11,
+    "card_settlement_sgd": 3980.55,
+    "outflow_sgd": 8116.26,
+    "closing_balance_sgd": 24514.6,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-07",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6711.91,
+    "card_settlement_sgd": 4420.71,
+    "outflow_sgd": 8862.35,
+    "closing_balance_sgd": 5566.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-08",
+    "paynow_inflow_count": 23,
+    "paynow_inflow_sgd": 6722.39,
+    "card_settlement_sgd": 3744.09,
+    "outflow_sgd": 8518.74,
+    "closing_balance_sgd": 7513.85,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-09",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6967.69,
+    "card_settlement_sgd": 5254.39,
+    "outflow_sgd": 11104.5,
+    "closing_balance_sgd": 8631.43,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-10",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6356.61,
+    "card_settlement_sgd": 4763.59,
+    "outflow_sgd": 9590.28,
+    "closing_balance_sgd": 10161.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-11",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 7342.12,
+    "card_settlement_sgd": 5592.62,
+    "outflow_sgd": 10998.02,
+    "closing_balance_sgd": 12098.07,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2025-12",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6695.55,
+    "card_settlement_sgd": 5166.57,
+    "outflow_sgd": 9207.08,
+    "closing_balance_sgd": 14753.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-01",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7020.23,
+    "card_settlement_sgd": 5243.1,
+    "outflow_sgd": 9206.25,
+    "closing_balance_sgd": 17810.19,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-02",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 7166.31,
+    "card_settlement_sgd": 5124.37,
+    "outflow_sgd": 9681.13,
+    "closing_balance_sgd": 20419.74,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-03",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 5944.84,
+    "card_settlement_sgd": 4392.5,
+    "outflow_sgd": 9468.08,
+    "closing_balance_sgd": 21289.0,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-04",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6023.53,
+    "card_settlement_sgd": 3840.29,
+    "outflow_sgd": 7519.43,
+    "closing_balance_sgd": 23633.39,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-05",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6052.13,
+    "card_settlement_sgd": 4804.46,
+    "outflow_sgd": 9420.11,
+    "closing_balance_sgd": 25069.87,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0128",
+    "month": "2026-06",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7816.69,
+    "card_settlement_sgd": 4940.29,
+    "outflow_sgd": 11470.88,
+    "closing_balance_sgd": 26355.97,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-01",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 13710.14,
+    "card_settlement_sgd": 9099.12,
+    "outflow_sgd": 18639.82,
+    "closing_balance_sgd": 10619.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-02",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 16971.68,
+    "card_settlement_sgd": 12590.52,
+    "outflow_sgd": 28045.89,
+    "closing_balance_sgd": 12136.08,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-03",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 12407.89,
+    "card_settlement_sgd": 8751.8,
+    "outflow_sgd": 18726.14,
+    "closing_balance_sgd": 14569.63,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-04",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 13870.8,
+    "card_settlement_sgd": 11459.43,
+    "outflow_sgd": 21322.63,
+    "closing_balance_sgd": 18577.23,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-05",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 12437.07,
+    "card_settlement_sgd": 6983.13,
+    "outflow_sgd": 16673.19,
+    "closing_balance_sgd": 21324.24,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0134",
+    "month": "2026-06",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 14293.34,
+    "card_settlement_sgd": 8441.59,
+    "outflow_sgd": 20347.84,
+    "closing_balance_sgd": 23711.33,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-07",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6513.88,
+    "card_settlement_sgd": 3731.05,
+    "outflow_sgd": 8616.68,
+    "closing_balance_sgd": 4924.09,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-08",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6026.27,
+    "card_settlement_sgd": 4440.78,
+    "outflow_sgd": 9841.77,
+    "closing_balance_sgd": 5549.37,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-09",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7230.9,
+    "card_settlement_sgd": 5849.89,
+    "outflow_sgd": 10552.15,
+    "closing_balance_sgd": 8078.01,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-10",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7767.69,
+    "card_settlement_sgd": 5380.28,
+    "outflow_sgd": 10507.65,
+    "closing_balance_sgd": 10718.33,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-11",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6991.49,
+    "card_settlement_sgd": 4364.28,
+    "outflow_sgd": 9091.41,
+    "closing_balance_sgd": 12982.69,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2025-12",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 8520.11,
+    "card_settlement_sgd": 6309.04,
+    "outflow_sgd": 12586.67,
+    "closing_balance_sgd": 15225.17,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-01",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7313.43,
+    "card_settlement_sgd": 5331.0,
+    "outflow_sgd": 9530.06,
+    "closing_balance_sgd": 18339.54,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-02",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 8549.64,
+    "card_settlement_sgd": 5390.86,
+    "outflow_sgd": 11134.97,
+    "closing_balance_sgd": 21145.07,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-03",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 5784.61,
+    "card_settlement_sgd": 3863.31,
+    "outflow_sgd": 7429.52,
+    "closing_balance_sgd": 23363.47,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6602.52,
+    "card_settlement_sgd": 3683.93,
+    "outflow_sgd": 9092.9,
+    "closing_balance_sgd": 24557.02,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-05",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 5998.14,
+    "card_settlement_sgd": 4446.77,
+    "outflow_sgd": 8067.92,
+    "closing_balance_sgd": 26934.01,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0137",
+    "month": "2026-06",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6662.38,
+    "card_settlement_sgd": 4786.68,
+    "outflow_sgd": 9034.82,
+    "closing_balance_sgd": 29348.25,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-07",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6483.19,
+    "card_settlement_sgd": 4398.38,
+    "outflow_sgd": 9642.32,
+    "closing_balance_sgd": 4535.09,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-08",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 5935.39,
+    "card_settlement_sgd": 3336.59,
+    "outflow_sgd": 7680.26,
+    "closing_balance_sgd": 6126.81,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-09",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6117.97,
+    "card_settlement_sgd": 4541.69,
+    "outflow_sgd": 9834.83,
+    "closing_balance_sgd": 6951.64,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-10",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7032.8,
+    "card_settlement_sgd": 5220.01,
+    "outflow_sgd": 9339.35,
+    "closing_balance_sgd": 9865.1,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-11",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6432.71,
+    "card_settlement_sgd": 4929.65,
+    "outflow_sgd": 9868.41,
+    "closing_balance_sgd": 11359.05,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2025-12",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 7480.4,
+    "card_settlement_sgd": 4768.18,
+    "outflow_sgd": 9695.98,
+    "closing_balance_sgd": 13911.65,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-01",
+    "paynow_inflow_count": 24,
+    "paynow_inflow_sgd": 7153.14,
+    "card_settlement_sgd": 4916.42,
+    "outflow_sgd": 9770.2,
+    "closing_balance_sgd": 16211.01,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7315.98,
+    "card_settlement_sgd": 4518.04,
+    "outflow_sgd": 9756.24,
+    "closing_balance_sgd": 18288.79,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-03",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6657.97,
+    "card_settlement_sgd": 4066.67,
+    "outflow_sgd": 8928.23,
+    "closing_balance_sgd": 20085.2,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7169.58,
+    "card_settlement_sgd": 4748.99,
+    "outflow_sgd": 10611.53,
+    "closing_balance_sgd": 21392.24,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-05",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6689.06,
+    "card_settlement_sgd": 4996.96,
+    "outflow_sgd": 10408.97,
+    "closing_balance_sgd": 22669.29,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0139",
+    "month": "2026-06",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 5460.23,
+    "card_settlement_sgd": 4078.08,
+    "outflow_sgd": 8488.01,
+    "closing_balance_sgd": 23719.59,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2025-09",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 8506.35,
+    "card_settlement_sgd": 5807.34,
+    "outflow_sgd": 13225.01,
+    "closing_balance_sgd": 5043.68,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2025-10",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7863.13,
+    "card_settlement_sgd": 5827.92,
+    "outflow_sgd": 10753.47,
+    "closing_balance_sgd": 7981.26,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2025-11",
+    "paynow_inflow_count": 55,
+    "paynow_inflow_sgd": 6155.39,
+    "card_settlement_sgd": 4795.4,
+    "outflow_sgd": 8360.02,
+    "closing_balance_sgd": 10572.03,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2025-12",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 8861.75,
+    "card_settlement_sgd": 5594.67,
+    "outflow_sgd": 12489.02,
+    "closing_balance_sgd": 12539.43,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-01",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8264.7,
+    "card_settlement_sgd": 5981.17,
+    "outflow_sgd": 11578.48,
+    "closing_balance_sgd": 15206.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-02",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 10305.6,
+    "card_settlement_sgd": 6524.76,
+    "outflow_sgd": 13206.43,
+    "closing_balance_sgd": 18830.75,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-03",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6504.7,
+    "card_settlement_sgd": 4123.47,
+    "outflow_sgd": 9222.98,
+    "closing_balance_sgd": 20235.94,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-04",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 8498.04,
+    "card_settlement_sgd": 6440.88,
+    "outflow_sgd": 12062.21,
+    "closing_balance_sgd": 23112.65,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-05",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7609.8,
+    "card_settlement_sgd": 4470.8,
+    "outflow_sgd": 9823.78,
+    "closing_balance_sgd": 25369.47,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0142",
+    "month": "2026-06",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 8059.57,
+    "card_settlement_sgd": 5820.89,
+    "outflow_sgd": 11283.95,
+    "closing_balance_sgd": 27965.98,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-07",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7087.81,
+    "card_settlement_sgd": 5952.28,
+    "outflow_sgd": 12026.61,
+    "closing_balance_sgd": 4309.32,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-08",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7022.95,
+    "card_settlement_sgd": 4048.31,
+    "outflow_sgd": 10019.7,
+    "closing_balance_sgd": 5360.88,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-09",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6294.41,
+    "card_settlement_sgd": 4929.58,
+    "outflow_sgd": 9072.47,
+    "closing_balance_sgd": 7512.4,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-10",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 6345.92,
+    "card_settlement_sgd": 3519.7,
+    "outflow_sgd": 7667.91,
+    "closing_balance_sgd": 9710.11,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-11",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6182.21,
+    "card_settlement_sgd": 4673.09,
+    "outflow_sgd": 10063.6,
+    "closing_balance_sgd": 10501.81,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2025-12",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7568.42,
+    "card_settlement_sgd": 6421.14,
+    "outflow_sgd": 10706.7,
+    "closing_balance_sgd": 13784.67,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-01",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6959.71,
+    "card_settlement_sgd": 5089.4,
+    "outflow_sgd": 10740.29,
+    "closing_balance_sgd": 15093.49,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-02",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 8710.25,
+    "card_settlement_sgd": 5760.55,
+    "outflow_sgd": 13609.98,
+    "closing_balance_sgd": 15954.31,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-03",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 5953.25,
+    "card_settlement_sgd": 3980.57,
+    "outflow_sgd": 7901.77,
+    "closing_balance_sgd": 17986.36,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-04",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 5948.21,
+    "card_settlement_sgd": 4554.27,
+    "outflow_sgd": 9116.9,
+    "closing_balance_sgd": 19371.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-05",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6880.64,
+    "card_settlement_sgd": 3815.24,
+    "outflow_sgd": 9482.34,
+    "closing_balance_sgd": 20585.48,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0144",
+    "month": "2026-06",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6198.79,
+    "card_settlement_sgd": 4868.57,
+    "outflow_sgd": 9131.08,
+    "closing_balance_sgd": 22521.76,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-07",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6585.51,
+    "card_settlement_sgd": 5182.19,
+    "outflow_sgd": 11149.78,
+    "closing_balance_sgd": 4243.34,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-08",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6714.22,
+    "card_settlement_sgd": 4737.39,
+    "outflow_sgd": 9838.05,
+    "closing_balance_sgd": 5856.9,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-09",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6863.92,
+    "card_settlement_sgd": 5660.4,
+    "outflow_sgd": 11809.61,
+    "closing_balance_sgd": 6571.61,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-10",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7170.97,
+    "card_settlement_sgd": 5697.38,
+    "outflow_sgd": 11918.98,
+    "closing_balance_sgd": 7520.98,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-11",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7653.17,
+    "card_settlement_sgd": 5621.94,
+    "outflow_sgd": 10274.46,
+    "closing_balance_sgd": 10521.63,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2025-12",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 8210.87,
+    "card_settlement_sgd": 5693.64,
+    "outflow_sgd": 10704.4,
+    "closing_balance_sgd": 13721.74,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-01",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 6374.13,
+    "card_settlement_sgd": 4667.16,
+    "outflow_sgd": 10310.45,
+    "closing_balance_sgd": 14452.58,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-02",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6780.84,
+    "card_settlement_sgd": 5233.74,
+    "outflow_sgd": 9116.5,
+    "closing_balance_sgd": 17350.66,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-03",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 7074.75,
+    "card_settlement_sgd": 5697.63,
+    "outflow_sgd": 10231.62,
+    "closing_balance_sgd": 19891.42,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-04",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7406.06,
+    "card_settlement_sgd": 5176.15,
+    "outflow_sgd": 11217.12,
+    "closing_balance_sgd": 21256.51,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-05",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 8821.64,
+    "card_settlement_sgd": 6463.87,
+    "outflow_sgd": 13897.67,
+    "closing_balance_sgd": 22644.35,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0148",
+    "month": "2026-06",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 8281.84,
+    "card_settlement_sgd": 5665.77,
+    "outflow_sgd": 11880.18,
+    "closing_balance_sgd": 24711.78,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-07",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 6705.56,
+    "card_settlement_sgd": 4968.12,
+    "outflow_sgd": 10063.61,
+    "closing_balance_sgd": 4576.32,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-08",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5491.52,
+    "card_settlement_sgd": 3259.15,
+    "outflow_sgd": 7335.22,
+    "closing_balance_sgd": 5991.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-09",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7231.06,
+    "card_settlement_sgd": 4038.63,
+    "outflow_sgd": 10282.24,
+    "closing_balance_sgd": 6979.22,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-10",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6209.49,
+    "card_settlement_sgd": 4805.37,
+    "outflow_sgd": 10341.67,
+    "closing_balance_sgd": 7652.41,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-11",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 6826.97,
+    "card_settlement_sgd": 3932.86,
+    "outflow_sgd": 8491.74,
+    "closing_balance_sgd": 9920.5,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2025-12",
+    "paynow_inflow_count": 53,
+    "paynow_inflow_sgd": 6359.09,
+    "card_settlement_sgd": 5043.87,
+    "outflow_sgd": 10098.77,
+    "closing_balance_sgd": 11224.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-01",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6679.99,
+    "card_settlement_sgd": 4582.45,
+    "outflow_sgd": 9988.35,
+    "closing_balance_sgd": 12498.78,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-02",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7546.92,
+    "card_settlement_sgd": 6384.85,
+    "outflow_sgd": 11395.78,
+    "closing_balance_sgd": 15034.77,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-03",
+    "paynow_inflow_count": 50,
+    "paynow_inflow_sgd": 4989.17,
+    "card_settlement_sgd": 3301.64,
+    "outflow_sgd": 7035.76,
+    "closing_balance_sgd": 16289.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-04",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 5230.11,
+    "card_settlement_sgd": 3448.79,
+    "outflow_sgd": 7189.63,
+    "closing_balance_sgd": 17779.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-05",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6533.64,
+    "card_settlement_sgd": 3702.23,
+    "outflow_sgd": 9559.87,
+    "closing_balance_sgd": 18455.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0152",
+    "month": "2026-06",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 5919.54,
+    "card_settlement_sgd": 4642.54,
+    "outflow_sgd": 9980.29,
+    "closing_balance_sgd": 19036.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-01",
+    "paynow_inflow_count": 53,
+    "paynow_inflow_sgd": 7249.34,
+    "card_settlement_sgd": 4831.82,
+    "outflow_sgd": 9137.43,
+    "closing_balance_sgd": 6898.73,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-02",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 9433.49,
+    "card_settlement_sgd": 6722.93,
+    "outflow_sgd": 13622.54,
+    "closing_balance_sgd": 9432.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-03",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6684.6,
+    "card_settlement_sgd": 3942.44,
+    "outflow_sgd": 9332.25,
+    "closing_balance_sgd": 10727.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-04",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7454.44,
+    "card_settlement_sgd": 5439.71,
+    "outflow_sgd": 10564.38,
+    "closing_balance_sgd": 13057.17,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-05",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7735.28,
+    "card_settlement_sgd": 6427.6,
+    "outflow_sgd": 10671.72,
+    "closing_balance_sgd": 16548.33,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0153",
+    "month": "2026-06",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7479.7,
+    "card_settlement_sgd": 6041.31,
+    "outflow_sgd": 11104.96,
+    "closing_balance_sgd": 18964.38,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-07",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6480.66,
+    "card_settlement_sgd": 5227.53,
+    "outflow_sgd": 10042.58,
+    "closing_balance_sgd": 5291.03,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-08",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 7094.86,
+    "card_settlement_sgd": 5352.06,
+    "outflow_sgd": 10508.42,
+    "closing_balance_sgd": 7229.53,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-09",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7402.02,
+    "card_settlement_sgd": 5508.44,
+    "outflow_sgd": 11531.96,
+    "closing_balance_sgd": 8608.03,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-10",
+    "paynow_inflow_count": 30,
+    "paynow_inflow_sgd": 8820.24,
+    "card_settlement_sgd": 6863.87,
+    "outflow_sgd": 12054.5,
+    "closing_balance_sgd": 12237.64,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 8544.03,
+    "card_settlement_sgd": 7204.29,
+    "outflow_sgd": 13009.35,
+    "closing_balance_sgd": 14976.61,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2025-12",
+    "paynow_inflow_count": 56,
+    "paynow_inflow_sgd": 7831.55,
+    "card_settlement_sgd": 4623.33,
+    "outflow_sgd": 10768.43,
+    "closing_balance_sgd": 16663.06,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-01",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7503.88,
+    "card_settlement_sgd": 6065.42,
+    "outflow_sgd": 10196.42,
+    "closing_balance_sgd": 20035.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 8190.91,
+    "card_settlement_sgd": 5034.6,
+    "outflow_sgd": 12274.31,
+    "closing_balance_sgd": 20987.14,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-03",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6501.21,
+    "card_settlement_sgd": 3847.0,
+    "outflow_sgd": 9647.29,
+    "closing_balance_sgd": 21688.06,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-04",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 6394.6,
+    "card_settlement_sgd": 3756.02,
+    "outflow_sgd": 8687.35,
+    "closing_balance_sgd": 23151.33,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-05",
+    "paynow_inflow_count": 30,
+    "paynow_inflow_sgd": 6993.74,
+    "card_settlement_sgd": 5492.27,
+    "outflow_sgd": 10681.72,
+    "closing_balance_sgd": 24955.62,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0154",
+    "month": "2026-06",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7634.77,
+    "card_settlement_sgd": 5928.5,
+    "outflow_sgd": 11745.53,
+    "closing_balance_sgd": 26773.36,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0165",
+    "month": "2026-04",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6284.03,
+    "card_settlement_sgd": 4945.88,
+    "outflow_sgd": 9968.78,
+    "closing_balance_sgd": 4886.55,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0165",
+    "month": "2026-05",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6308.24,
+    "card_settlement_sgd": 4221.14,
+    "outflow_sgd": 8529.35,
+    "closing_balance_sgd": 6886.58,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0165",
+    "month": "2026-06",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7826.11,
+    "card_settlement_sgd": 4594.15,
+    "outflow_sgd": 9382.55,
+    "closing_balance_sgd": 9924.29,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-07",
+    "paynow_inflow_count": 24,
+    "paynow_inflow_sgd": 7951.6,
+    "card_settlement_sgd": 4824.55,
+    "outflow_sgd": 9824.6,
+    "closing_balance_sgd": 6576.97,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-08",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 6314.92,
+    "card_settlement_sgd": 5123.59,
+    "outflow_sgd": 9630.31,
+    "closing_balance_sgd": 8385.17,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-09",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 8082.81,
+    "card_settlement_sgd": 5879.55,
+    "outflow_sgd": 11030.33,
+    "closing_balance_sgd": 11317.2,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-10",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 6008.19,
+    "card_settlement_sgd": 4330.65,
+    "outflow_sgd": 9786.15,
+    "closing_balance_sgd": 11869.89,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-11",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8554.17,
+    "card_settlement_sgd": 5025.51,
+    "outflow_sgd": 11300.12,
+    "closing_balance_sgd": 14149.45,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2025-12",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 9334.02,
+    "card_settlement_sgd": 6063.39,
+    "outflow_sgd": 12666.58,
+    "closing_balance_sgd": 16880.28,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-01",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7615.6,
+    "card_settlement_sgd": 4792.29,
+    "outflow_sgd": 10986.23,
+    "closing_balance_sgd": 18301.94,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-02",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7927.31,
+    "card_settlement_sgd": 6305.68,
+    "outflow_sgd": 10953.13,
+    "closing_balance_sgd": 21581.8,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-03",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6451.13,
+    "card_settlement_sgd": 4759.12,
+    "outflow_sgd": 9549.43,
+    "closing_balance_sgd": 23242.62,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6472.75,
+    "card_settlement_sgd": 3806.47,
+    "outflow_sgd": 8461.86,
+    "closing_balance_sgd": 25059.98,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-05",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 7295.72,
+    "card_settlement_sgd": 4585.11,
+    "outflow_sgd": 10086.94,
+    "closing_balance_sgd": 26853.87,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0167",
+    "month": "2026-06",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 8105.64,
+    "card_settlement_sgd": 6178.34,
+    "outflow_sgd": 11342.22,
+    "closing_balance_sgd": 29795.63,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-07",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6999.2,
+    "card_settlement_sgd": 4384.96,
+    "outflow_sgd": 10670.01,
+    "closing_balance_sgd": 4009.99,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-08",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 7568.79,
+    "card_settlement_sgd": 5759.13,
+    "outflow_sgd": 12349.89,
+    "closing_balance_sgd": 4988.02,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-09",
+    "paynow_inflow_count": 46,
+    "paynow_inflow_sgd": 5839.41,
+    "card_settlement_sgd": 4317.37,
+    "outflow_sgd": 9426.45,
+    "closing_balance_sgd": 5718.35,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-10",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 6837.43,
+    "card_settlement_sgd": 4742.51,
+    "outflow_sgd": 9330.0,
+    "closing_balance_sgd": 7968.29,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-11",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 6853.49,
+    "card_settlement_sgd": 5625.74,
+    "outflow_sgd": 10726.7,
+    "closing_balance_sgd": 9720.82,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2025-12",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6764.43,
+    "card_settlement_sgd": 5500.2,
+    "outflow_sgd": 10692.62,
+    "closing_balance_sgd": 11292.83,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-01",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 6902.05,
+    "card_settlement_sgd": 5335.98,
+    "outflow_sgd": 11132.91,
+    "closing_balance_sgd": 12397.95,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-02",
+    "paynow_inflow_count": 57,
+    "paynow_inflow_sgd": 8177.49,
+    "card_settlement_sgd": 6868.86,
+    "outflow_sgd": 13077.74,
+    "closing_balance_sgd": 14366.56,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-03",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 4490.18,
+    "card_settlement_sgd": 2812.79,
+    "outflow_sgd": 5500.12,
+    "closing_balance_sgd": 16169.41,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-04",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 6504.08,
+    "card_settlement_sgd": 4976.66,
+    "outflow_sgd": 9987.16,
+    "closing_balance_sgd": 17662.99,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5956.45,
+    "card_settlement_sgd": 3595.32,
+    "outflow_sgd": 7364.41,
+    "closing_balance_sgd": 19850.35,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0168",
+    "month": "2026-06",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6950.34,
+    "card_settlement_sgd": 5824.13,
+    "outflow_sgd": 11712.76,
+    "closing_balance_sgd": 20912.06,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-01",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 19382.89,
+    "card_settlement_sgd": 11094.63,
+    "outflow_sgd": 24354.62,
+    "closing_balance_sgd": 15798.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-02",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 24202.19,
+    "card_settlement_sgd": 16467.55,
+    "outflow_sgd": 33822.08,
+    "closing_balance_sgd": 22646.06,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-03",
+    "paynow_inflow_count": 25,
+    "paynow_inflow_sgd": 16725.77,
+    "card_settlement_sgd": 10355.19,
+    "outflow_sgd": 25481.86,
+    "closing_balance_sgd": 24245.16,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-04",
+    "paynow_inflow_count": 27,
+    "paynow_inflow_sgd": 20235.51,
+    "card_settlement_sgd": 11859.87,
+    "outflow_sgd": 27012.69,
+    "closing_balance_sgd": 29327.85,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-05",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 22770.05,
+    "card_settlement_sgd": 13573.53,
+    "outflow_sgd": 28662.09,
+    "closing_balance_sgd": 37009.34,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0169",
+    "month": "2026-06",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 19456.72,
+    "card_settlement_sgd": 15208.15,
+    "outflow_sgd": 26848.12,
+    "closing_balance_sgd": 44826.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-07",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7416.58,
+    "card_settlement_sgd": 4763.35,
+    "outflow_sgd": 11260.51,
+    "closing_balance_sgd": 4544.84,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-08",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7646.87,
+    "card_settlement_sgd": 4321.93,
+    "outflow_sgd": 11342.19,
+    "closing_balance_sgd": 5171.45,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-09",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 5921.62,
+    "card_settlement_sgd": 4715.71,
+    "outflow_sgd": 8017.38,
+    "closing_balance_sgd": 7791.4,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-10",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7110.94,
+    "card_settlement_sgd": 4200.73,
+    "outflow_sgd": 8771.59,
+    "closing_balance_sgd": 10331.48,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-11",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7048.06,
+    "card_settlement_sgd": 5733.37,
+    "outflow_sgd": 10212.03,
+    "closing_balance_sgd": 12900.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2025-12",
+    "paynow_inflow_count": 59,
+    "paynow_inflow_sgd": 7999.7,
+    "card_settlement_sgd": 5907.81,
+    "outflow_sgd": 11405.32,
+    "closing_balance_sgd": 15403.07,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-01",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 7873.74,
+    "card_settlement_sgd": 4592.18,
+    "outflow_sgd": 10524.38,
+    "closing_balance_sgd": 17344.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-02",
+    "paynow_inflow_count": 47,
+    "paynow_inflow_sgd": 8269.97,
+    "card_settlement_sgd": 5889.64,
+    "outflow_sgd": 12880.32,
+    "closing_balance_sgd": 18623.9,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-03",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 6709.72,
+    "card_settlement_sgd": 5295.47,
+    "outflow_sgd": 10391.17,
+    "closing_balance_sgd": 20237.92,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6958.56,
+    "card_settlement_sgd": 4976.15,
+    "outflow_sgd": 11284.16,
+    "closing_balance_sgd": 20888.47,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-05",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7099.06,
+    "card_settlement_sgd": 5249.1,
+    "outflow_sgd": 10565.95,
+    "closing_balance_sgd": 22670.68,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0170",
+    "month": "2026-06",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7989.3,
+    "card_settlement_sgd": 4976.82,
+    "outflow_sgd": 12148.5,
+    "closing_balance_sgd": 23488.3,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-07",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 6735.82,
+    "card_settlement_sgd": 5330.25,
+    "outflow_sgd": 10849.35,
+    "closing_balance_sgd": 4512.56,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-08",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 6038.98,
+    "card_settlement_sgd": 4101.33,
+    "outflow_sgd": 9585.45,
+    "closing_balance_sgd": 5067.42,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-09",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6857.53,
+    "card_settlement_sgd": 4165.2,
+    "outflow_sgd": 9238.14,
+    "closing_balance_sgd": 6852.01,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-10",
+    "paynow_inflow_count": 33,
+    "paynow_inflow_sgd": 6567.11,
+    "card_settlement_sgd": 4969.52,
+    "outflow_sgd": 8958.59,
+    "closing_balance_sgd": 9430.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-11",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7832.7,
+    "card_settlement_sgd": 5261.85,
+    "outflow_sgd": 11548.46,
+    "closing_balance_sgd": 10976.14,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2025-12",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 6585.26,
+    "card_settlement_sgd": 4042.49,
+    "outflow_sgd": 8789.28,
+    "closing_balance_sgd": 12814.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-01",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 5688.05,
+    "card_settlement_sgd": 3326.27,
+    "outflow_sgd": 7355.87,
+    "closing_balance_sgd": 14473.06,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8264.34,
+    "card_settlement_sgd": 6286.15,
+    "outflow_sgd": 12651.53,
+    "closing_balance_sgd": 16372.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-03",
+    "paynow_inflow_count": 48,
+    "paynow_inflow_sgd": 5920.05,
+    "card_settlement_sgd": 4542.49,
+    "outflow_sgd": 8602.38,
+    "closing_balance_sgd": 18232.18,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6123.46,
+    "card_settlement_sgd": 4651.17,
+    "outflow_sgd": 9368.99,
+    "closing_balance_sgd": 19637.82,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-05",
+    "paynow_inflow_count": 35,
+    "paynow_inflow_sgd": 6546.76,
+    "card_settlement_sgd": 5461.87,
+    "outflow_sgd": 10987.76,
+    "closing_balance_sgd": 20658.69,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0172",
+    "month": "2026-06",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 6828.6,
+    "card_settlement_sgd": 3952.84,
+    "outflow_sgd": 8840.79,
+    "closing_balance_sgd": 22599.34,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2025-08",
+    "paynow_inflow_count": 28,
+    "paynow_inflow_sgd": 7533.66,
+    "card_settlement_sgd": 5169.84,
+    "outflow_sgd": 10138.31,
+    "closing_balance_sgd": 6190.61,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2025-09",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7106.24,
+    "card_settlement_sgd": 3914.41,
+    "outflow_sgd": 8941.33,
+    "closing_balance_sgd": 8269.93,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2025-10",
+    "paynow_inflow_count": 32,
+    "paynow_inflow_sgd": 7779.08,
+    "card_settlement_sgd": 5662.07,
+    "outflow_sgd": 10272.73,
+    "closing_balance_sgd": 11438.35,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2025-11",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 7918.87,
+    "card_settlement_sgd": 4968.79,
+    "outflow_sgd": 11483.99,
+    "closing_balance_sgd": 12842.02,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2025-12",
+    "paynow_inflow_count": 55,
+    "paynow_inflow_sgd": 9118.12,
+    "card_settlement_sgd": 7153.78,
+    "outflow_sgd": 14848.64,
+    "closing_balance_sgd": 14265.28,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-01",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7757.01,
+    "card_settlement_sgd": 4541.84,
+    "outflow_sgd": 10756.56,
+    "closing_balance_sgd": 15807.57,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-02",
+    "paynow_inflow_count": 66,
+    "paynow_inflow_sgd": 8615.87,
+    "card_settlement_sgd": 6390.81,
+    "outflow_sgd": 13456.37,
+    "closing_balance_sgd": 17357.88,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-03",
+    "paynow_inflow_count": 31,
+    "paynow_inflow_sgd": 7657.5,
+    "card_settlement_sgd": 4666.13,
+    "outflow_sgd": 10488.79,
+    "closing_balance_sgd": 19192.72,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-04",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 6998.3,
+    "card_settlement_sgd": 5156.43,
+    "outflow_sgd": 9267.83,
+    "closing_balance_sgd": 22079.62,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-05",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7721.27,
+    "card_settlement_sgd": 4795.08,
+    "outflow_sgd": 11641.51,
+    "closing_balance_sgd": 22954.46,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0173",
+    "month": "2026-06",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7935.63,
+    "card_settlement_sgd": 4674.59,
+    "outflow_sgd": 9857.48,
+    "closing_balance_sgd": 25707.2,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-07",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6400.02,
+    "card_settlement_sgd": 4947.99,
+    "outflow_sgd": 10232.02,
+    "closing_balance_sgd": 4741.41,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-08",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 8290.19,
+    "card_settlement_sgd": 5035.69,
+    "outflow_sgd": 11626.49,
+    "closing_balance_sgd": 6440.8,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-09",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 8651.48,
+    "card_settlement_sgd": 6147.99,
+    "outflow_sgd": 11357.26,
+    "closing_balance_sgd": 9883.01,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-10",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 7292.08,
+    "card_settlement_sgd": 5300.02,
+    "outflow_sgd": 11791.92,
+    "closing_balance_sgd": 10683.19,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-11",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 7832.17,
+    "card_settlement_sgd": 5621.05,
+    "outflow_sgd": 10457.23,
+    "closing_balance_sgd": 13679.18,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2025-12",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8187.75,
+    "card_settlement_sgd": 5886.38,
+    "outflow_sgd": 11201.46,
+    "closing_balance_sgd": 16551.85,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-01",
+    "paynow_inflow_count": 39,
+    "paynow_inflow_sgd": 7954.88,
+    "card_settlement_sgd": 6246.16,
+    "outflow_sgd": 12511.97,
+    "closing_balance_sgd": 18240.92,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-02",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 8008.09,
+    "card_settlement_sgd": 5449.61,
+    "outflow_sgd": 10105.97,
+    "closing_balance_sgd": 21592.65,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-03",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 5876.96,
+    "card_settlement_sgd": 4564.75,
+    "outflow_sgd": 8448.06,
+    "closing_balance_sgd": 23586.3,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-04",
+    "paynow_inflow_count": 29,
+    "paynow_inflow_sgd": 6914.72,
+    "card_settlement_sgd": 5530.21,
+    "outflow_sgd": 11710.75,
+    "closing_balance_sgd": 24320.48,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-05",
+    "paynow_inflow_count": 43,
+    "paynow_inflow_sgd": 7042.4,
+    "card_settlement_sgd": 4733.06,
+    "outflow_sgd": 10547.01,
+    "closing_balance_sgd": 25548.93,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0174",
+    "month": "2026-06",
+    "paynow_inflow_count": 36,
+    "paynow_inflow_sgd": 7220.4,
+    "card_settlement_sgd": 5606.5,
+    "outflow_sgd": 12015.46,
+    "closing_balance_sgd": 26360.37,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2025-11",
+    "paynow_inflow_count": 38,
+    "paynow_inflow_sgd": 7202.0,
+    "card_settlement_sgd": 4807.96,
+    "outflow_sgd": 11324.27,
+    "closing_balance_sgd": 4311.11,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2025-12",
+    "paynow_inflow_count": 44,
+    "paynow_inflow_sgd": 9372.01,
+    "card_settlement_sgd": 7838.48,
+    "outflow_sgd": 14516.51,
+    "closing_balance_sgd": 7005.09,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-01",
+    "paynow_inflow_count": 41,
+    "paynow_inflow_sgd": 6788.8,
+    "card_settlement_sgd": 4026.81,
+    "outflow_sgd": 8807.65,
+    "closing_balance_sgd": 9013.05,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-02",
+    "paynow_inflow_count": 51,
+    "paynow_inflow_sgd": 9551.03,
+    "card_settlement_sgd": 6990.85,
+    "outflow_sgd": 15646.41,
+    "closing_balance_sgd": 9908.52,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-03",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 7123.36,
+    "card_settlement_sgd": 4133.03,
+    "outflow_sgd": 9872.28,
+    "closing_balance_sgd": 11292.63,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-04",
+    "paynow_inflow_count": 49,
+    "paynow_inflow_sgd": 7611.26,
+    "card_settlement_sgd": 4613.14,
+    "outflow_sgd": 9227.27,
+    "closing_balance_sgd": 14289.76,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-05",
+    "paynow_inflow_count": 40,
+    "paynow_inflow_sgd": 7986.72,
+    "card_settlement_sgd": 6449.75,
+    "outflow_sgd": 11185.55,
+    "closing_balance_sgd": 17540.68,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0183",
+    "month": "2026-06",
+    "paynow_inflow_count": 37,
+    "paynow_inflow_sgd": 8547.28,
+    "card_settlement_sgd": 7109.3,
+    "outflow_sgd": 12180.61,
+    "closing_balance_sgd": 21016.65,
+    "has_ocbc_operating_account": true
+  },
+  {
+    "merchant_id": "M0189",
+    "month": "2026-02",
+    "paynow_inflow_count": 54,
+    "paynow_inflow_sgd": 7747.9,
+    "card_settlement_sgd": 6289.56,
+    "outflow_sgd": 11190.82,
+    "closing_balance_sgd": 6142.48,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0189",
+    "month": "2026-03",
+    "paynow_inflow_count": 34,
+    "paynow_inflow_sgd": 6836.55,
+    "card_settlement_sgd": 5294.84,
+    "outflow_sgd": 9640.26,
+    "closing_balance_sgd": 8633.61,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0189",
+    "month": "2026-04",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5903.74,
+    "card_settlement_sgd": 4071.7,
+    "outflow_sgd": 8626.4,
+    "closing_balance_sgd": 9982.65,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0189",
+    "month": "2026-05",
+    "paynow_inflow_count": 42,
+    "paynow_inflow_sgd": 5764.61,
+    "card_settlement_sgd": 4721.46,
+    "outflow_sgd": 9438.73,
+    "closing_balance_sgd": 11029.99,
+    "has_ocbc_operating_account": false
+  },
+  {
+    "merchant_id": "M0189",
+    "month": "2026-06",
+    "paynow_inflow_count": 45,
+    "paynow_inflow_sgd": 7248.75,
+    "card_settlement_sgd": 4363.94,
+    "outflow_sgd": 8771.97,
+    "closing_balance_sgd": 13870.71,
+    "has_ocbc_operating_account": false
+  }
+]

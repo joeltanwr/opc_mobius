@@ -1,0 +1,18 @@
+{
+  "merchant_id": "M0001",
+  "campaign_name": "Tanjong Pagar Afternoon Lift \u2014 S$2 off, 2-5pm",
+  "offer_terms": "S$2 off any drink, redeemable Tue-Thu 14:00-17:00, one use per cardholder",
+  "treated_size": 328,
+  "control_size": 219,
+  "redemption_count": 62,
+  "redemption_rate": 0.189,
+  "control_organic_conversion_rate": 0.031,
+  "incremental_transactions": 88.7,
+  "incremental_sales_sgd": 638.64,
+  "reward_cost_total_sgd": 186.0,
+  "reward_cost_ocbc_funded_sgd": 93.0,
+  "reward_cost_merchant_funded_sgd": 93.0,
+  "net_contribution_sgd": 545.64,
+  "merchant_opened_ocbc_operating_account": true,
+  "account_opened_date": "2026-05-12"
+}

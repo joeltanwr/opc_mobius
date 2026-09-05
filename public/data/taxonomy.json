@@ -1,0 +1,342 @@
+{
+  "categories": [
+    {
+      "id": "cafe",
+      "label": "Cafe",
+      "group": "F&B",
+      "typical_mcc": [
+        5812,
+        5814
+      ],
+      "ticket_range_sgd": [
+        6,
+        22
+      ],
+      "frequency_archetype": "routine",
+      "daypart_peak": "morning",
+      "is_aggregator": false
+    },
+    {
+      "id": "bubble_tea",
+      "label": "Bubble Tea",
+      "group": "F&B",
+      "typical_mcc": [
+        5812
+      ],
+      "ticket_range_sgd": [
+        4,
+        9
+      ],
+      "frequency_archetype": "habitual",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "hawker_kopitiam",
+      "label": "Hawker & Kopitiam",
+      "group": "F&B",
+      "typical_mcc": [
+        5812
+      ],
+      "ticket_range_sgd": [
+        3,
+        10
+      ],
+      "frequency_archetype": "habitual",
+      "daypart_peak": "lunch",
+      "is_aggregator": false
+    },
+    {
+      "id": "zichar_chinese_casual",
+      "label": "Zichar & Chinese Casual",
+      "group": "F&B",
+      "typical_mcc": [
+        5812
+      ],
+      "ticket_range_sgd": [
+        15,
+        45
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "evening",
+      "is_aggregator": false
+    },
+    {
+      "id": "japanese",
+      "label": "Japanese",
+      "group": "F&B",
+      "typical_mcc": [
+        5812
+      ],
+      "ticket_range_sgd": [
+        15,
+        60
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "evening",
+      "is_aggregator": false
+    },
+    {
+      "id": "bakery_dessert",
+      "label": "Bakery & Dessert",
+      "group": "F&B",
+      "typical_mcc": [
+        5462,
+        5812
+      ],
+      "ticket_range_sgd": [
+        5,
+        18
+      ],
+      "frequency_archetype": "routine",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "fast_food",
+      "label": "Fast Food",
+      "group": "F&B",
+      "typical_mcc": [
+        5814
+      ],
+      "ticket_range_sgd": [
+        6,
+        15
+      ],
+      "frequency_archetype": "routine",
+      "daypart_peak": "lunch",
+      "is_aggregator": false
+    },
+    {
+      "id": "bar_pub",
+      "label": "Bar & Pub",
+      "group": "F&B",
+      "typical_mcc": [
+        5813
+      ],
+      "ticket_range_sgd": [
+        15,
+        50
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "late",
+      "is_aggregator": false
+    },
+    {
+      "id": "apparel",
+      "label": "Apparel",
+      "group": "Retail",
+      "typical_mcc": [
+        5651,
+        5691
+      ],
+      "ticket_range_sgd": [
+        20,
+        150
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "beauty_cosmetics",
+      "label": "Beauty & Cosmetics",
+      "group": "Retail",
+      "typical_mcc": [
+        5977
+      ],
+      "ticket_range_sgd": [
+        15,
+        120
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "convenience_grocery",
+      "label": "Convenience & Grocery",
+      "group": "Retail",
+      "typical_mcc": [
+        5411,
+        5499
+      ],
+      "ticket_range_sgd": [
+        5,
+        40
+      ],
+      "frequency_archetype": "habitual",
+      "daypart_peak": "evening",
+      "is_aggregator": false
+    },
+    {
+      "id": "electronics",
+      "label": "Electronics",
+      "group": "Retail",
+      "typical_mcc": [
+        5732
+      ],
+      "ticket_range_sgd": [
+        30,
+        500
+      ],
+      "frequency_archetype": "rare",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "books_gifts",
+      "label": "Books & Gifts",
+      "group": "Retail",
+      "typical_mcc": [
+        5942,
+        5947
+      ],
+      "ticket_range_sgd": [
+        10,
+        60
+      ],
+      "frequency_archetype": "rare",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "hair_nail_salon",
+      "label": "Hair & Nail Salon",
+      "group": "Services & Lifestyle",
+      "typical_mcc": [
+        7230
+      ],
+      "ticket_range_sgd": [
+        20,
+        120
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "gym_fitness",
+      "label": "Gym & Fitness Studio",
+      "group": "Services & Lifestyle",
+      "typical_mcc": [
+        7997,
+        7991
+      ],
+      "ticket_range_sgd": [
+        15,
+        200
+      ],
+      "frequency_archetype": "routine",
+      "daypart_peak": "morning",
+      "is_aggregator": false
+    },
+    {
+      "id": "clinic_wellness",
+      "label": "Clinic & Wellness",
+      "group": "Services & Lifestyle",
+      "typical_mcc": [
+        8011,
+        8099
+      ],
+      "ticket_range_sgd": [
+        30,
+        150
+      ],
+      "frequency_archetype": "considered",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "cinema_arcade",
+      "label": "Cinema & Arcade",
+      "group": "Services & Lifestyle",
+      "typical_mcc": [
+        7832,
+        7994
+      ],
+      "ticket_range_sgd": [
+        10,
+        40
+      ],
+      "frequency_archetype": "rare",
+      "daypart_peak": "evening",
+      "is_aggregator": false
+    },
+    {
+      "id": "pet_services",
+      "label": "Pet Services",
+      "group": "Services & Lifestyle",
+      "typical_mcc": [
+        742,
+        5995
+      ],
+      "ticket_range_sgd": [
+        20,
+        100
+      ],
+      "frequency_archetype": "rare",
+      "daypart_peak": "afternoon",
+      "is_aggregator": false
+    },
+    {
+      "id": "ride_hailing_transit",
+      "label": "Ride-hailing & Transit",
+      "group": "Other",
+      "typical_mcc": [
+        4121,
+        4111
+      ],
+      "ticket_range_sgd": [
+        5,
+        30
+      ],
+      "frequency_archetype": "habitual",
+      "daypart_peak": "evening",
+      "is_aggregator": true
+    },
+    {
+      "id": "online_marketplace",
+      "label": "Online Marketplace",
+      "group": "Other",
+      "typical_mcc": [
+        5999,
+        5311
+      ],
+      "ticket_range_sgd": [
+        10,
+        100
+      ],
+      "frequency_archetype": "habitual",
+      "daypart_peak": "evening",
+      "is_aggregator": true
+    }
+  ],
+  "attributes": {
+    "price_band": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "frequency_archetype": [
+      "habitual",
+      "routine",
+      "considered",
+      "rare"
+    ],
+    "catchment_type": [
+      "neighbourhood",
+      "office",
+      "destination",
+      "transit"
+    ],
+    "daypart": [
+      "morning",
+      "lunch",
+      "afternoon",
+      "evening",
+      "late"
+    ]
+  }
+}
