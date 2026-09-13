@@ -1,4 +1,5 @@
 data-generator/data/raw/
+data-generator/data/derived/
 __pycache__/
 *.pyc
 node_modules/

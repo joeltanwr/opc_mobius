@@ -22,16 +22,20 @@ Single config block at the top of the generator:
 SEED = 42                    # fixed; output must be byte-identical across runs
 N_CARDHOLDERS = 5_000
 N_MERCHANTS = 200            # ~10 per category, so every merchant has real peers
-PERIOD_START = "2025-07-01"
-PERIOD_END   = "2026-06-30"  # 12 months
+PERIOD_START = "2025-10-01"
+PERIOD_END   = "2026-09-30"  # 12 months (brief §2)
 TXN_PER_CARDHOLDER_MEAN = 60 # over the full period, log-normal
 DESCRIPTOR_NOISE_RATE = 0.15 # share of merchants with messy descriptor variants
 MIN_SEGMENT_SIZE = 250       # privacy floor enforced in aggregates
 ```
 
 Outputs:
-- `data/raw/` — Parquet, build artifact, gitignored. Large.
-- `public/data/` — JSON, shipped to the app. Must stay under ~600 KB total.
+- `data/raw/` — Parquet, build artifact, gitignored. Large. **The generator writes only this.**
+- `public/data/` — JSON, shipped to the app. Must stay under ~600 KB total. **Written by
+  `pipeline/` only** (see `MOBIUS_BUILD_BRIEF_V2.md` §5); the generator plants, the pipeline detects.
+
+The period, cardholder count and cohort sizes above are superseded by the brief's §2/§3 and the
+config block at the top of `generate.py`.
 
 The app **never** loads raw transactions. It loads precomputed aggregates only (§8).
 
@@ -207,7 +211,7 @@ Deliberately light. One dashboard tile, not a pillar.
 These drive the demo. Generate the base population first, then inject.
 
 **H1 — Off-peak gap (`M0001`, `cafe`, Tanjong Pagar, OCBC-acquired, full 12 months history).**
-Tue–Thu 14:00–17:00 volume runs 40% below its own weekly average, and below the other nine cafés in the benchmark set. Plant a non-OCBC competitor `M0055` (also `cafe`) two districts over with strong lift against `M0001`'s converting profile: cardholders who transact at `M0055`, are available in that daypart, are within catchment, match the price band — and have **zero** transactions at `M0001`. Verify the cohort lands between 350 and 800, and that Bernice (§5a) is inside it.
+Tue–Thu 14:00–17:00 volume runs 40% below its own weekly average, and below the other nine cafés in the benchmark set. Plant a non-OCBC competitor `M0055` (also `cafe`) in the same district, 200 metres away, with strong lift against `M0001`'s converting profile: cardholders who transact at `M0055`, are available in that daypart, are within catchment, match the price band — and have **zero** transactions at `M0001`. Verify the cohort lands between 350 and 800, and that Bernice (§5a) is inside it.
 
 **H2 — Cold start (`M0002`, `bubble tea`, OCBC-acquired, `acquiring_start_date` 3 weeks before `PERIOD_END`).**
 Almost no history. Forces the category-and-catchment fallback path. The target cohort must be derivable from the other nine bubble tea merchants, not from `M0002`'s own data.
@@ -234,7 +238,7 @@ Everything the app renders. Nothing raw ships.
 | `campaign_results.json` | one completed campaign (§9) |
 | `rationales.json` | precomputed LLM output, keyed by merchant and segment |
 
-**Enforce `MIN_SEGMENT_SIZE`.** Any segment below 500 is suppressed and emitted as `{"suppressed": true, "reason": "below minimum segment size"}`. The app must render that state — the privacy floor is a feature you want visible on screen, not a promise in the appendix.
+**Enforce `MIN_SEGMENT_SIZE`.** Any segment below 250 is suppressed and emitted as `{"suppressed": true, "reason": "below minimum segment size"}`. The app must render that state — the privacy floor is a feature you want visible on screen, not a promise in the appendix.
 
 ### Lift specification
 
@@ -255,7 +259,9 @@ Use lift rather than raw co-occurrence — raw counts surface only the most popu
 
 One completed campaign for `M0001`, closing the flywheel visually.
 
-Treated cohort and a held-out control drawn from the same segment. Include: offer terms, treated/control sizes, redemption count and rate, incremental transactions and sales versus control, OCBC-funded and merchant-funded reward cost, net contribution, and — the closing beat — `merchant_opened_ocbc_operating_account: true` with a date.
+Treated cohort and a held-out control drawn from the same segment. Include: offer terms, treated/control sizes, redemption count and rate, incremental transactions and sales versus control, the merchant's reward cost (the merchant funds the reward in full — there is no OCBC-funded figure), net contribution, and — the closing beat — `merchant_opened_ocbc_operating_account: true` with a date.
+
+A second, losing campaign for `M0001` is required alongside it: high redemption rate, mostly existing customers, control spent nearly as much, net negative. Both are planted by the generator as `campaigns.parquet` + `allocations.parquet` + tagged redemption rows and measured by `pipeline/campaign.py`.
 
 Make control-group uplift **positive but modest**. An implausibly large effect reads as fabricated; a realistic one reads as measured.
 

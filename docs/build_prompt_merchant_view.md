@@ -1,0 +1,564 @@
+# Build prompt — Mobius, Medium-Sized Company view
+
+One of three interfaces in the Mobius system. Build this one only; the OCBC staff view and
+the retail customer view are separate builds that share the same state contract (§9).
+
+This is a **demo for a 6-minute hackathon pitch**, not a product. Every screen exists to be
+shown on a projector for 30–60 seconds and to survive a banker's follow-up question.
+Optimise for legibility at 3 metres and for defensibility under questioning, not for
+feature count.
+
+---
+
+## 1. What Mobius does
+
+Medium-sized companies cannot profile their own customers well enough to run a reward
+programme that earns loyalty or attracts new spend. OCBC can see both sides — who spends at
+the merchant, and which cardholders spend on comparable merchants but not there. Mobius
+turns that into a reward programme the merchant can activate, OCBC reviews and pushes, the
+cardholder redeems, and the redemption data then improves the next offer.
+
+The loop, in the merchant's words:
+
+> Understand who your customers are → activate a reward → OCBC reaches the right
+> cardholders → they redeem in store → results refine the next offer.
+
+The merchant-facing job of this build is to make that loop obvious in the first twenty
+seconds and then let the merchant walk it end to end.
+
+**Target persona:** medium-sized company (50–500 employees), Singapore, retail and F&B,
+already an OCBC business customer.
+**Primary outcome of the whole view:** merchant signs up and activates a campaign.
+
+---
+
+## 2. Non-negotiable constraints
+
+### 2.1 What the merchant may see
+
+Two different data surfaces, and the interface must not blur them:
+
+**Its own customers** — aggregate breakdowns are fine. Age bands, card mix, hourly
+intensity, ticket size, repeat rate. This is a summary of people who have transacted with
+the merchant. Rules:
+- Minimum cell size **250**. Any band below the floor renders as a visibly suppressed row
+  ("Below reporting threshold"), not as a small number and not silently merged. Include at
+  least one suppressed band in the demo data on purpose — it is a feature, and judges
+  notice it.
+- No free-form filtering. No query builder, no "add filter". The merchant reads
+  pre-computed breakdowns. Free-form filtering is a re-identification vector and its
+  absence is deliberate.
+- No export, download, print view, or copy-to-clipboard of customer data.
+- Segment narrowing on the reward set-up page is a partial exception and carries its own
+  rules — see §7.1. Read those before building anything that accepts a free-text query.
+
+**Cardholders it has never served** — **counts and labels only**. The "new customer reach"
+figure is a number with a plain-language descriptor. No age split, no gender, no
+nationality, no spend distribution, no map of where they live. If a chart would describe
+the composition of people who have never visited this merchant, do not build it.
+
+**OCBC delivers every offer.** The merchant never receives a cardholder identity, contact
+detail, or targetable list, and there is no screen where it could. Say this in the
+interface, once, quietly.
+
+Put a persistent, understated privacy line in the merchant chrome stating what the merchant
+can and cannot see, linked to a short explainer panel. Quiet, not a banner. It should look
+like a bank built it.
+
+### 2.2 The acquiring assumption
+
+The card-mix panel (OCBC / DBS / UOB / other / cash / PayNow) is only possible where **OCBC
+is the merchant's acquirer** — that is acquiring data, not issuing data. Do not let the demo
+imply OCBC can see a customer's DBS transactions generally.
+
+- Merchant acquired by OCBC → full card mix, labelled "From your OCBC merchant acquiring
+  records".
+- Merchant not acquired by OCBC → panel renders in a reduced state showing OCBC-issued
+  cards only, with a line explaining that moving acquiring to OCBC completes the picture.
+
+Build both states. The reduced state is the more interesting one — it is a live
+cross-sell surface and it proves the team understands where the data actually comes from.
+
+### 2.3 Deterministic vs AI
+
+AI calls scale with **the number of decisions a human sees**, never with rows of data.
+
+Deterministic, plain code, auditable: segment matching, reach counts, uplift and
+incrementality estimates, funding arithmetic, threshold detection, all campaign statistics.
+
+AI-generated: the customer-profile narrative summary, segment names, reward-option
+reasoning, offer copy.
+
+Every AI-generated sentence in the UI sits directly beneath or beside the number that
+produced it. A generated sentence with no number under it is decoration — cut it.
+
+For the demo, **pre-compute all AI output and bake it into JSON.** The live demo must not
+depend on network conditions or a rate limit. Allow exactly one optional, clearly marked
+button that makes a real API call, with a pre-computed fallback that renders if the call
+fails or exceeds 3 seconds. The brief asks for an AI-generated caveat on the profile
+insight — use "Generated by Mobius AI from your transaction data", not "real-time", unless
+the live call is the one firing.
+
+### 2.4 Human in the loop
+
+There is **no one-click launch**, and no single button anywhere that sends an offer to a
+customer. Tab 3 hands a chosen mechanic to the set-up page; the set-up page submits for
+review; OCBC staff approve. Three deliberate steps, each with a named owner. The handoff
+from set-up to the staff queue is the demo's best moment, because it is visible.
+
+Also carried from the control-layer decisions and surfaced here as merchant-visible facts,
+not as merchant controls:
+- A portfolio-level frequency cap limits how often any cardholder is contacted, across all
+  merchants. Show it as a stated limit on the campaign submission screen, so the merchant
+  understands reach is capped by design rather than by budget.
+- Consent filtering happens before segmentation. Reach figures are post-consent. Say so.
+
+### 2.5 Numbers and copy
+
+One constants file, `src/data/constants.js`, holds every headline figure with a `basis`
+string. No number is typed into a component. If a figure has no basis, it does not ship.
+
+- Cardholder base: **800,000**. Do not write ">1 million".
+- "Set up within 2 days" currently has no basis. Either attach one (what process, measured
+  where) or soften to a range with a footnote. Do not print it as a flat fact.
+- Sales uplift is always stated **against a matched control group**, never as before-versus-
+  after. Before/after is not incrementality and a bank judge will say so.
+- **The merchant funds the reward in full.** There is no cost split, no co-funding slider and
+  no OCBC contribution anywhere in this build. OCBC supplies targeting, delivery and
+  measurement; the merchant pays for the discount. Every cost figure shown to the merchant is
+  therefore the merchant's whole cost — never a share of one.
+  Note for whoever owns the write-up: this contradicts the 50% co-funding assumption in the
+  base case, which is what puts OCBC's reward cost at roughly S$1.44m a year. One of the two
+  documents has to move.
+
+**Testimonials:** two quotes from medium-sized companies, as the brief asks — but as
+*illustrative composites on mock data*, labelled as such in a caption. No invented named
+executives, no fictional company registration, no logo wall, no aggregate traction claims
+("450+ merchants onboarded", "S$12.4M generated"). A stated assumption with a confidence
+level beats a precise number without one, and Appendix A of the pitch template asks for
+exactly that.
+
+**Both testimonials must be positive in tone.** Credibility comes from specifics — a named
+hour, a real number, a concrete decision — not from admitting a failure. Where a quote
+touches something that went wrong, it resolves: the RM redirected them and the redirect
+worked. Save the loss case for the dashboard, where it is evidence of measurement rather
+than a discouragement on the sales page.
+
+Every screen carries a small permanent **"Mock data"** marker. Do not hide it.
+
+---
+
+## 3. Data
+
+Pull merchant records from `public/data/merchant_profiles.json` (written by `pipeline/`).
+`merchant_directory.json` no longer exists.
+
+Ship at least three merchant profiles so the demo can switch personas:
+1. **Primary demo merchant** — F&B or retail group, OCBC-acquired, clear off-peak trough.
+   This is the one shown in the pitch.
+2. **Not acquired by OCBC** — drives the reduced card-mix state in §2.2.
+3. **Thin history** — too few months of data for a full profile; the interface degrades
+   honestly to category-and-district benchmarks rather than inventing a trend line.
+
+Merchant names must be plausible Singapore businesses, never real brands.
+
+Transaction data behind the profiles must be sampled from latent customer personas, never
+uniformly at random — uniform sampling makes every breakdown converge to noise and the
+demo collapses.
+
+---
+
+## 4. Tab 1 — Landing page
+
+Purpose: an unsigned merchant understands the programme and signs up.
+
+1. **OCBC logo lockup with the Mobius mark** (Möbius loop). Top-left, in the sticky nav.
+2. **Tagline: "A click away from your customer."** This is the hero line — set it as the
+   dominant type on the page, not as a subtitle above a stock diagram.
+3. **The Mobius loop diagram.** This is the one place to spend visual boldness; keep
+   everything else on the page quiet.
+
+   Construction: **one continuous figure-eight path, not two separate arcs.** Draw it twice —
+   first as a thick ribbon in border grey `#E2E8F0` (~24px, round joins), then the identical
+   path again on top as a thin OCBC-red dashed line (~1.8px, 7/7 dash, around 50% opacity).
+   The grey band gives the mark its weight; the red thread traces the circuit through it.
+   Being one unbroken path is the point: the two sides are the same loop, not two loops that
+   happen to touch.
+
+   **Keep the colour quiet.** The page already spends red on the primary CTA, and two heavy
+   coloured arcs compete with it. Here red appears only in the dashed thread, the icon
+   outlines and the arrowheads — small, high-contrast, and therefore legible. Avoid filling
+   the lobes with brand colour.
+
+   At the crossover, a dark slate rounded plaque reading **OCBC** with **AI · DATA · DIGITAL**
+   beneath it, drawn over the path so both sides run into the bank and out again. In each
+   lobe, a white circle with a red outline: a shop icon labelled *Your business* on the left,
+   a group-of-people icon labelled *OCBC cardholders* on the right. The diagram must show the
+   two parties, not only the flow between them.
+
+   Direction: two small solid red arrowheads on the band — upper travelling left to right,
+   lower travelling right to left. Four short labels sit outside the loop, in travel order —
+   your transaction data → a reward they will use → redeemed in store → results refine the
+   next offer.
+
+   No gradients. No animation beyond one deliberate reveal at most.
+4. **Three-step programme guide**, in sequence (this content genuinely is a sequence, so
+   numbering is appropriate here — do not number anything else on the page):
+   1. See who your customers are, from OCBC card activity at your business.
+   2. Activate a reward that fits them; OCBC reaches them and they become regulars.
+   3. OCBC tunes the programme with you as redemption data comes in.
+5. **Benefits — 3 to 5 cards.** Written from the merchant's perspective in plain verbs, not
+   feature names.
+6. **Feature grid — 4 to 6.** No overlap with the benefit cards; if a benefit and a feature
+   say the same thing, cut one.
+7. **FAQ — 5 questions.** Must cover: what data OCBC shares and does not share; PDPA and
+   consent; whether the merchant needs to be an OCBC customer; who funds the reward; how
+   long setup takes.
+8. **Sign-up CTA**, prominent, repeated at top nav and in a closing band. Copy names what
+   happens: "Sign up and see your customer profile" — not "Get started".
+
+Note in the interface that the profile view requires signing up and speaking to OCBC. Frame
+the RM conversation as part of the product, not a gate.
+
+## 5. Tab 2 — Login
+
+Merchant logs in with OCBC business credentials.
+
+- **Existing OCBC customer** → straight to Tab 3, loaded with their merchant profile. For
+  the demo, offer the three profiles from §3 as selectable accounts.
+- **Not an OCBC customer** → routed to account opening and an RM contact form. Build this
+  branch properly; it is the acquisition path, not an error state. An empty screen is an
+  invitation to act, so it should show what they would get, not just what they lack.
+
+This is a mock login. Never handle a real credential, and do not build a password field
+that submits anything.
+
+## 6. Tab 3 — Target customer
+
+Purpose: the merchant understands its customer base and is persuaded to activate a campaign.
+
+Open with an **eligibility strip**: the SME gate (average balance above S$30,000, and
+internal *or* external transaction score at band 3 or better) is checked before any
+recommendation is generated. Show the pass state plainly. A merchant that fails sees a
+not-eligible state and no recommendation at all.
+
+**Trading summary**
+- Average monthly transaction volume, trailing 6 months
+- Transaction volume month on month — line chart, baseline series dashed slate
+- Average spend per ticket
+- Top payment method
+- Core customer base — count of unique OCBC cardholders transacting
+
+**Recency, frequency and value.** These are the RFM inputs, so order them to build toward
+the segmentation rather than scattering them as loose statistics:
+- **Days since last purchase** — median as a headline figure, plus a distribution across
+  0–7 / 8–30 / 31–90 / over 90 days. Name the lapsed share explicitly; it is the pool a
+  win-back reward draws from.
+- **Average days between purchases**, repeat customers only. State the qualifier — averaging
+  one-time customers into this number makes it meaningless.
+- **One-time versus repeat split**, as a single proportional bar. Give both the customer
+  share and the transaction share; they differ substantially and the gap is the point.
+- **Purchase frequency distribution, repeat customers only** — 2 / 3–4 / 5–9 / 10–19 / 20+
+  visits. Most repeat customers stop at two or three; the tail is where loyalty mechanics
+  earn out.
+- **Total revenue by customer percentile** — top 10% / next 15% / next 25% / bottom 50%, so
+  the merchant can see concentration. **Interpret it in a line of prose.** A concentration
+  chart with no reading invites the merchant to assume something is wrong; say whether this
+  is normal for the sector.
+
+**Trading pattern**
+- Hourly transaction intensity, peak highlighted, and **name the trough** — the trough is
+  what the campaign targets, so it must be visually obvious, not left to be inferred
+- Age band breakdown — subject to the 250 floor
+- Card type breakdown — subject to §2.2
+
+**Customer analysis — output of `/sme-business-customer-analysis`**
+
+Render the skill's output as a single attributed panel, not as scattered AI captions. Three
+labelled blocks in this order:
+1. **Customer profile** — category and sub-category behaviour of the merchant's OCBC-card
+   customers, and separately the **top 20% by spend**, with how they differ (visit interval,
+   share of revenue, breadth of basket).
+2. **Demand gap** — the detected gap, its size, and whether it is structural or seasonal.
+   Say when no gap of a given type was detected; a negative finding is a finding.
+3. **RFM segmentation** — Champions, Loyal, New/Promising, Needs attention, At Risk,
+   Hibernating, with counts. Follow with one line naming the lapsed total, since that is the
+   number the reward recommendation acts on.
+
+Attribute the panel to the skill by name. Every claim in it must trace to a figure shown
+above it on the page.
+
+**Reward options — output of `/reward-programme-recommendation`**
+
+- **All six reward types, always shown, always ranked**: discount, cashback, voucher,
+  spend-and-save, bundle / 1-for-1, overseas/FX-linked benefit. The skill surfaces the full
+  ranked list so a human can see and override the runner-up — do not filter before display.
+- Each option carries its **target RFM segment with a count**, the reasoning, and the
+  deterministic score. Ranked by expected incremental value, never by size of discount.
+- A type that does not apply is shown **ranked and rejected with a reason**, not hidden. For
+  a domestic merchant, overseas/FX is the honest example of this.
+- **New customer reach** — count only, post-consent, above the 250 floor.
+- **"Sign up for the campaign now"** → submits an application to OCBC. Confirm with: OCBC has
+  received the application and a relationship manager will be in touch **within the week**.
+  Nothing is configured and nothing is sent at this point. The application appears on the
+  dashboard with a status that says an RM will make contact — not "pending review", which
+  implies the merchant has already submitted something reviewable.
+  Configuration happens later, on the set-up page (§7), once the RM is in the conversation.
+
+## 7. Tab 4 — Reward set-up
+
+Purpose: the merchant and its OCBC relationship manager configure a reward programme
+together, on one shared page, and submit it for approval.
+
+**Entry point.** This page is not reached from Tab 3 directly. The merchant applies on Tab 3,
+the RM makes contact, and the set-up page is where the two of them then work. In the demo,
+reach it from the dashboard application row so the sequence stays visible.
+
+This is the page a reviewer or an auditor will open in six months' time when asked why a
+particular campaign went out. Build it as the approval artifact, not as a form.
+
+**Demo handling:** the page is used by two parties but the pitch shows one screen. Provide a
+"View as merchant / View as OCBC staff" toggle in the page chrome so field-level permissions
+(§7.6) can be demonstrated in one pass. In production this would be two logins.
+
+### 7.1 Target segment — set by AI, narrowed by humans
+
+Mobius proposes the segment from the merchant's transaction profile. **Neither the merchant
+nor OCBC staff can author a segment from scratch, or widen one.** They can only narrow.
+
+A **reward manager agent** accepts natural-language narrowing — "only around the Bugis
+outlet", "only the weekday lunch regulars". It narrows, and it does nothing else: it never
+widens, never redefines the base segment, never describes an individual, and never returns
+anything resembling a list.
+
+The narrowing rules are not optional, because an unconstrained narrowing agent is a query
+interface over cardholder data, and §2.1 rules that out:
+
+- **The 250 floor still applies.** Refuse any narrowing that would fall below it — and do
+  **not** report the count of a refused narrowing. Reporting it is the leak.
+- **Round every reach figure to the nearest 50.** Sequential narrowings can otherwise be
+  differenced: narrow by A and get 1,200, narrow by A and B and get 980, and you have
+  recovered a 220-person group that the floor was meant to protect. Rounding plus the floor
+  closes that path; either alone does not.
+- **Cap narrowing at five refinements per campaign**, with a visible counter. Unlimited
+  refinement is a query interface however it is dressed.
+- **Refuse narrowing that amounts to differential offers by protected characteristic** —
+  nationality, race, religion, gender, marital status, health. Age band and location are
+  permitted because they are ordinary commercial targeting. Refusals must be **shown and
+  explained**, never silent: the visible refusal is the demonstration. Expect a judge to
+  type one of these in deliberately, so make the refusal a good one.
+- **Log every narrowing** — who asked, the exact request, and what the agent did with it.
+  The log renders on the page.
+
+Present the segment as a plain-language description with a rounded count. Never a list,
+never a composition breakdown, never a map of where the cardholders live. Keep **Reset to
+the AI segment** available at every point.
+
+### 7.2 Reward selection
+
+- **One reward per campaign** (settled; RM §2 supersedes the earlier multi-reward wording).
+  The reward is tagged **New customer** or **Returning customer**, and the tag drives
+  measurement, not just labelling.
+- The reward shows its **expected incremental share** — the portion of redemptions that
+  would not have happened anyway. Returning-customer rewards score lower here by nature, and
+  that number must be shown rather than buried. It is the single most honest figure on the
+  page and the one that most distinguishes this from a discount tool.
+- Show expected cost and expected incremental value. All cost figures are the merchant's full
+  cost — see §2.5.
+
+### 7.3 Timing
+
+- Mobius prefills the window from the transaction pattern — the trough identified on Tab 3.
+- The window is editable, and editing it is the main way this campaign can go wrong.
+  **Recompute expected incremental value live as the window moves**, so the cost of leaving
+  the trough is visible while the choice is being made rather than in the results three
+  months later.
+- When the chosen window overlaps peak hours, show a warning carrying the actual number:
+  peak hours are already full, so a reward placed there mostly discounts trade the merchant
+  was going to take anyway. Name the past campaign that failed this way.
+- Configure day of week, time of day, and campaign start and end dates.
+
+### 7.4 Location and platform
+
+- **Location:** per-outlet multi-select with a rounded reach figure for each. Some outlets
+  will not clear the 250 floor alone — show those as unavailable individually, with a prompt
+  to group them, rather than showing a small number.
+- **Platform:** the in-app offer feed is the default and is always included. **Push is a
+  request, not a setting.** It is subject to OCBC's relevance threshold and to the global
+  per-cardholder frequency cap, and it is granted at approval, not chosen at set-up. Label
+  the control "Request push notification" and state the cap beside it.
+  Carried from the control-layer decisions: approved and pushed must be different events, or
+  push volume scales linearly with merchant count and the channel burns out.
+- No SMS, no email. Do not build the option.
+
+### 7.5 Limit
+
+- A redemption cap — "first N customers" — which is the merchant's real cost control.
+- Show **maximum cost** as a hard number: N × maximum reward value. This is the merchant's
+  whole cost, not a share, and it is the single figure most worth making unmissable — it is
+  what converts an open-ended discount into a bounded decision.
+- This is **not** the 250 segment floor and the interface should say so in one line. A
+  redemption limit of 100 is perfectly fine; a segment of 100 is not. The two get confused
+  and the confusion will surface in Q&A.
+- Optional per-customer limit — once per customer, or once per week.
+- State what happens when the cap is reached: the offer closes, the feed entry updates, no
+  further pushes go out.
+
+### 7.6 Working together — permissions and audit
+
+- Both parties see the same page and the same figures.
+- Field-level permissions: the **merchant** proposes rewards, timing, location and limit and
+  is the party that sets the limit, since the limit bounds its own spend. **OCBC staff** can
+  adjust rewards, timing and location, and control whether push is granted. Neither party can
+  author the segment.
+- Status ladder, shown on the page: Applied → In setup → Submitted → Live (display labels of
+  the shared state keys `applied` → `draft` → `pending` → `active`; see the brief §2 display map).
+- Every change is attributed and timestamped in a change log rendered on the page. Do not
+  hide it behind a tab — it is the reason this page is the approval artifact.
+- Submitting sends the campaign to the OCBC staff queue. Approval flips it to Live and it
+  appears under Ongoing on Tab 5.
+
+### 7.7 Summary before submit
+
+A single block, readable in one screen, showing: segment description and rounded reach;
+the reward with its new/returning tag and incremental share; the window; selected outlets;
+channel and whether push was requested; the limit and the maximum cost it implies; and
+expected incremental value **as a range, not a point estimate**.
+
+If the merchant cannot read that block and say what they are about to spend and what they
+expect back, the page has not done its job.
+
+## 8. Tab 5 — Reward dashboard
+
+**Not signed up:** locked state. Show the shape of what is behind the lock with the numbers
+withheld, and a single CTA. Do not show a blank panel with a padlock icon.
+
+**Signed up:**
+1. Three summary cards — new customers reached, new returning customers, sales uplift
+   against matched control.
+2. **Ongoing** campaigns with live statistics, each with a stop control. Stopping requires
+   confirmation and states what happens to offers already delivered.
+3. **Pending** campaigns awaiting OCBC review, with submission time and what is being
+   reviewed.
+4. **Past** campaigns with results. **At least one past campaign must show a result that did
+   not clear its reward cost.** A dashboard that only reports wins is not a measurement
+   system, and a judge will ask. Showing the loss case is what makes the rest credible.
+
+**Campaign drill-down.** Every live and past campaign opens into a detail view. This is where
+the loop closes, so build it properly rather than as an expanded row:
+
+- **What was set up** — the full configuration as agreed: segment, rewards and their
+  new/returning tags, window, outlets, channel, limit and maximum cost. Where a setting was
+  changed away from the Mobius recommendation, **say so on the row** ("changed from the
+  recommended 2–5pm trough"). That annotation is what lets a result be explained later.
+- **Reach and redemption** — cardholders reached, redemptions, redemption rate.
+- **Profile of the customers who redeemed** — new to the business versus already returning,
+  age bands, and RFM segment at time of redemption. Aggregate only, 250 floor enforced, with
+  a suppressed band visible where one applies. These are the merchant's own customers now,
+  so the breakdown is permitted; cardholders who were reached and did not redeem are not
+  profiled.
+- **Repeat purchases from redeemers** — how many returned within 30 days, how many further
+  visits each, and how that compares with the control group. This is the retention claim and
+  it needs the comparison to mean anything.
+- **Incremental sales, reward cost and net contribution**, with net shown in emerald or red
+  according to sign.
+- **A written verdict** — one short block saying what the result tells the merchant. On the
+  loss-making campaign this explains the mechanism: high redemption rate, mostly existing
+  customers, control group spent nearly as much. Redemption rate measures popularity, not
+  incremental trade, and the detail view is where that distinction is taught.
+
+---
+
+## 9. State contract with the other two interfaces
+
+The merchant view reads and writes shared state; the staff and customer views consume it.
+Define it once, in a single module, so all three builds agree:
+
+- Merchant applies on Tab 3 → status `applied`, appears on the dashboard as awaiting RM
+  contact. No configuration exists yet.
+- RM makes contact and opens the set-up page → status `draft`.
+- Set-up page submitted → status `pending`, appears in the staff queue with the full
+  configuration and the change log attached.
+- Staff edits and approves → status `active`, moves to Ongoing on Tab 5. Staff edits made
+  after submission must be visible to the merchant on the set-up page, not applied silently.
+- Staff triggers push → notification appears in the customer view's Rewards page.
+- Customer redeems → merchant Tab 5 statistics update; customer profile weights update to
+  improve future relevance.
+- Redemptions reach the configured limit → status `capped`, offer closes in the customer
+  feed, no further pushes.
+- Merchant stops a campaign → status `stopped`, moves to Past with results frozen.
+
+Redemption events must propagate to both the merchant dashboard and the customer profile
+without a page reload. That propagation *is* the flywheel; if the demo has to be refreshed
+to show it, the pitch loses its best thirty seconds.
+
+---
+
+## 10. Design system
+
+**Colour** — OCBC Red `#ED1C24` (primary action and brand only), hover `#D0121A`, active
+`#A60E14`. Dark Slate `#1E293B`. Canvas `#F8FAFC`. Card `#FFFFFF`. Border `#E2E8F0`. Text
+`#0F172A` primary, `#64748B` secondary, `#94A3B8` light. Success `#10B981`. Warning
+`#F59E0B`. Baseline and control series `#94A3B8`, dashed.
+
+Do not use red to mean "good" in a chart — in a bank interface red reads as loss. Growth
+series use emerald; baseline and control use dashed slate.
+
+**Type** — Open Sans / Helvetica Neue / Arial. Tabular numerals on every financial figure so
+columns align. Display 36–44px; H1 28–32px; H2 20–24px; H3 16–18px; body 14–15px; caption
+12–13px. Nothing meaningful below 14px — it will not survive a projector.
+
+**Layout** — 8px scale, 1280px max container, 48–64px section padding. Cards: white, 1px
+`#E2E8F0`, radius 12px, shadow `0 1px 3px rgba(0,0,0,.05)`.
+
+**Components** — `SectionHeader`, `FeatureCard`, `TestimonialCard`, `StatCard`,
+`ChartCard`, `CampaignRow`. No `PricingCard`: nothing in this product is priced.
+
+**Restraint.** No gradients, no glassmorphism, no animated counters, no confetti on
+campaign approval. One accent colour doing one job. The Möbius diagram is the memorable
+element; everything else stays disciplined.
+
+**Quality floor** — sticky nav with active section anchors, responsive to mobile, visible
+keyboard focus, semantic headings, reduced motion respected, keyboard navigation between
+tabs so the pitch never depends on a mouse, and deep-linkable URLs per tab so any screen can
+be opened cold in Q&A.
+
+---
+
+## 11. Out of scope
+
+Overseas and FX offers, Great Eastern data, multi-market rollout, reward settlement and
+billing, pricing tiers, real authentication. If a screen needs one of these to make sense,
+the screen is wrong.
+
+---
+
+## 12. Self-check
+
+- Is the loop legible from the landing page alone, without narration?
+- Is there any chart describing cardholders the merchant has never served?
+- Is a suppressed band visible somewhere?
+- Does the Tab 3 button submit an application and promise RM contact within the week,
+  rather than launching or configuring anything?
+- Does the loop diagram show both parties and the OCBC plaque with AI · DATA · DIGITAL?
+- Are both testimonials positive in tone?
+- Do the recency, frequency and value blocks build toward the RFM segmentation rather than
+  sitting as loose statistics?
+- Is the revenue-concentration chart interpreted in prose?
+- Are all six reward types shown, including the rejected one with its reason?
+- Does every campaign open into a drill-down with redeemer profile and repeat-purchase data?
+- Is every cost figure the merchant's whole cost, with no split shown anywhere?
+- Does the narrowing agent round reach to 50, cap refinements, and refuse a protected-
+  characteristic narrowing out loud?
+- Does a refused narrowing avoid reporting the count it refused?
+- Is the reward's incremental share on screen, even when it is unflattering?
+- Does moving the window into peak hours change the expected value while you watch?
+- Is maximum cost shown as a hard number, the merchant's whole cost?
+- Is the change log on the page rather than behind a tab?
+- Does the card-mix panel state where the data comes from, and does the non-acquired state
+  exist?
+- Does every AI sentence sit next to its number?
+- Does the dashboard show one campaign that lost money?
+- Does every headline number trace to `constants.js` with a basis?
+- Is "Mock data" visible on every screen?
+- Can all four tabs be driven by keyboard in under two minutes?
