@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Möbius — integrated demo</title>
+<style>
+:root{
+  --red:#ED1C24; --red-h:#D0121A; --red-d:#A60E14;
+  --navy:#1A202C; --slate:#1E293B;
+  --bg:#F4F5F7; --card:#fff; --line:#E2E8F0; --line-d:#CBD5E1;
+  --t1:#0F172A; --t2:#64748B; --t3:#94A3B8;
+  --ok:#10B981; --ok-bg:#ECFDF5; --warn:#F59E0B; --warn-bg:#FEF3C7;
+  --info:#2563EB; --info-bg:#EFF6FF; --indigo:#6366F1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:15px/1.5 "Open Sans","Helvetica Neue",Arial,sans-serif;color:var(--t1);background:var(--bg);-webkit-font-smoothing:antialiased}
+h1{font-size:28px;font-weight:700;line-height:1.25}
+h2{font-size:20px;font-weight:600;line-height:1.3}
+h3{font-size:16px;font-weight:600;line-height:1.4}
+.mono{font-variant-numeric:tabular-nums;font-family:Inter,system-ui,sans-serif}
+.cap{font-size:12.5px;color:var(--t2);line-height:1.45}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.sec{padding:32px 0}
+button{font-family:inherit;font-size:14px;cursor:pointer;border-radius:8px;border:0}
+.btn{padding:10px 18px;font-weight:600;transition:.15s}
+.btn-p{background:var(--red);color:#fff}.btn-p:hover{background:var(--red-h)}
+.btn-p:disabled{background:var(--line-d);cursor:not-allowed}
+.btn-s{background:#fff;color:var(--slate);border:1px solid var(--line-d)}
+.btn-s:hover{background:#F8FAFC;border-color:var(--t3)}
+.btn-lg{padding:14px 26px;font-size:15px}
+.btn-dark{background:var(--slate);color:#fff}.btn-dark:hover{background:var(--navy)}
+
+/* ── shell ── */
+.topbar{background:var(--navy);color:#fff;position:sticky;top:0;z-index:60}
+.topbar .wrap{display:flex;align-items:center;gap:28px;height:60px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-.3px}
+.loop{width:26px;height:16px;flex:none}
+.roles{display:flex;gap:2px;background:rgba(255,255,255,.08);padding:3px;border-radius:9px;margin-left:auto}
+.roles button{padding:7px 15px;background:transparent;color:#CBD5E1;font-weight:600;font-size:13px;border-radius:6px}
+.roles button.on{background:var(--red);color:#fff}
+.clock{font-size:12px;color:#94A3B8;padding-left:20px;border-left:1px solid rgba(255,255,255,.15)}
+.rolebar{background:#fff;border-bottom:1px solid var(--line)}
+.rolebar .wrap{display:flex;align-items:center;gap:4px;height:52px;overflow-x:auto}
+.rolebar button{padding:8px 15px;background:transparent;color:var(--t2);font-weight:600;font-size:13.5px;white-space:nowrap}
+.rolebar button.on{background:#F1F5F9;color:var(--red)}
+.rolebar button:disabled{color:var(--t3);cursor:not-allowed}
+.ctx{margin-left:auto;font-size:12.5px;color:var(--t2);white-space:nowrap}
+
+/* ── cards ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 1px 2px -1px rgba(0,0,0,.05)}
+.card+.card{margin-top:16px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.split{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kpi .v{font-size:27px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--t2);margin-top:2px}
+.kpi .n{font-size:11.5px;color:var(--t3);margin-top:6px}
+.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.p-ok{background:var(--ok-bg);color:#047857}.p-warn{background:var(--warn-bg);color:#92400E}
+.p-info{background:var(--info-bg);color:#1D4ED8}.p-red{background:#FEF2F2;color:#B91C1C}
+.p-grey{background:#F1F5F9;color:var(--t2)}
+.skill{display:inline-flex;align-items:center;gap:6px;background:#F5F3FF;border:1px solid #DDD6FE;
+  color:#5B21B6;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:6px;font-family:Inter,monospace}
+.flag{background:var(--warn-bg);border-left:3px solid var(--warn);padding:11px 14px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.5}
+.note{background:var(--info-bg);border-left:3px solid var(--info);padding:11px 14px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.5}
+.internal{background:#FEF2F2;border:1px dashed #FCA5A5;border-radius:8px;padding:9px 13px;font-size:12px;color:#B91C1C;font-weight:600}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);
+  padding:9px 10px;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:11px 10px;border-bottom:1px solid #F1F5F9;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── charts ── */
+.hbars{display:flex;align-items:flex-end;gap:5px;height:150px;padding-top:8px}
+.hbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.hbar i{width:100%;background:#CBD5E1;border-radius:3px 3px 0 0;display:block}
+.hbar.gap i{background:var(--red)}
+.hbar.peak i{background:var(--slate)}
+.hbar b{font-size:10px;color:var(--t3);font-weight:600}
+.sbar{height:9px;background:#F1F5F9;border-radius:5px;overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--red);border-radius:5px}
+.stack{display:flex;height:26px;border-radius:6px;overflow:hidden;font-size:10.5px;color:#fff;font-weight:700}
+.stack div{display:flex;align-items:center;justify-content:center;min-width:0}
+.rowlab{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+.rowlab b{font-variant-numeric:tabular-nums}
+
+/* ── rank list ── */
+.rank{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid #F1F5F9}
+.rank:last-child{border-bottom:0}
+.rank .n{width:26px;height:26px;border-radius:7px;background:#F1F5F9;color:var(--t2);
+  display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.rank.top .n{background:var(--red);color:#fff}
+.rank.dim{opacity:.6}
+
+/* ── form ── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:700;margin-bottom:5px;color:var(--slate)}
+.field .h{font-size:12px;color:var(--t2);margin-bottom:6px;line-height:1.45}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:9px 12px;border:1px solid var(--line-d);border-radius:8px;font:14px/1.4 inherit;color:var(--t1);background:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid #FCA5A5;outline-offset:-1px;border-color:var(--red)}
+input[readonly]{background:#F8FAFC;color:var(--t2)}
+input[type=range]{width:100%;accent-color:var(--red)}
+.locked{background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:13px 15px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{padding:6px 12px;border-radius:20px;border:1px solid var(--line-d);background:#fff;font-size:12.5px;font-weight:600;color:var(--slate)}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg2{display:flex;gap:6px;flex-wrap:wrap}
+.seg2 button{padding:8px 14px;border:1px solid var(--line-d);background:#fff;font-weight:600;font-size:13px;color:var(--slate)}
+.seg2 button.on{background:var(--slate);color:#fff;border-color:var(--slate)}
+
+/* ── phone ── */
+.phone{width:332px;background:#0F172A;border-radius:34px;padding:11px;box-shadow:0 20px 40px rgba(0,0,0,.22);margin:0 auto}
+.screen{background:#F4F5F7;border-radius:25px;overflow:hidden;height:610px;display:flex;flex-direction:column;position:relative}
+.sbar2{background:#fff;padding:9px 18px 5px;display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--t1)}
+.apphd{background:#fff;padding:9px 18px 14px;border-bottom:1px solid var(--line)}
+.apphd h4{font-size:17px;font-weight:700}
+.scroll{flex:1;overflow-y:auto;padding:14px}
+.toast{position:absolute;top:12px;left:10px;right:10px;background:rgba(255,255,255,.98);backdrop-filter:blur(8px);
+  border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:5;
+  animation:drop .45s cubic-bezier(.2,1.2,.4,1)}
+@keyframes drop{from{transform:translateY(-130%);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast .th{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px}
+.toast .tt{font-size:13.5px;font-weight:700;line-height:1.3}
+.toast .tb{font-size:12.5px;color:var(--t2);margin-top:2px;line-height:1.4}
+.offer{background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:12px}
+.offer .band{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff;padding:16px}
+.offer .band .big{font-size:30px;font-weight:800;letter-spacing:-1px}
+.offer .body{padding:14px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block}
+
+/* ── allocator run ── */
+.funnel{display:flex;flex-direction:column;gap:2px}
+.fstep{display:flex;align-items:center;gap:14px;padding:13px 16px;background:#fff;border:1px solid var(--line);
+  border-radius:9px;opacity:.28;transition:.3s}
+.fstep.on{opacity:1;border-color:var(--line-d)}
+.fstep.on.cut{background:#FFFBF5;border-color:#FDE68A}
+.fstep .ix{width:25px;height:25px;border-radius:7px;background:#F1F5F9;display:grid;place-items:center;
+  font-size:12px;font-weight:700;color:var(--t2);flex:none}
+.fstep.on .ix{background:var(--slate);color:#fff}
+.fstep .txt{flex:1;min-width:0}
+.fstep .txt b{font-size:13.5px}
+.fstep .txt span{display:block;font-size:12px;color:var(--t2);margin-top:1px}
+.fstep .ct{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.fstep .dl{font-size:12px;color:#B45309;font-weight:700;width:62px;text-align:right;font-variant-numeric:tabular-nums}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:100;display:grid;place-items:center;padding:24px}
+.modal .box{background:#fff;border-radius:14px;padding:26px;max-width:740px;width:100%;max-height:88vh;overflow-y:auto}
+.hide{display:none!important}
+@media(max-width:1100px){.split{grid-template-columns:1fr}.g4,.g3{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <div class="logo">
+    <svg class="loop" viewBox="0 0 52 32" fill="none">
+      <path d="M6 16c0-7 6-11 12-7l16 14c6 4 12 0 12-7s-6-11-12-7L18 23c-6 4-12 0-12-7z"
+            stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+      <path d="M6 16c0-7 6-11 12-7l16 14c6 4 12 0 12-7s-6-11-12-7L18 23c-6 4-12 0-12-7z"
+            stroke="#ED1C24" stroke-width="1.6" stroke-dasharray="3 4" stroke-linecap="round"/>
+    </svg>Möbius
+  </div>
+  <div class="clock" id="clock"></div>
+  <div class="roles">
+    <button data-role="merchant" class="on">Merchant</button>
+    <button data-role="rm">OCBC RM</button>
+    <button data-role="cust">Customer</button>
+  </div>
+</div></div>
+
+<div class="rolebar"><div class="wrap" id="subnav"></div></div>
+
+<div id="app"></div>
+
+<div id="modal"></div>
+
+<script>
+const D = {
+ "meta": {
+  "seed": 20260913,
+  "window": [
+   "01 Sep 2025",
+   "31 Aug 2026"
+  ],
+  "demo_now": "Fri 11 Sep 2026, 3:12PM",
+  "generated": "2026-09-13"
+ },
+ "demand_gap": {
+  "total_customers": 4204,
+  "total_txns": 61157,
+  "repeat_rate": 59.3,
+  "repeat_n": 2492,
+  "recent_repeater_pct": 56.5,
+  "avg_freq": 2.98,
+  "hourly": [
+   [
+    7,
+    2949,
+    5.6
+   ],
+   [
+    8,
+    7887,
+    14.9
+   ],
+   [
+    9,
+    6185,
+    11.7
+   ],
+   [
+    10,
+    4157,
+    7.9
+   ],
+   [
+    11,
+    5459,
+    10.3
+   ],
+   [
+    12,
+    10498,
+    19.9
+   ],
+   [
+    13,
+    7920,
+    15.0
+   ],
+   [
+    14,
+    3064,
+    5.8
+   ],
+   [
+    15,
+    2061,
+    3.9
+   ],
+   [
+    16,
+    1662,
+    3.1
+   ],
+   [
+    17,
+    958,
+    1.8
+   ]
+  ],
+  "months": [
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07",
+   "2026-08"
+  ],
+  "monthly_vol": [
+   5435,
+   5703,
+   5039,
+   5567,
+   5668,
+   4971,
+   5492,
+   4947,
+   4593,
+   4392,
+   4478,
+   4872
+  ],
+  "monthly_ticket": [
+   14.07,
+   13.27,
+   13.13,
+   13.44,
+   14.31,
+   14.35,
+   13.87,
+   13.44,
+   13.7,
+   14.19,
+   14.83,
+   14.96
+  ],
+  "vol_trend_pct": -11.1,
+  "ticket_trend_pct": 2.9,
+  "offpeak_window": [
+   15,
+   18
+  ],
+  "offpeak_share": 8.9,
+  "peak_hour": 12,
+  "peak_share": 19.9,
+  "avg_ticket": 13.94
+ },
+ "rfm_dist": {
+  "Hibernating": {
+   "n": 1147,
+   "pct": 27.3
+  },
+  "Champions": {
+   "n": 727,
+   "pct": 17.3
+  },
+  "Potential Loyalists": {
+   "n": 701,
+   "pct": 16.7
+  },
+  "Loyal Customers": {
+   "n": 532,
+   "pct": 12.7
+  },
+  "New Customers": {
+   "n": 356,
+   "pct": 8.5
+  },
+  "At Risk": {
+   "n": 270,
+   "pct": 6.4
+  },
+  "Can't Lose Them": {
+   "n": 262,
+   "pct": 6.2
+  },
+  "Promising": {
+   "n": 209,
+   "pct": 5.0
+  }
+ },
+ "customer_profile": {
+  "ocbc_n": 1754,
+  "loyal_n": 351,
+  "ocbc_txns": 26195,
+  "all_cat": {
+   "F&B": 31,
+   "Groceries": 17,
+   "Transport": 12,
+   "Retail fashion": 11,
+   "Health & beauty": 8,
+   "Entertainment": 7,
+   "Travel": 6,
+   "Other": 8
+  },
+  "loyal_cat": {
+   "F&B": 40,
+   "Groceries": 13,
+   "Transport": 9,
+   "Retail fashion": 11,
+   "Health & beauty": 8,
+   "Entertainment": 7,
+   "Travel": 6,
+   "Other": 6
+  },
+  "all_sub": {
+   "Cafe & western": 38,
+   "Hawker & kopitiam": 24,
+   "Casual dining": 16,
+   "Fast food": 11,
+   "Bubble tea & dessert": 7,
+   "Fine dining": 4
+  },
+  "loyal_sub": {
+   "Cafe & western": 57,
+   "Hawker & kopitiam": 15,
+   "Casual dining": 13,
+   "Fast food": 6,
+   "Bubble tea & dessert": 5,
+   "Fine dining": 4
+  },
+  "loyal_cut": 166.18
+ },
+ "tagging": {
+  "fixed_cutoff": 10.0,
+  "p10_cutoff": 8.3,
+  "threshold_used": 8.3,
+  "dormant_n": 1970,
+  "total": 20000,
+  "foreign_active": 13304
+ },
+ "allocation": {
+  "retention": {
+   "pool": 963,
+   "narrow_removed": 329,
+   "after_narrow": 634,
+   "consent_removed": 98,
+   "cap_removed": 59,
+   "eligible": 477,
+   "final": 477,
+   "seg_split": {
+    "Loyal Customers": 76,
+    "Can't Lose Them": 58,
+    "Potential Loyalists": 122,
+    "At Risk": 68,
+    "New Customers": 94,
+    "Promising": 59
+   }
+  },
+  "acquisition": {
+   "pool": 1342,
+   "consent_removed": 181,
+   "tier_removed": 401,
+   "final": 323
+  },
+  "reach_cap": 800,
+  "freq_cap": 2,
+  "total": 800
+ },
+ "ocbc_txns": 26195
+};
+
+/* ═══════════════ demo customer profiles ═══════════════
+   Each profile is an archetype the tag + RFM pipeline produces for M0001.
+   'copy' is the segment-specific notification the merchant authors on the
+   configuration page — one reward mechanic, several framings.            */
+const PROFILES = [
+ {id:'denise', name:'Denise L.', init:'DL', seg:'Loyal Customers', pool:'retention',
+  tags:['F&B 44% of spend','Cafe & western','CBD weekday professional','Regular spender'],
+  fact:'Visits 1.4×/week, 11:50am–1:15pm. 0 of 71 visits fall in 3–6pm.',
+  why:'Already a customer, structurally absent from the demand-gap window. Cheapest incremental visit available.',
+  targeted:true, n:198,
+  title:'Your usual, 20% off after lunch',
+  body:'You know the 12 o\'clock queue. Skip it — 20% off 3pm–6pm, weekdays.'},
+
+ {id:'priya', name:'Priya S.', init:'PS', seg:"Can't Lose Them", pool:'retention',
+  tags:['F&B 39% of spend','Cafe & western','CBD weekday professional','High spender'],
+  fact:'Was 3×/week for 7 months. Last visit 112 days ago. Lifetime spend S$1,840.',
+  why:'High historic F and M, collapsed R. Win-back framing, not a habit-formation one.',
+  targeted:true, n:126,
+  title:'It has been a while',
+  body:'Your table is still here. 20% off any afternoon visit, 3pm–6pm this month.'},
+
+ {id:'edwin', name:'Edwin T.', init:'ET', seg:'New Customers', pool:'retention',
+  tags:['F&B 51% of spend','Bubble tea & dessert','CBD weekday professional','Budget-occasional'],
+  fact:'2 visits in the last 19 days, both first-time-of-day 9am. Avg ticket S$9.20.',
+  why:'High R, low F. The reward is buying a second habit, not a single transaction.',
+  targeted:true, n:153,
+  title:'Come back for round two',
+  body:'20% off your next afternoon coffee, 3pm–6pm. Good all month.'},
+
+ {id:'bernice', name:'Bernice W.', init:'BW', seg:'Champion-lookalike', pool:'acquisition',
+  tags:['F&B 47% of spend','Cafe & western','CBD weekday professional','High spender'],
+  fact:'11 café visits/month within 400m of Tanjong Pagar. Zero visits to this merchant.',
+  why:'No history here, but her tag signature matches this merchant\'s own top-20% loyal profile.',
+  targeted:true, n:323,
+  title:'New to Tanjong Pagar Cafe?',
+  body:'20% off your first afternoon visit, 3pm–6pm weekdays. Two minutes from your usual.'},
+
+ {id:'alvin', name:'Alvin K.', init:'AK', seg:'Champions', pool:'—',
+  tags:['F&B 52% of spend','Cafe & western','CBD weekday professional','High spender'],
+  fact:'127 visits, 8:05–8:30am, same flat white. Recency 1 day.',
+  why:'Excluded at segment selection. Discounting a Champion pays for a visit that was happening anyway.',
+  targeted:false, reason:'Champions excluded from segment', n:727},
+
+ {id:'charles', name:'Charles O.', init:'CO', seg:'Loyal Customers', pool:'retention',
+  tags:['F&B 36% of spend','Casual dining','CBD weekday professional','High spender'],
+  fact:'Avg ticket S$21.40. 84% of his visits are already inside 3pm–6pm.',
+  why:'Passes the segment test, fails the narrowing filter. Rewarding him funds existing off-peak revenue.',
+  targeted:false, reason:'Removed by narrowing filter (off-peak share ≥10%)', n:329},
+
+ {id:'farah', name:'Farah B.', init:'FB', seg:'—', pool:'—',
+  tags:['Dormant','6.1 txns/month — below the 8.3 threshold'],
+  fact:'9 transactions in 12 months, all at one clinic. No marketing consent on file.',
+  why:'Two independent exclusions: OCBC-wide dormancy tag and absent consent.',
+  targeted:false, reason:'Dormant tag + no marketing consent', n:'1,970 / 279'}
+];
+
+const REWARDS = [
+ {r:1,t:'Discount',s:'Time-boxed to the 3–6pm window',
+  why:'Most tangible and immediate motivator, and it is the only mechanic that can be fenced to a narrow daily window without the customer doing arithmetic.',pick:true},
+ {r:2,t:'Cashback',s:'Time-boxed',
+  why:'Similar immediacy but settles after the fact, so it pulls less hard at the point of sale where the visit decision is actually made.'},
+ {r:3,t:'Voucher',s:'Fixed value',
+  why:'Lowers trial friction well, but a voucher is not naturally tied to a three-hour daily window — it gets redeemed at noon instead.'},
+ {r:4,t:'Spend-and-save',s:'Tiered threshold',
+  why:'Requires multiple visits to pay out. Wrong instrument for filling one recurring window; right one for a seasonal campaign.'},
+ {r:5,t:'Overseas / FX-linked',s:'Cross-border benefit',
+  why:'No travel signal in this merchant\'s customer base above the OCBC baseline. Irrelevant here.'}
+];
+
+/* ═══════════════ state ═══════════════ */
+const S = {
+  role:'merchant', view:'profile',
+  signedUp:false, live:false, triggered:false,
+  cust:'denise', killed:false,
+  cfg:{ reward:'Discount', pct:20, days:'Weekdays', from:'15:00', to:'18:00',
+        cap:D.allocation.reach_cap, limit:400, freqPerCust:2,
+        start:'2026-09-14', end:'2026-10-16', narrow:true, acq:true }
+};
+
+const NAV = {
+  merchant:[['profile','1 · Customer profile'],['rec','2 · Recommended programme'],
+            ['config','3 · Reward configuration'],['dash','4 · Reward dashboard']],
+  rm:[['portfolio','Portfolio dashboard'],['run','Allocation run'],['tagging','Cardholder tagging batch']],
+  cust:[['app','OCBC app']]
+};
+const CTX = {merchant:'M0001 · Tanjong Pagar Cafe · OCBC Velocity',
+             rm:'Shannon Lim · EmB relationship manager · 34 merchants',
+             cust:'Demo device — switch cardholder below'};
+
+const $ = s => document.querySelector(s);
+const n = v => Number(v).toLocaleString();
+const sum = o => Object.values(o).reduce((a,b)=>a+b,0);
+
+function go(view){ S.view=view; render(); window.scrollTo(0,0); }
+function setRole(r){ S.role=r; S.view=NAV[r][0][0]; render(); window.scrollTo(0,0); }
+
+/* ═══════════════ render ═══════════════ */
+function render(){
+  $('#clock').textContent = D.meta.demo_now + ' · demo clock';
+  document.querySelectorAll('.roles button').forEach(b=>b.classList.toggle('on',b.dataset.role===S.role));
+  $('#subnav').innerHTML = NAV[S.role].map(([k,l])=>{
+    const dis = S.role==='merchant' && ((k==='config'&&!S.signedUp)||(k==='dash'&&!S.live));
+    return `<button data-v="${k}" class="${S.view===k?'on':''}" ${dis?'disabled':''}>${l}</button>`;
+  }).join('') + `<span class="ctx">${CTX[S.role]}</span>`;
+  $('#app').innerHTML = ({
+    profile:vProfile, rec:vRec, config:vConfig, dash:vDash,
+    portfolio:vPortfolio, run:vRun, tagging:vTagging, app:vApp
+  })[S.view]();
+  bind();
+}
+
+function bind(){
+  document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>!b.disabled&&go(b.dataset.v));
+  document.querySelectorAll('.roles button').forEach(b=>b.onclick=()=>setRole(b.dataset.role));
+  document.querySelectorAll('[data-cust]').forEach(b=>b.onclick=()=>{S.cust=b.dataset.cust;render()});
+  document.querySelectorAll('[data-cfg]').forEach(el=>{
+    el.oninput = ()=>{ const k=el.dataset.cfg;
+      S.cfg[k] = el.type==='checkbox'?el.checked:(el.type==='range'||el.type==='number'?+el.value:el.value);
+      if(['cap','pct','narrow','acq','from','to','days'].includes(k)) render(); };
+  });
+  const s=$('#signup'); if(s) s.onclick=()=>{S.signedUp=true;go('config')};
+  const a=$('#activate'); if(a) a.onclick=()=>{S.live=true;go('dash')};
+  const t=$('#trigger'); if(t) t.onclick=runAllocator;
+  const k=$('#kill'); if(k) k.onclick=()=>{S.killed=!S.killed;render()};
+}
+
+/* ═══════════════ MERCHANT 1 — customer profile ═══════════════ */
+function vProfile(){
+  const g=D.demand_gap, cp=D.customer_profile, [lo,hi]=g.offpeak_window;
+  const mx=Math.max(...g.hourly.map(h=>h[1]));
+  const bars=g.hourly.map(([h,c,p])=>{
+    const gap=h>=lo&&h<hi, peak=h===g.peak_hour;
+    return `<div class="hbar ${gap?'gap':peak?'peak':''}"><i style="height:${c/mx*100}%"></i><b>${h}</b></div>`;
+  }).join('');
+  const vmx=Math.max(...g.monthly_vol);
+  const vbars=g.monthly_vol.map((v,i)=>`<div class="hbar"><i style="height:${v/vmx*100}%;background:${i<6?'#CBD5E1':'#6366F1'}"></i><b>${g.months[i].slice(5)}</b></div>`).join('');
+  const rfmRows=Object.entries(D.rfm_dist).map(([k,v])=>{
+    const hot=['Loyal Customers',"Can't Lose Them",'New Customers','Promising','Potential Loyalists','At Risk'].includes(k);
+    return `<div style="margin-bottom:9px"><div class="rowlab"><span>${k} ${hot?'<span class="pill p-info" style="margin-left:4px">in scope</span>':''}</span><b>${n(v.n)} · ${v.pct}%</b></div>
+    <div class="sbar"><i style="width:${v.pct/30*100}%;background:${hot?'var(--red)':'#CBD5E1'}"></i></div></div>`;
+  }).join('');
+  const catRow=(o,c)=>Object.entries(o).map(([k,v])=>
+    `<div><div class="rowlab"><span>${k}</span><b>${v}%</b></div><div class="sbar"><i style="width:${v/60*100}%;background:${c}"></i></div></div>`).join('');
+
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Your customer profile</h1>
+    <p class="cap" style="margin-top:4px">Tanjong Pagar Cafe · one outlet · data window ${D.meta.window[0]} – ${D.meta.window[1]}</p></div>
+    <span class="skill">/sme-business-customer-analysis</span></div>
+
+  <div class="note" style="margin-bottom:18px"><b>Data-volume gate passed.</b>
+    ${n(D.ocbc_txns)} OCBC-card transactions in your file, against a threshold of 100.
+    Below that you would see the demand gap only — the customer profile and RFM sections stay locked
+    until there is enough OCBC transaction history to say anything without guessing.</div>
+
+  <h2 style="margin:24px 0 12px">Demand-gap detector</h2>
+  <div class="grid g4">
+    <div class="kpi"><div class="v">${n(g.total_customers)}</div><div class="l">Unique customers</div><div class="n">${n(g.total_txns)} transactions</div></div>
+    <div class="kpi"><div class="v">${g.repeat_rate}%</div><div class="l">Repeat-customer rate</div><div class="n">${n(g.repeat_n)} came back at least once</div></div>
+    <div class="kpi"><div class="v">S$${g.avg_ticket}</div><div class="l">Average ticket</div><div class="n">${g.ticket_trend_pct>0?'+':''}${g.ticket_trend_pct}% H2 vs H1</div></div>
+    <div class="kpi"><div class="v" style="color:var(--red)">${g.vol_trend_pct}%</div><div class="l">Transaction volume</div><div class="n">H2 vs H1 of the window</div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="hd"><h3>Weekday transactions by hour</h3>
+      <span class="pill p-red">Gap window ${lo}:00–${hi}:00 · ${g.offpeak_share}% of volume</span></div>
+    <div class="hbars">${bars}</div>
+    <p class="cap" style="margin-top:12px">Your busiest hour (${g.peak_hour}:00) carries ${g.peak_share}% of weekday volume.
+    The three hours from ${lo}:00 carry ${g.offpeak_share}% between them — the lowest contiguous three-hour block in your trading day.
+    That block is the demand gap this programme is built to fill.</p>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3 style="margin-bottom:12px">Monthly transaction volume</h3>
+      <div class="hbars" style="height:110px">${vbars}</div>
+      <p class="cap" style="margin-top:12px">Second half of the window runs ${Math.abs(g.vol_trend_pct)}% below the first.
+      Twelve months shows a monthly shape; it is not long enough to call a season.</p></div>
+    <div class="card"><h3 style="margin-bottom:12px">One-time vs repeat</h3>
+      <div class="stack" style="margin-bottom:10px">
+        <div style="width:${g.repeat_rate}%;background:var(--red)">Repeat ${g.repeat_rate}%</div>
+        <div style="width:${(100-g.repeat_rate).toFixed(1)}%;background:#CBD5E1;color:var(--slate)">One-time ${(100-g.repeat_rate).toFixed(1)}%</div></div>
+      <p class="cap">${g.recent_repeater_pct}% of your repeat customers transacted in the last 30 days of the window,
+      at an average of ${g.avg_freq} visits per month while active.</p>
+      <div class="flag" style="margin-top:12px">Roughly ${(100-g.repeat_rate).toFixed(0)} in every 100 customers never come back.
+      That is the pool the acquisition half of this programme is aimed at.</div></div>
+  </div>
+
+  <h2 style="margin:30px 0 12px">Customer profile — where else they spend</h2>
+  <p class="cap" style="margin-bottom:14px">${n(cp.ocbc_n)} of your customers paid with an OCBC card.
+  The right-hand column is your top 20% by spend here (${n(cp.loyal_n)} customers, S$${n(cp.loyal_cut)}+ lifetime).
+  Aggregate only — no individual is identifiable in this view.</p>
+  <div class="grid g2">
+    <div class="card"><div class="hd"><h3>All OCBC customers</h3><span class="pill p-grey">${n(cp.ocbc_n)}</span></div>
+      <div class="grid" style="gap:9px">${catRow(cp.all_cat,'#94A3B8')}</div>
+      <h3 style="margin:18px 0 9px;font-size:14px">Within F&amp;B</h3>
+      <div class="grid" style="gap:9px">${catRow(cp.all_sub,'#94A3B8')}</div></div>
+    <div class="card" style="border-color:var(--red)"><div class="hd"><h3>Top 20% by spend</h3><span class="pill p-red">${n(cp.loyal_n)}</span></div>
+      <div class="grid" style="gap:9px">${catRow(cp.loyal_cat,'var(--red)')}</div>
+      <h3 style="margin:18px 0 9px;font-size:14px">Within F&amp;B</h3>
+      <div class="grid" style="gap:9px">${catRow(cp.loyal_sub,'var(--red)')}</div></div>
+  </div>
+  <div class="note" style="margin-top:14px"><b>The one number that matters here.</b>
+    Café &amp; western is ${cp.all_sub['Cafe & western']}% of F&amp;B spend across all your customers,
+    but ${cp.loyal_sub['Cafe & western']}% among your best ones. Your loyal customers are not general diners
+    who happen to visit — they are café people. That signature is what the acquisition targeting matches against.</div>
+
+  <h2 style="margin:30px 0 12px">RFM segmentation</h2>
+  <div class="card"><div class="hd"><h3>Distribution across ${n(g.total_customers)} customers</h3>
+    <span class="cap">Quintile-scored on recency, frequency and monetary value</span></div>${rfmRows}</div>
+
+  <div class="card" style="margin-top:20px;border-color:var(--red);background:#FFFBFB">
+    <div class="hd"><h3>You have a demand gap Möbius can act on</h3></div>
+    <p style="font-size:14.5px;margin-bottom:14px">Three hours a day at ${g.offpeak_share}% of volume, a customer base
+    with ${n(sum(Object.fromEntries(Object.entries(D.rfm_dist).filter(([k])=>['Loyal Customers',"Can't Lose Them",'New Customers','Promising','Potential Loyalists','At Risk'].includes(k)).map(([k,v])=>[k,v.n]))))}
+    customers in reachable segments, and a loyal-customer signature clear enough to find lookalikes.</p>
+    <button class="btn btn-p btn-lg" data-v="rec">See the recommended reward programme →</button></div>
+  </div>`;
+}
+
+/* ═══════════════ MERCHANT 2 — recommendation ═══════════════ */
+function vRec(){
+  const a=D.allocation;
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Recommended reward programme</h1>
+    <p class="cap" style="margin-top:4px">Generated from your demand gap and RFM breakdown</p></div>
+    <span class="skill">/reward-programme-recommendation</span></div>
+
+  <div class="card" style="border-color:var(--ok)">
+    <div class="hd"><h3>Eligibility gate</h3><span class="pill p-ok">PASS</span></div>
+    <table><tr><td>Average bank balance</td><td class="num mono">S$47,200</td><td style="width:150px">Threshold &gt; S$30,000</td><td style="width:60px"><span class="pill p-ok">Pass</span></td></tr>
+    <tr><td>Internal transaction score</td><td class="num mono">Band 2</td><td>Band 3 or better</td><td><span class="pill p-ok">Pass</span></td></tr>
+    <tr><td>External transaction score</td><td class="num mono">Band 4</td><td>Band 3 or better</td><td><span class="pill p-warn">Fail</span></td></tr></table>
+    <div class="flag" style="margin-top:12px">The gate needs the balance test <b>and</b> at least one of the two scores.
+    Internal band 2 carries it. Band direction assumed lower = better, per standard PD-band convention — confirm before this
+    rule is stated to anyone outside the team.</div></div>
+
+  <div class="card"><div class="hd"><h3>Demand gap classification</h3><span class="pill p-red">Off-peak / soft footfall</span></div>
+    <p class="cap">A recurring trough in a fixed daily window, not a seasonal or product-level shortfall.
+    Transaction volume is also down ${Math.abs(D.demand_gap.vol_trend_pct)}% half-on-half, which reads as a secondary
+    declining-activity signal — noted, but the hourly pattern is the stronger and more actionable one.</p></div>
+
+  <div class="card"><div class="hd"><h3>All five reward types, ranked for this gap</h3>
+    <span class="cap">Runner-up options stay visible so a reviewer can override</span></div>
+    ${REWARDS.map(r=>`<div class="rank ${r.pick?'top':'dim'}"><div class="n">${r.r}</div><div>
+      <b style="font-size:14.5px">${r.t}</b> <span class="cap">· ${r.s}</span>
+      ${r.pick?'<span class="pill p-red" style="margin-left:6px">Recommended</span>':''}
+      <p class="cap" style="margin-top:3px">${r.why}</p></div></div>`).join('')}</div>
+
+  <div class="grid g2">
+    <div class="card"><div class="hd"><h3>Existing customers</h3><span class="pill p-info">Retention pool</span></div>
+      <p class="cap" style="margin-bottom:12px">Discount maps to New Customers and Promising as habit formation,
+      and to At Risk / Can't Lose Them as low-cost reactivation. Champions are deliberately out.</p>
+      ${Object.entries(a.retention.seg_split).map(([k,v])=>
+        `<div class="rowlab"><span>${k}</span><b>${n(v)} allocated</b></div>`).join('')}
+    </div>
+    <div class="card"><div class="hd"><h3>Prospects</h3><span class="pill p-info">Acquisition pool</span></div>
+      <p class="cap" style="margin-bottom:10px">OCBC cardholders whose category, sub-category style and frequency tier
+      match your top-20% loyal signature, with no transaction history here.</p>
+      <div class="kpi" style="border:0;padding:0"><div class="v">${n(a.acquisition.final)}</div>
+        <div class="l">Champion-lookalike prospects available</div></div>
+      <div class="flag" style="margin-top:12px">Voucher ranks first for this pool — a fixed-value welcome invites a
+      future high-value customer without teaching them to expect a discount. One campaign carries one mechanic, so
+      these prospects will receive the discount (their #2) unless you run a second campaign.</div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px"><h3 style="margin-bottom:10px">Who pays</h3>
+    <p class="cap">The reward is funded by the merchant. OCBC supplies the targeting, the delivery channel and the
+    measurement, and carries no share of the discount.</p>
+    <div class="flag" style="margin-top:12px"><b>Open against the write-up.</b> The Q5/Q6 document and the financial model
+    assume ~50% OCBC co-funding, and roughly 47% of base-case revenue is built on SME deposit economics that follow from it.
+    This build reflects the later merchant-funded decision. The two need to be reconciled before the deck goes out.</div></div>
+
+  <div class="card" style="margin-top:20px;border-color:var(--red);background:#FFFBFB">
+    <h3 style="margin-bottom:8px">Ready to run this?</h3>
+    <p class="cap" style="margin-bottom:16px">Signing up takes you straight to configuration. Nothing is sent to any
+    customer until you set the parameters and activate.</p>
+    <button class="btn btn-p btn-lg" id="signup">Sign up for the reward programme →</button></div>
+  </div>`;
+}
+
+/* ═══════════════ MERCHANT 3 — configuration ═══════════════ */
+function vConfig(){
+  const a=D.allocation, c=S.cfg;
+  const ret=c.narrow?a.retention.eligible:a.retention.pool-a.retention.consent_removed-a.retention.cap_removed;
+  const acq=c.acq?a.acquisition.final:0;
+  const avail=ret+acq, reach=Math.min(c.cap,avail);
+  const p=PROFILES.find(x=>x.id===S.cust&&x.targeted)||PROFILES[0];
+
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Configure your reward</h1>
+    <p class="cap" style="margin-top:4px">Step 3 of 4 · nothing sends until you activate</p></div>
+    <span class="skill">/reward-programme-recommendation · prefilled draft</span></div>
+
+  <div class="split">
+  <div>
+    <div class="card">
+      <div class="hd"><h3>1 · Target segment</h3><span class="pill p-grey">Set by Möbius</span></div>
+      <div class="locked"><b style="font-size:14px">New Customers · Promising · Potential Loyalists · Loyal Customers · At Risk · Can't Lose Them</b>
+        <p class="cap" style="margin-top:6px">Champions and Hibernating are excluded. You cannot add a segment or widen
+        this selection — only narrow it.</p></div>
+
+      <div class="field" style="margin-top:16px">
+        <label>Narrowing</label>
+        <div class="h">Filters remove people. None of them can add anyone the segment above does not already contain.</div>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:13.5px;padding:11px 13px;border:1px solid var(--line);border-radius:8px;cursor:pointer">
+          <input type="checkbox" data-cfg="narrow" ${c.narrow?'checked':''} style="width:auto;margin-top:2px">
+          <span><b>Exclude customers already visiting in the gap window</b><br>
+          <span class="cap">Anyone with 10% or more of their visits already in ${c.from}–${c.to} is removed.
+          Removes ${n(a.retention.narrow_removed)}. These visits are happening without a discount.</span></span></label>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:13.5px;padding:11px 13px;border:1px solid var(--line);border-radius:8px;cursor:pointer;margin-top:8px">
+          <input type="checkbox" data-cfg="acq" ${c.acq?'checked':''} style="width:auto;margin-top:2px">
+          <span><b>Include lookalike prospects</b><br>
+          <span class="cap">${n(a.acquisition.final)} OCBC cardholders matching your loyal-customer signature, no history here.</span></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd"><h3>2 · Reward</h3><span class="pill p-red">One reward per campaign</span></div>
+      <div class="grid g2">
+        <div class="field"><label>Mechanic</label>
+          <select data-cfg="reward">${REWARDS.map(r=>`<option ${r.t===c.reward?'selected':''}>${r.t}</option>`).join('')}</select>
+          <div class="h" style="margin-top:5px">Ranked #1 for an off-peak gap.</div></div>
+        <div class="field"><label>Discount</label>
+          <input type="number" data-cfg="pct" value="${c.pct}" min="5" max="50" step="5">
+          <div class="h" style="margin-top:5px">% off the bill within the window.</div></div>
+      </div>
+      <div class="grid g3">
+        <div class="field"><label>Days</label><select data-cfg="days">
+          <option ${c.days==='Weekdays'?'selected':''}>Weekdays</option><option ${c.days==='All days'?'selected':''}>All days</option></select></div>
+        <div class="field"><label>From</label><input type="text" data-cfg="from" value="${c.from}"></div>
+        <div class="field"><label>To</label><input type="text" data-cfg="to" value="${c.to}"></div>
+      </div>
+      <div class="note">Prefilled from your hourly transaction pattern, not from a default. You can move the window;
+      moving it outside ${D.demand_gap.offpeak_window[0]}:00–${D.demand_gap.offpeak_window[1]}:00 means rewarding hours that are already busy.</div>
+      <div class="grid g3" style="margin-top:16px">
+        <div class="field"><label>Outlet</label><input type="text" value="Tanjong Pagar" readonly></div>
+        <div class="field"><label>Start</label><input type="date" data-cfg="start" value="${c.start}"></div>
+        <div class="field"><label>Expiry</label><input type="date" data-cfg="end" value="${c.end}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:14px">3 · Limits</h3>
+      <div class="field"><label>Customer reach cap — ${n(reach)} of ${n(avail)} eligible</label>
+        <div class="h">How many people are contacted. Lower it if the discount budget will not carry the full pool.</div>
+        <input type="range" data-cfg="cap" min="100" max="${Math.max(avail,100)}" step="50" value="${c.cap}">
+        <div class="stack" style="margin-top:9px">
+          <div style="width:${avail?Math.min(100,reach/avail*100):0}%;background:var(--red)">Contacted ${n(reach)}</div>
+          <div style="width:${avail?Math.max(0,100-reach/avail*100):100}%;background:#CBD5E1;color:var(--slate)">Held back ${n(Math.max(0,avail-reach))}</div></div>
+      </div>
+      <div class="grid g2">
+        <div class="field"><label>Total redemptions</label><input type="number" data-cfg="limit" value="${c.limit}">
+          <div class="h" style="margin-top:5px">Hard stop on your cost. At ${c.pct}% of a S$${D.demand_gap.avg_ticket} ticket,
+          ${n(c.limit)} redemptions is about <b>S$${n(Math.round(c.limit*D.demand_gap.avg_ticket*c.pct/100))}</b>.</div></div>
+        <div class="field"><label>Redemptions per customer</label><input type="number" data-cfg="freqPerCust" value="${c.freqPerCust}">
+          <div class="h" style="margin-top:5px">Over the life of the campaign.</div></div>
+      </div>
+      <div class="internal">OCBC-side cap, not yours: no cardholder receives more than ${a.freq_cap} offers
+      per fortnight across every merchant on Möbius. That cap removes ${n(a.retention.cap_removed)} people from
+      your pool and you cannot raise it.</div>
+    </div>
+
+    <div class="card">
+      <div class="hd"><h3>4 · Notification message</h3><span class="pill p-info">One per segment</span></div>
+      <p class="cap" style="margin-bottom:14px">Same reward, different framing. A lapsed regular and a first-time
+      prospect should not read the same sentence.</p>
+      <div class="seg2" style="margin-bottom:14px">
+        ${PROFILES.filter(x=>x.targeted).map(x=>`<button data-cust="${x.id}" class="${S.cust===x.id?'on':''}">${x.seg}</button>`).join('')}</div>
+      ${PROFILES.filter(x=>x.targeted&&x.id===(PROFILES.find(y=>y.id===S.cust&&y.targeted)?S.cust:'denise')).map(x=>`
+        <div class="field"><label>Headline · ${x.seg} · ${n(x.n)} recipients</label>
+          <input type="text" value="${x.title}"></div>
+        <div class="field"><label>Body</label><textarea rows="2">${x.body}</textarea></div>
+        <div class="cap">Why this group reads differently: ${x.why}</div>`).join('')}
+    </div>
+
+    <div class="card" style="border-color:var(--red);background:#FFFBFB">
+      <h3 style="margin-bottom:8px">Activate</h3>
+      <p class="cap" style="margin-bottom:14px">The campaign goes live and appears on your dashboard. Your relationship
+      manager is notified and can throttle or stop it at any time.</p>
+      <button class="btn btn-p btn-lg" id="activate">Create and activate this reward →</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="position:sticky;top:130px">
+      <div class="hd"><h3>Customer preview</h3><span class="pill p-grey">${p.seg}</span></div>
+      <div class="phone" style="width:100%;max-width:300px">
+        <div class="screen" style="height:420px">
+          <div class="sbar2"><span>9:41</span><span>OCBC</span></div>
+          <div class="apphd"><h4>Rewards</h4></div>
+          <div class="scroll">
+            <div class="offer"><div class="band">
+              <div style="font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px">TANJONG PAGAR CAFE</div>
+              <div class="big">${c.pct}% off</div>
+              <div style="font-size:12px;opacity:.9">${c.days} ${c.from}–${c.to}</div></div>
+              <div class="body"><b style="font-size:13.5px">${p.title}</b>
+                <p class="cap" style="margin-top:4px">${p.body}</p>
+                <p class="cap" style="margin-top:8px;color:var(--t3)">Valid to ${c.end} · max ${c.freqPerCust} per customer</p></div></div>
+          </div></div></div>
+      <p class="cap" style="margin-top:12px">This is what the selected segment sees. Switch segment above to preview the others.</p>
+    </div>
+  </div></div></div>`;
+}
+
+/* ═══════════════ MERCHANT 4 — dashboard ═══════════════ */
+function vDash(){
+  const a=D.allocation, c=S.cfg;
+  const sent=S.triggered?a.total:0;
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Reward dashboard</h1>
+    <p class="cap" style="margin-top:4px">Tanjong Pagar Cafe · 1 active campaign</p></div></div>
+
+  <div class="card" style="border-color:var(--red)">
+    <div class="hd"><div><h3>${c.pct}% off · ${c.days} ${c.from}–${c.to}</h3>
+      <p class="cap">Off-peak fill · ${c.start} to ${c.end}</p></div>
+      <span class="pill ${S.killed?'p-red':'p-ok'}">${S.killed?'STOPPED BY OCBC':'ONGOING'}</span></div>
+    <div class="grid g4" style="margin-top:6px">
+      <div class="kpi"><div class="v">${n(Math.min(c.cap,a.total))}</div><div class="l">Allocated audience</div></div>
+      <div class="kpi"><div class="v">${n(sent)}</div><div class="l">Notifications sent</div></div>
+      <div class="kpi"><div class="v">${S.triggered?'47':'0'}</div><div class="l">Redemptions</div><div class="n">of ${n(c.limit)} cap</div></div>
+      <div class="kpi"><div class="v">S$${S.triggered?n(Math.round(47*D.demand_gap.avg_ticket*c.pct/100)):'0'}</div><div class="l">Reward cost to you</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:${S.triggered?'var(--line)':'var(--red)'};background:${S.triggered?'#fff':'#FFFBFB'}">
+    <div class="hd"><h3>${S.triggered?'Send completed':'Send to allocated customers'}</h3>
+      <span class="skill">/portfolio-allocator</span></div>
+    ${S.triggered
+      ? `<p class="cap">${n(a.total)} notifications delivered at ${D.meta.demo_now}.
+         Open the Customer view to see what each segment received, or the RM view for the full allocation log.</p>
+         <div style="display:flex;gap:9px;margin-top:14px">
+         <button class="btn btn-s" data-v="run">View allocation log</button>
+         <button class="btn btn-dark" onclick="setRole('cust')">Open customer view →</button></div>`
+      : `<p class="cap" style="margin-bottom:6px">In production this fires on the campaign schedule. For the demo it is a manual trigger:
+         the allocator runs live, applies every filter, and pushes a real-time notification to the surviving list.</p>
+         <div class="internal" style="margin:14px 0">Allocation runs at send time, not at activation — consent, dormancy and
+         the fortnightly frequency cap are all re-checked against the state of the portfolio right now.</div>
+         <button class="btn btn-p btn-lg" id="trigger">▶ Run allocator and send now</button>`}
+  </div>
+
+  <div class="card"><h3 style="margin-bottom:12px">Campaign economics</h3>
+    <table><tr><td>Audience contacted</td><td class="num mono">${n(Math.min(c.cap,a.total))}</td></tr>
+    <tr><td>Redemption cap</td><td class="num mono">${n(c.limit)}</td></tr>
+    <tr><td>Maximum reward cost at ${c.pct}% of S$${D.demand_gap.avg_ticket}</td><td class="num mono">S$${n(Math.round(c.limit*D.demand_gap.avg_ticket*c.pct/100))}</td></tr>
+    <tr><td>Gross sales if every redemption is a visit that would not have happened</td><td class="num mono">S$${n(Math.round(c.limit*D.demand_gap.avg_ticket))}</td></tr></table>
+    <div class="flag" style="margin-top:12px">That last line is the assumption doing all the work. Some redeemers would
+    have come anyway, and the discount on those visits is pure cost. The narrowing filter is what keeps that share down;
+    a holdout group is what would let you measure it. Neither makes the number safe to quote as revenue.</div></div>
+  </div>`;
+}
+
+/* ═══════════════ allocator run ═══════════════ */
+function runAllocator(){
+  const a=D.allocation, c=S.cfg;
+  const steps=[
+    {t:'Segment pool',s:'OCBC cardholders with history here, in the selected RFM segments',v:a.retention.pool},
+    {t:'Narrowing filter',s:'≥10% of visits already in the gap window',v:a.retention.after_narrow,d:a.retention.narrow_removed,cut:1},
+    {t:'Marketing consent',s:'No valid opt-in on file',v:a.retention.after_narrow-a.retention.consent_removed,d:a.retention.consent_removed,cut:1},
+    {t:'Portfolio frequency cap',s:`Already holding ${a.freq_cap} offers this fortnight from other merchants`,v:a.retention.eligible,d:a.retention.cap_removed,cut:1},
+    {t:'Acquisition pool',s:'Lookalike prospects, consent and dormancy applied',v:a.acquisition.final,add:1},
+    {t:'Reach cap',s:`Merchant cap of ${n(c.cap)}`,v:Math.min(c.cap,a.total)},
+  ];
+  $('#modal').innerHTML=`<div class="modal"><div class="box">
+    <div class="hd"><div><h2>Running /portfolio-allocator</h2>
+      <p class="cap">Live against the portfolio as at ${D.meta.demo_now}</p></div>
+      <span class="skill">/portfolio-allocator</span></div>
+    <div class="funnel" id="fn">${steps.map((s,i)=>`
+      <div class="fstep ${s.cut?'cut':''}" id="f${i}">
+        <div class="ix">${i+1}</div>
+        <div class="txt"><b>${s.t}</b><span>${s.s}</span></div>
+        ${s.d?`<div class="dl">−${n(s.d)}</div>`:s.add?`<div class="dl" style="color:#047857">+${n(s.v)}</div>`:'<div class="dl"></div>'}
+        <div class="ct">${n(s.v)}</div></div>`).join('')}</div>
+    <div id="done" class="hide"></div></div></div>`;
+  steps.forEach((s,i)=>setTimeout(()=>{
+    document.getElementById('f'+i).classList.add('on');
+    if(i===steps.length-1) setTimeout(finish,520);
+  },i*560));
+
+  function finish(){
+    S.triggered=true;
+    $('#done').className='';
+    $('#done').innerHTML=`
+      <div class="card" style="margin-top:18px;border-color:var(--ok);background:var(--ok-bg)">
+        <h3 style="margin-bottom:6px">${n(Math.min(c.cap,a.total))} notifications sent</h3>
+        <p class="cap">Delivered to the in-app offer feed, with a push notification for the segments above the
+        relevance threshold. ${n(a.retention.narrow_removed+a.retention.consent_removed+a.retention.cap_removed)} people were
+        removed by the filters and received nothing.</p></div>
+      <div class="internal" style="margin-top:12px">The per-customer send list stays on the OCBC side.
+        Tanjong Pagar Cafe sees the counts on this screen and never the identities behind them.</div>
+      <div style="display:flex;gap:9px;margin-top:18px">
+        <button class="btn btn-p" onclick="closeModal();setRole('cust')">Open customer view →</button>
+        <button class="btn btn-s" onclick="closeModal();go('run')">Full allocation log</button>
+        <button class="btn btn-s" onclick="closeModal()">Close</button></div>`;
+  }
+}
+function closeModal(){ $('#modal').innerHTML=''; render(); }
+
+/* ═══════════════ RM 1 — portfolio ═══════════════ */
+function vPortfolio(){
+  const a=D.allocation;
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Portfolio dashboard</h1>
+    <p class="cap" style="margin-top:4px">Shannon Lim · Emerging Business · 34 merchants</p></div></div>
+
+  <div class="grid g4">
+    <div class="kpi"><div class="v">34</div><div class="l">Merchants in caseload</div></div>
+    <div class="kpi"><div class="v">${S.live?'7':'6'}</div><div class="l">Live campaigns</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Awaiting your review</div><div class="n">Above the auto-approve threshold</div></div>
+    <div class="kpi"><div class="v">S$18,400</div><div class="l">Merchant reward spend this month</div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px;border-color:var(--warn);background:#FFFDF7">
+    <div class="hd"><div><h3>Portfolio exposure</h3>
+      <p class="cap">Cardholder-level, across every merchant. No merchant can see this screen.</p></div>
+      <span class="pill p-warn">RM ONLY</span></div>
+    <div class="grid g3" style="margin:6px 0 16px">
+      <div class="kpi"><div class="v">${n(14280+(S.triggered?a.total:0))}</div><div class="l">Cardholders contacted this fortnight</div></div>
+      <div class="kpi"><div class="v">1.42</div><div class="l">Average offers per contacted cardholder</div><div class="n">Cap is ${a.freq_cap}</div></div>
+      <div class="kpi"><div class="v" style="color:var(--warn)">${n(a.retention.cap_removed+412)}</div><div class="l">Suppressed by the frequency cap</div></div>
+    </div>
+    <p class="cap" style="margin-bottom:14px">No individual campaign reviewer can see the other campaigns pointing at the
+    same cardholder this week. This panel and the cap behind it are the only thing that can.</p>
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <button class="btn ${S.killed?'btn-p':'btn-s'}" id="kill">${S.killed?'Resume all campaigns':'Stop all sends'}</button>
+      <span class="cap">${S.killed?'All sends halted. Merchants see a stopped status.':'Throttle and kill-switch act on sends in flight, not on approvals already given.'}</span>
+    </div>
+  </div>
+
+  <div class="card"><h3 style="margin-bottom:12px">Campaigns</h3>
+    <table><thead><tr><th>Merchant</th><th>Reward</th><th>Gap type</th><th class="num">Allocated</th><th class="num">Sent</th><th>Status</th></tr></thead><tbody>
+    ${S.live?`<tr style="background:#FFFBFB"><td><b>M0001 Tanjong Pagar Cafe</b><br><span class="cap">Yours · activated today</span></td>
+      <td>${S.cfg.pct}% discount<br><span class="cap">${S.cfg.from}–${S.cfg.to}</span></td><td>Off-peak</td>
+      <td class="num mono">${n(Math.min(S.cfg.cap,a.total))}</td><td class="num mono">${S.triggered?n(a.total):'—'}</td>
+      <td><span class="pill ${S.killed?'p-red':S.triggered?'p-ok':'p-info'}">${S.killed?'Stopped':S.triggered?'Sent':'Scheduled'}</span></td></tr>`:''}
+    <tr><td>M0002 Bugis Bubble Tea</td><td>Voucher S$3</td><td>New outlet</td><td class="num mono">1,450</td><td class="num mono">1,450</td><td><span class="pill p-ok">Live</span></td></tr>
+    <tr><td>M0003 Orchard Apparel</td><td>Spend-and-save</td><td>Seasonal</td><td class="num mono">2,100</td><td class="num mono">2,100</td><td><span class="pill p-ok">Live</span></td></tr>
+    <tr><td>M0007 Kallang Gym</td><td>15% discount</td><td>Declining activity</td><td class="num mono">890</td><td class="num mono">—</td><td><span class="pill p-warn">Your review</span></td></tr>
+    <tr><td>M0011 Novena Clinic</td><td>Cashback 5%</td><td>Off-peak</td><td class="num mono">3,400</td><td class="num mono">—</td><td><span class="pill p-warn">Your review</span></td></tr>
+    </tbody></table>
+    <div class="note" style="margin-top:12px">Campaigns below the reach and cost threshold auto-approve. The two flagged
+    here are above it. The threshold itself is still undecided — it needs a stated basis before it goes in the deck.</div></div>
+  </div>`;
+}
+
+/* ═══════════════ RM 2 — allocation run ═══════════════ */
+function vRun(){
+  const a=D.allocation;
+  if(!S.triggered) return `<div class="wrap sec"><div class="card">
+    <h2>No allocation run yet</h2><p class="cap" style="margin-top:8px">Activate and trigger the campaign from the
+    merchant dashboard to populate this log.</p>
+    <button class="btn btn-s" style="margin-top:14px" onclick="setRole('merchant')">Go to merchant view</button></div></div>`;
+  const rows=[
+    ['Retention · segment pool','Loyal, Potential Loyalist, New, Promising, At Risk, Can\'t Lose Them — with OCBC card history here',a.retention.pool,''],
+    ['− Narrowing filter','≥10% of visits already inside the gap window',-a.retention.narrow_removed,'Merchant-set'],
+    ['− Marketing consent','No valid opt-in',-a.retention.consent_removed,'Mandatory'],
+    ['− Portfolio frequency cap',`At the ${a.freq_cap}-offer fortnightly ceiling from other merchants`,-a.retention.cap_removed,'OCBC-set'],
+    ['Retention subtotal','',a.retention.eligible,''],
+    ['Acquisition · lookalike pool','Cafe & western · CBD weekday professional · non-dormant',a.acquisition.pool,''],
+    ['− Marketing consent','',-a.acquisition.consent_removed,'Mandatory'],
+    ['− Frequency tier','Budget-occasional removed; below the loyal signature',-a.acquisition.tier_removed,'Signature match'],
+    ['Acquisition subtotal','',a.acquisition.final,''],
+    ['Reach cap',`Merchant cap of ${n(S.cfg.cap)} applied to the ranked list`,a.total,'Merchant-set'],
+  ];
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Allocation run</h1>
+    <p class="cap" style="margin-top:4px">M0001 Tanjong Pagar Cafe · ${D.meta.demo_now}</p></div>
+    <span class="skill">/portfolio-allocator</span></div>
+
+  <div class="internal" style="margin-bottom:16px">Internal allocation layer. The per-customer send list is not rendered
+  anywhere in this prototype, including here — only the counts and the reason each filter fired.</div>
+
+  <div class="card"><table><thead><tr><th>Stage</th><th>Basis</th><th class="num">Customers</th><th>Set by</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr${r[2]<0?' style="background:#FFFBF5"':r[0].includes('subtotal')||r[0]==='Reach cap'?' style="font-weight:700"':''}>
+    <td>${r[0]}</td><td class="cap">${r[1]}</td>
+    <td class="num mono" style="${r[2]<0?'color:#B45309':''}">${r[2]<0?'−'+n(-r[2]):n(r[2])}</td>
+    <td><span class="cap">${r[3]}</span></td></tr>`).join('')}</tbody></table></div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3 style="margin-bottom:12px">Allocation by segment</h3>
+      ${Object.entries(a.retention.seg_split).map(([k,v])=>
+        `<div style="margin-bottom:9px"><div class="rowlab"><span>${k}</span><b>${n(v)}</b></div>
+        <div class="sbar"><i style="width:${v/Math.max(...Object.values(a.retention.seg_split))*100}%"></i></div></div>`).join('')}
+      <div style="margin-top:9px"><div class="rowlab"><span>Champion-lookalike prospects</span><b>${n(a.acquisition.final)}</b></div>
+      <div class="sbar"><i style="width:100%;background:var(--indigo)"></i></div></div></div>
+    <div class="card"><h3 style="margin-bottom:12px">Pool choice</h3>
+      <p class="cap">Two genuinely different populations, not one list filtered twice. The retention pool exists because
+      these people have transaction history here, which is what makes an RFM score possible at all. The acquisition pool
+      exists because they do not, so they are matched on tag signature instead.</p>
+      <div class="note" style="margin-top:12px">That choice moves the final list more than any filter below it.
+      Every other line in the table above shifts the number by a few hundred; this one decides what kind of number it is.</div></div>
+  </div>
+  </div>`;
+}
+
+/* ═══════════════ RM 3 — tagging batch ═══════════════ */
+function vTagging(){
+  const t=D.tagging;
+  return `<div class="wrap sec">
+  <div class="hd"><div><h1>Cardholder tagging batch</h1>
+    <p class="cap" style="margin-top:4px">Runs nightly across the whole cardholder base, independent of any campaign</p></div>
+    <span class="skill">/retailer-transaction-data-analysis</span></div>
+
+  <div class="note" style="margin-bottom:18px">This job does not know that Tanjong Pagar Cafe exists. It tags every
+  cardholder from their own spending, and the allocator reads those tags afterwards. Keeping the two apart is what stops
+  a merchant's campaign from reaching into the raw transaction history of people who have never been their customers.</div>
+
+  <div class="grid g4">
+    <div class="kpi"><div class="v">${n(t.total)}</div><div class="l">Cardholders in batch</div></div>
+    <div class="kpi"><div class="v">${n(t.dormant_n)}</div><div class="l">Tagged dormant</div><div class="n">${(100*t.dormant_n/t.total).toFixed(1)}% excluded from targeting</div></div>
+    <div class="kpi"><div class="v">${n(t.total-t.dormant_n)}</div><div class="l">Actively tagged</div></div>
+    <div class="kpi"><div class="v">${n(t.foreign_active)}</div><div class="l">With foreign spend &gt;5%</div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px"><h3 style="margin-bottom:12px">Dormancy threshold</h3>
+    <table><tr><td>Fixed cutoff</td><td class="num mono">${t.fixed_cutoff} txns/month</td></tr>
+    <tr><td>Distribution cutoff — 10th percentile</td><td class="num mono">${t.p10_cutoff} txns/month</td></tr>
+    <tr style="font-weight:700"><td>Threshold applied — the lower of the two</td><td class="num mono">${t.threshold_used} txns/month</td></tr></table>
+    <div class="flag" style="margin-top:12px">Read as <b>min(10, p10)</b> used as one threshold, not as "below 10 <b>or</b>
+    below p10", which is a looser test that would tag more people dormant. It changes who gets excluded from every campaign
+    downstream, so it is worth confirming rather than assuming.</div></div>
+
+  <div class="card"><h3 style="margin-bottom:12px">Tags produced per cardholder</h3>
+    <table><thead><tr><th>Tag</th><th>Basis</th><th>Used by the allocator for</th></tr></thead><tbody>
+    <tr><td><b>Top-level category</b></td><td class="cap">Spend share across F&amp;B, groceries, transport, retail and the rest</td><td class="cap">Matching a merchant's own category</td></tr>
+    <tr><td><b>Sub-category style</b></td><td class="cap">Top 3 categories only — cafe hopper, hawker regular, fine dining</td><td class="cap">The loyal-customer signature match</td></tr>
+    <tr><td><b>Location and timing</b></td><td class="cap">Where and when spend clusters — CBD weekday, heartland weekend</td><td class="cap">Catchment relevance</td></tr>
+    <tr><td><b>Frequency tier</b></td><td class="cap">Percentile bands across the non-dormant base</td><td class="cap">Ranking the acquisition pool</td></tr>
+    <tr><td><b>Local / foreign split</b></td><td class="cap">Resident country from address, overridden by transaction majority when they disagree</td><td class="cap">The FX-linked reward type</td></tr>
+    <tr><td><b>Dormant</b></td><td class="cap">Below the threshold above</td><td class="cap">Hard exclusion</td></tr>
+    </tbody></table></div>
+
+  <div class="card" style="border-color:var(--warn);background:#FFFDF7">
+    <h3 style="margin-bottom:8px">Considered and left out</h3>
+    <p class="cap">Mapping each cardholder's family and frequent transaction counterparties into a network, then lifting
+    their targeting propensity using those people's spending. It works, and it is not built. Inferring relationships between
+    identified individuals from transaction data is a different order of privacy exposure than tagging someone's own spend —
+    the same reason the Great Eastern travel-intent idea was dropped. Named here so it reads as a decision rather than an oversight.</p></div>
+  </div>`;
+}
+
+/* ═══════════════ CUSTOMER ═══════════════ */
+function vApp(){
+  const c=S.cfg, p=PROFILES.find(x=>x.id===S.cust)||PROFILES[0];
+  const got=S.triggered&&p.targeted&&!S.killed;
+  return `<div class="wrap sec"><div class="split">
+  <div>
+    <h1>Cardholder view</h1>
+    <p class="cap" style="margin:4px 0 20px">Seven profiles the tagging and RFM pipeline produces for this merchant.
+    Four are allocated the campaign and read different copy. Three receive nothing, for three different reasons.</p>
+
+    ${PROFILES.map(x=>`
+      <div class="card" style="padding:16px;margin-top:10px;cursor:pointer;${S.cust===x.id?'border-color:var(--red);background:#FFFBFB':''}" data-cust="${x.id}">
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:${x.targeted?'var(--red)':'#CBD5E1'};color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none">${x.init}</div>
+          <div style="flex:1;min-width:0">
+            <div class="hd" style="margin-bottom:3px"><b style="font-size:14.5px">${x.name}</b>
+              <span class="pill ${x.targeted?(x.pool==='acquisition'?'p-info':'p-ok'):'p-grey'}">${x.targeted?(x.pool==='acquisition'?'Prospect':'Allocated'):'Not sent'}</span></div>
+            <div class="cap" style="margin-bottom:5px"><b>${x.seg}</b> · ${n(x.n)} cardholders in this group</div>
+            <div class="chips" style="margin-bottom:6px">${x.tags.map(t=>`<span class="chip" style="padding:3px 9px;font-size:11px;font-weight:600">${t}</span>`).join('')}</div>
+            <p class="cap">${x.fact}</p>
+            <p class="cap" style="margin-top:5px;color:${x.targeted?'var(--t2)':'#B45309'}">${x.targeted?x.why:'<b>'+x.reason+'.</b> '+x.why}</p>
+          </div></div></div>`).join('')}
+  </div>
+
+  <div style="position:sticky;top:130px">
+    <div class="phone"><div class="screen">
+      ${got?`<div class="toast"><div class="th"><span class="dot"></span>OCBC · now</div>
+        <div class="tt">${p.title}</div><div class="tb">${p.body}</div></div>`:''}
+      <div class="sbar2"><span>3:12</span><span>OCBC ▮</span></div>
+      <div class="apphd"><h4>Rewards</h4>
+        <p class="cap" style="margin-top:2px">${p.name} · ${p.seg==='—'?'no segment':p.seg}</p></div>
+      <div class="scroll" style="padding-top:${got?'74px':'14px'}">
+        ${got?`<div class="offer"><div class="band">
+            <div style="font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px">TANJONG PAGAR CAFE</div>
+            <div class="big">${c.pct}% off</div>
+            <div style="font-size:12px;opacity:.9">${c.days} ${c.from}–${c.to}</div></div>
+          <div class="body"><b style="font-size:13.5px">${p.title}</b>
+            <p class="cap" style="margin-top:4px">${p.body}</p>
+            <div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--line)">
+              <p class="cap">1 Tanjong Pagar Road · ${c.start} to ${c.end}</p>
+              <p class="cap">Max ${c.freqPerCust} redemptions · pay with any OCBC card</p></div>
+            <button class="btn btn-p" style="width:100%;margin-top:12px">Redeem in store</button></div></div>`:''}
+        ${S.killed&&p.targeted?`<div class="flag" style="margin-bottom:12px">Campaign stopped by OCBC. Nothing delivered.</div>`:''}
+        <div class="offer"><div class="band" style="background:linear-gradient(135deg,#475569,#1E293B)">
+          <div style="font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px">OCBC 365</div>
+          <div class="big" style="font-size:24px">6% cashback</div>
+          <div style="font-size:12px;opacity:.9">Dining, all week</div></div>
+          <div class="body"><p class="cap">Your standing card benefit. Always on.</p></div></div>
+        ${!got&&!S.triggered?`<p class="cap" style="text-align:center;padding:20px 10px">No Möbius offers yet.
+          Trigger the campaign from the merchant dashboard.</p>`:''}
+        ${!got&&S.triggered&&!S.killed?`<div class="note" style="font-size:12px">No Möbius offer for this cardholder.
+          <b>${p.reason}.</b></div>`:''}
+      </div></div></div>
+    <p class="cap" style="text-align:center;margin-top:12px;max-width:332px;margin-left:auto;margin-right:auto">
+      In-app feed is the primary channel; push is the nudge. Every offer lands in the feed, only high-relevance ones push.</p>
+  </div></div></div>`;
+}
+
+render();
+</script>
+</body>
+</html>
