@@ -54,7 +54,9 @@ CONSTANTS = {
     "GAP_PEER_RATIO": C(0.8, "Peer test margin: own slot share must sit below 80% of the peer-median share, so ordinary weekend/weekday variation is not read as a gap"),
     "PUSH_CAP_PER_WEEK": C(2, "design-decisions-log anti-spam — not yet calibrated", provisional=True),
     "FREQ_CAP_OFFERS": C(3, "portfolio-allocator Step 3 — concurrent offers per cardholder per 30 days, placeholder", provisional=True),
-    "PORTFOLIO_WEEKLY_CEIL": C(50_000, "RM prompt §3.2 — cardholders contactable per week at the 800k base; a placeholder until it has a basis", provisional=True),
+    "PORTFOLIO_WEEKLY_CEIL_SHARE": C(0.0625, "RM prompt §3.2 — 50,000 cardholders contactable per week is 6.25% of the 800,000 base. "
+                                            "Held as a share of the consented base, not a headcount, so the ceiling lands in whatever units the "
+                                            "panel is counting; the share is still a placeholder until it has a basis", provisional=True),
     "ASSUMED_GROSS_MARGIN": C(0.65, "Brief §5 — café gross margin assumed for net contribution; not merchant-reported", provisional=True),
     "RETURN_WINDOW_DAYS": C(30, "Brief §5 — unprompted return measured within 30 days of last redemption"),
     "RECENT_REPEATER_DAYS": C(30, "sme-business-customer-analysis Step 2"),
@@ -74,6 +76,7 @@ DEMO_DATE = DEMO_CLOCK.date()
 PERIOD_START = date.fromisoformat(CONSTANTS["PERIOD_START"].value)
 PERIOD_END = date.fromisoformat(CONSTANTS["PERIOD_END"].value)
 CARDHOLDER_BASE = CONSTANTS["CARDHOLDER_BASE"].value
+SAMPLE_CARDHOLDERS = CONSTANTS["SAMPLE_CARDHOLDERS"].value
 ELIG_MIN_BALANCE_SGD = CONSTANTS["ELIG_MIN_BALANCE_SGD"].value
 ELIG_MAX_SCORE_BAND = CONSTANTS["ELIG_MAX_SCORE_BAND"].value
 ELIG_BALANCE_MONTHS = CONSTANTS["ELIG_BALANCE_MONTHS"].value
@@ -97,7 +100,7 @@ GAP_MIN_SLOT_BASELINE = CONSTANTS["GAP_MIN_SLOT_BASELINE"].value
 GAP_MIN_VOLUME_12W = CONSTANTS["GAP_MIN_VOLUME_12W"].value
 PUSH_CAP_PER_WEEK = CONSTANTS["PUSH_CAP_PER_WEEK"].value
 FREQ_CAP_OFFERS = CONSTANTS["FREQ_CAP_OFFERS"].value
-PORTFOLIO_WEEKLY_CEIL = CONSTANTS["PORTFOLIO_WEEKLY_CEIL"].value
+PORTFOLIO_WEEKLY_CEIL_SHARE = CONSTANTS["PORTFOLIO_WEEKLY_CEIL_SHARE"].value
 ASSUMED_GROSS_MARGIN = CONSTANTS["ASSUMED_GROSS_MARGIN"].value
 RETURN_WINDOW_DAYS = CONSTANTS["RETURN_WINDOW_DAYS"].value
 RECENT_REPEATER_DAYS = CONSTANTS["RECENT_REPEATER_DAYS"].value
@@ -228,6 +231,119 @@ def cell(n, label=None):
     if label is not None:
         out["label"] = label
     return out
+
+
+# ----------------------------------------------------------------------------------------------
+# Composition breakdowns vs direct observations
+#
+# The 250 floor exists to stop a merchant learning who its reached cardholders are. It belongs
+# on *composition* breakdowns — age bands, RFM segments, card mix: the cells that say what a
+# group of people is made of. It does not belong on the merchant's own observations of its own
+# trade: how many people redeemed, how many of them had bought there before, how many came back,
+# what came in and what it cost. Those are the merchant's records, it can read them off its own
+# till, and floored or rounded they would make the campaign drill-down unreadable for nothing.
+#
+# A suppressed composition breakdown must state the population it declined to break down. A
+# column of suppressed cells with no denominator reads as a broken pipeline, and the merchant
+# cannot tell a privacy decision from missing data.
+# ----------------------------------------------------------------------------------------------
+
+def composition(counts, population, breakdown, subject):
+    """A count-based composition breakdown under the floor, with the population named.
+
+    `counts` is {label: raw count}; `population` is the group being broken down (a direct
+    observation, reported exactly); `breakdown` names the cut ("age band"); `subject` is the
+    phrase that follows the population count ("cardholders redeemed this offer").
+    """
+    population = int(population)
+    cells = {k: cell(int(v)) for k, v in counts.items()}
+    n = f"{population:,}"
+    below_as_a_group = population < MIN_SEGMENT_SIZE
+    if population == 0:
+        note = f"No {subject}, so there is no breakdown by {breakdown} to show."
+    elif below_as_a_group:
+        note = (f"{n} {subject} — fewer than the {MIN_SEGMENT_SIZE}-cardholder reporting floor as a single group, so no "
+                f"breakdown by {breakdown} is shown for them. The {n} itself is your own record and is reported in full.")
+    elif any(c["suppressed"] for c in cells.values()):
+        note = (f"{n} {subject}. Any {breakdown} under {MIN_SEGMENT_SIZE} is withheld and the rest are rounded to the "
+                f"nearest {REACH_ROUNDING}, so the shown cells do not sum to {n}.")
+    else:
+        note = (f"{n} {subject}. Every {breakdown} clears the {MIN_SEGMENT_SIZE} floor and is rounded to the nearest "
+                f"{REACH_ROUNDING}, so the cells do not sum exactly to {n}.")
+    return dict(population=population, floor=MIN_SEGMENT_SIZE, breakdown=breakdown,
+                all_suppressed=below_as_a_group, cells=cells, note=note)
+
+
+def composition_shares(shares, population, breakdown, subject):
+    """A share-based composition breakdown (the card-mix panel) under the same floor.
+
+    Percentages carry no count of their own, so the floor lands on the population behind them:
+    below it the whole mix is withheld rather than shown as percentages of a handful of people.
+    """
+    population = int(population)
+    n = f"{population:,}"
+    below = population < MIN_SEGMENT_SIZE
+    if population == 0:
+        note = f"No {subject} yet, so there is no {breakdown} to show."
+    elif below:
+        note = (f"{n} {subject} — fewer than the {MIN_SEGMENT_SIZE}-cardholder reporting floor, so the {breakdown} is "
+                f"withheld: percentages of {n} people would describe individuals.")
+    else:
+        note = f"Share of transactions by tender across {n} {subject}."
+    return dict(population=population, floor=MIN_SEGMENT_SIZE, breakdown=breakdown,
+                all_suppressed=below, shares=None if below else shares, note=note)
+
+
+def floor_policy(composition_keys, direct_observation_keys):
+    """The floor's scope, shipped next to the numbers it governs so a view cannot guess wrong."""
+    return dict(floor=MIN_SEGMENT_SIZE, rounding=REACH_ROUNDING,
+                floored_composition=list(composition_keys), direct_observations=list(direct_observation_keys),
+                note=(f"The {MIN_SEGMENT_SIZE}-cardholder floor applies to composition breakdowns of the people in this "
+                      f"campaign — age bands, RFM segments, card mix. New versus returning, repeat purchases against "
+                      f"control, incremental sales and net contribution are counted from your own transactions and are "
+                      f"reported exactly, unrounded."))
+
+
+# ----------------------------------------------------------------------------------------------
+# Scale policy
+#
+# public/data ships sample units (SAMPLE_CARDHOLDERS); the pitch speaks at CARDHOLDER_BASE. A cap
+# on how many people may be contacted therefore cannot be a headcount: 50,000 set at the 800,000
+# base next to a count drawn from 12,000 is not a ceiling, it is two scales on one panel. Caps
+# live here as a share and become an absolute number at render time, against the base the panel
+# is actually counting. Every cap-like constant is classified below and validate.py fails if a
+# new one appears unclassified.
+# ----------------------------------------------------------------------------------------------
+
+SCALE_POLICY = dict(
+    share_of_consented_base=["PORTFOLIO_WEEKLY_CEIL_SHARE"],
+    per_cardholder_rates=["PUSH_CAP_PER_WEEK", "FREQ_CAP_OFFERS", "NARROW_MAX_REFINEMENTS", "DORMANT_TXN_PER_MONTH"],
+    absolute_by_design={
+        "MIN_SEGMENT_SIZE": "A privacy floor in cardholders. As a share it would shrink with the sample and stop closing the differencing attack.",
+        "REACH_ROUNDING": "Rounding granularity in cardholders, paired with the floor for the same reason.",
+        "GATE_MIN_OCBC_TXNS": "Evidence threshold on the merchant's own transactions, not a cap on the cardholder base.",
+        "LIFT_MIN_SUPPORT": "Evidence threshold on how many cardholders a merchant pair shares, not a cap on reach.",
+        "LIFT_MIN_DAYPART_AVAILABILITY": "Already a fraction, of one cardholder's own week rather than of the base.",
+        "LIFT_PRICE_BAND_TOLERANCE": "A distance in price bands, on a scale that does not grow with the base.",
+        "GAP_MIN_WEEKS": "A count of weeks in the trailing window, unrelated to the size of the base.",
+        "GAP_MIN_SLOT_BASELINE": "Evidence threshold on a daypart's mean slot volume.",
+        "GAP_MIN_VOLUME_12W": "Evidence threshold on the merchant's own trailing volume.",
+        "ELIG_MIN_BALANCE_SGD": "A currency threshold on one merchant's balance.",
+        "ELIG_MAX_SCORE_BAND": "A credit-band position on a 1–5 scale.",
+    },
+)
+
+SCALE_DISCLOSURE = (f"Counts are in sample units: {SAMPLE_CARDHOLDERS:,} synthetic cardholders standing in for OCBC's "
+                    f"{CARDHOLDER_BASE:,}. Caps are held as a share of the consented base and computed into sample "
+                    f"units, so no panel mixes the two scales.")
+
+
+def cap_from_share(share, base):
+    """An absolute cap, computed at render time from its share of the base on screen.
+
+    Caps are fractions in this file; only the render knows which base it is counting against.
+    """
+    return int(round(share * int(base)))
 
 
 def constants_manifest():

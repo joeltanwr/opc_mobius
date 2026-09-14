@@ -9,8 +9,12 @@ from datetime import date, timedelta
 import numpy as np
 import pandas as pd
 
-from config import (DEMO_DATE, ASSUMED_GROSS_MARGIN, RETURN_WINDOW_DAYS, CONSTANTS, AGE_BANDS, RFM_SEGMENTS, STATUS_DISPLAY, cell, round_reach)
+from config import (DEMO_DATE, ASSUMED_GROSS_MARGIN, RETURN_WINDOW_DAYS, CONSTANTS, AGE_BANDS, RFM_SEGMENTS, STATUS_DISPLAY,
+                    composition, floor_policy, round_reach)
 from sme_analysis import merchant_source, rfm_table
+
+
+_REDEEMER_SUBJECT = "cardholders redeemed this offer"
 
 
 def _reward_cost(amounts, pct_off, cap):
@@ -97,12 +101,21 @@ def measure_completed(raw, camp, alloc):
                   gross_margin_assumed=ASSUMED_GROSS_MARGIN, gross_margin_provisional=CONSTANTS["ASSUMED_GROSS_MARGIN"].provisional,
                   net_contribution_sgd=round(net, 2), net_sign="negative" if losing else "positive"),
         redeemer_profile=dict(new_to_business=len(new_redeemers), returning=len(redeemers) - len(new_redeemers),
-                              age_bands={b: cell(int(ages.get(b, 0))) for b in AGE_BANDS},
-                              rfm_at_redemption={k: cell(v) for k, v in sorted(seg_counts.items(), key=lambda kv: -kv[1])},
+                              new_vs_returning_basis=("A redeemer who had not bought here before the window is new. Read off your own "
+                                                      "transactions, so it is reported exactly rather than floored or rounded."),
+                              age_bands=composition({b: int(ages.get(b, 0)) for b in AGE_BANDS}, len(redeemers),
+                                                    "age band", _REDEEMER_SUBJECT),
+                              rfm_at_redemption=composition(dict(sorted(seg_counts.items(), key=lambda kv: -kv[1])), len(redeemers),
+                                                            "RFM segment", _REDEEMER_SUBJECT),
                               note="Aggregate only; cardholders reached but not redeeming are not profiled"),
+        floor_policy=floor_policy(["redeemer_profile.age_bands", "redeemer_profile.rfm_at_redemption"],
+                                  ["redemption.redeemers", "redeemer_profile.new_to_business", "redeemer_profile.returning",
+                                   "repeat", "incremental", "cost"]),
         repeat=dict(returned_within_30d=returned, return_rate_pct=round(100 * returned / len(redeemers), 1) if redeemers else None,
                     control_returned=c_returned, control_return_rate_pct=round(100 * c_returned / len(c_conv), 1) if c_conv else None,
-                    further_visits_distribution={"1": int((further == 1).sum()), "2": int((further == 2).sum()), "3+": int((further >= 3).sum())}),
+                    further_visits_distribution={"1": int((further == 1).sum()), "2": int((further == 2).sum()), "3+": int((further >= 3).sum())},
+                    basis=(f"An untagged visit at your outlets within {RETURN_WINDOW_DAYS} days of the redemption, measured the same way on the "
+                           "control group. Counted from your own transactions and reported exactly — the floor governs composition, not your own trade.")),
         verdict=verdict,
         operating_account=dict(opened=bool(raw["merchant_by_id"].loc[mid, "operating_account_opened_date"]),
                                date=raw["merchant_by_id"].loc[mid, "operating_account_opened_date"]) if camp["campaign_id"] == "C-SJ-02" else None,
