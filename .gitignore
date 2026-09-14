@@ -6,3 +6,8 @@ node_modules/
 .next/
 dist/
 build/
+
+# Machine-local dev launch config. The committed version pointed at `npm run dev`, which a
+# PowerShell execution policy blocks on the maintainer's machine; the workaround is an absolute
+# node path, which is true of exactly one machine and does not belong in the repo.
+.claude/launch.json
