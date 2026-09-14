@@ -272,6 +272,35 @@ def main(rerun=True):
     check("Soujourner card mix still ships shares summing to ~100%",
           abs(sum(mixes["M0001"]["shares"].values()) - 100) < 1.5, str(mixes["M0001"]["shares"]))
 
+    # all_customers_seen is the merchant's own count of its own terminals: exact, unrounded, and a
+    # stated empty state rather than a literal 0 next to a chart.
+    seen = {m: p["trading_summary"]["all_customers_seen"] for m, p in profiles.items()
+            if p["trading_summary"].get("all_customers_seen") is not None}
+    bad_seen = [(m, v) for m, v in seen.items()
+                if v.get("floor_applies") is not False or not isinstance(v.get("count"), int)
+                or (v["count"] == 0 and not v["note"].lower().startswith("no "))
+                or (v["count"] and f"{v['count']:,}" not in v["note"])]
+    check("all_customers_seen is a direct observation with its own copy, never a floored cell", not bad_seen, str(bad_seen[:3]))
+    check("all_customers_seen is exact, not rounded to the reach granularity",
+          any(v["count"] % cfg.REACH_ROUNDING for v in seen.values() if v["count"]),
+          str({m: v["count"] for m, v in seen.items()}))
+    check("a merchant with no trade yet states it instead of shipping a bare 0",
+          any(v["count"] == 0 and v["note"].lower().startswith("no ") for v in seen.values()),
+          str([(m, v["note"]) for m, v in seen.items() if v["count"] == 0]))
+
+    # Every shipped file has to survive a strict JSON parser — the browser's JSON.parse rejects
+    # bare NaN and Infinity, and one of them takes down every screen that reads the file.
+    nonfinite = []
+    for fn in sorted(os.listdir(PUB)):
+        if not fn.endswith(".json"):
+            continue
+        raw_text = open(os.path.join(PUB, fn), encoding="utf-8").read()
+        try:
+            json.loads(raw_text, parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))
+        except ValueError as e:
+            nonfinite.append((fn, str(e)))
+    check("every shipped JSON file parses under a strict parser (no NaN or Infinity)", not nonfinite, str(nonfinite[:3]))
+
     # -------------------------------------------------------------- fix 2: caps scale with the base
     cap_like = [k for k in cfg.CONSTANTS if re.search(r"CAP|CEIL|MAX|MIN|LIMIT", k)]
     buckets = cfg.SCALE_POLICY
@@ -315,6 +344,116 @@ def main(rerun=True):
     src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
                 and os.path.basename(f) != "DataProvider.jsx"]
     check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+
+    # -------------------------------------------------------------- shared state module (brief §4)
+    # The reducer, ladder and bus are JavaScript; the only honest check is to run them. selftest.mjs
+    # drives the real code against the real public/data and prints one JSON report.
+    st_path = os.path.join(ROOT, "src", "state", "selftest.mjs")
+    try:
+        st = subprocess.run(["node", st_path], capture_output=True, text=True, timeout=120)
+        st_report = json.loads(st.stdout) if st.stdout.strip().startswith("{") else None
+    except (OSError, subprocess.SubprocessError, ValueError) as e:      # node missing or crashed
+        st, st_report = None, None
+        st_error = str(e)
+    if st_report is None:
+        check("state module: selftest.mjs runs under node", False, (st.stderr[-600:] if st else None) or locals().get("st_error"))
+    else:
+        check("state module: selftest.mjs passes every check", st_report["ok"], str(st_report.get("failed")))
+        ladder = st_report["notes"]["ladder"]
+        check("state ladder: no unreachable state", not ladder["unreachable"], str(ladder["unreachable"]))
+        check("state ladder: display map keys == ladder states (one set of keys)", not ladder["missing_display"] and not ladder["extra_display"], str(ladder))
+        check("state ladder: the ladder is the brief's ladder",
+              ladder["states"] == ["applied", "draft", "pending", "active", "capped", "stopped", "completed"]
+              and set(ladder["terminal"]) == {"capped", "stopped", "completed"}, str(ladder["states"]))
+        check("state ladder: ladder states == shipped status_display keys", set(ladder["states"]) == set(const["status_display"]), str(const["status_display"]))
+        for name in ("event 1: suppression is counted, not dropped — delivered = sent + suppressed",
+                     "event 2: customer profile weight moved toward the merchant's category and still sums to 1",
+                     "event 3: reaching the redemption limit moves the campaign to capped with the reason",
+                     "event 4: a card held at the stop can still be redeemed — never revoked",
+                     "event 5: turning offers off empties the feed",
+                     "bus: a tab opened later derives the same state from the log"):
+            check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
+
+    # The narrowing agent's world (merchant §7.1): a lookup table of floored, rounded reaches, and
+    # the protected-characteristic policy, both shipped from the pipeline.
+    hero_seg = segments["M0001"][0]
+    nt = hero_seg.get("narrowing")
+    check("narrowing: the hero segment ships the agent's reach table", bool(nt) and nt["cells_shipped"] == len(nt["cells"]) > 0)
+    check("narrowing: every shipped cell clears the floor and is rounded — nothing below the floor is shipped at all",
+          bool(nt) and all(c["reach"]["suppressed"] is False and c["reach"]["count"] >= cfg.MIN_SEGMENT_SIZE and c["reach"]["count"] % cfg.REACH_ROUNDING == 0 for c in nt["cells"]))
+    check("narrowing: dimensions are outlet, daypart and age band only — weekday is the window, not the segment",
+          bool(nt) and set(nt["dimensions"]) == {"outlet", "daypart", "age_band"})
+    check("narrowing: a below-floor narrowing exists to refuse (lunch does not ship)",
+          bool(nt) and not any(c["constraints"] == {"daypart": "lunch"} for c in nt["cells"]))
+    check("narrowing: other segments carry no table (only the campaign's segment can be narrowed)", all(s.get("narrowing") is None for s in segments["M0001"][1:]))
+    prot = const["constants"].get("NARROW_PROTECTED_TERMS", {})
+    check("narrowing: protected-characteristic policy ships with the six characteristics and a basis",
+          set(prot.get("value", {})) == {"nationality", "race", "religion", "gender", "marital status", "health"} and bool(prot.get("basis")))
+    check("narrowing: refinement cap ships", const["constants"].get("NARROW_MAX_REFINEMENTS", {}).get("value") == cfg.NARROW_MAX_REFINEMENTS)
+    if st_report:
+        for name in ("narrow: below-floor narrowing refused with NO count reported",
+                     "narrow: protected characteristic refused, explained, and does not consume a refinement",
+                     "narrow: widening refused",
+                     "narrow: after reset the sixth narrowing is refused by the cap — reset does not refund",
+                     "permissions: OCBC staff cannot set the limit",
+                     "permissions: nobody can author the segment as a field",
+                     "submit: refused while a required field is missing, naming it",
+                     "cohort push: the reach cap fires — campaign capped with the reason, results frozen",
+                     "cohort push: Bernice's card is still honoured after the reach cap"):
+            check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
+
+    # Suppression counts reconcile end to end: the shipped allocation_summary against the derived
+    # per-cardholder allocation ledger, and the personas' seeded push state against the same ledger.
+    allocated = alloc[alloc["exclusion_reason"].isna()]
+    check("suppression reconciles: allocation_summary.push.suppressed_count == Σ push_suppressed in the derived allocation",
+          summ["push"]["suppressed_count"] == int(allocated["push_suppressed"].sum()),
+          f"{summ['push']['suppressed_count']} vs {int(allocated['push_suppressed'].sum())}")
+    check("suppression reconciles: push.eligible == round_reach(allocated − suppressed)",
+          summ["push"]["eligible"] == cfg.round_reach(int((~allocated["push_suppressed"]).sum())),
+          f"{summ['push']['eligible']} vs {cfg.round_reach(int((~allocated['push_suppressed']).sum()))}")
+    p_by_id = {p["id"]: p for p in personas}
+    edwin_row = allocated[allocated["card_id"] == ids["edwin"]].iloc[0]
+    check("suppression reconciles: Edwin's seeded push_state matches his allocation row (at the cap, suppressed)",
+          p_by_id["edwin"]["push_state"]["pushes_this_week"] == int(edwin_row["pushes_this_week"]) and p_by_id["edwin"]["push_state"]["at_push_cap"]
+          and "push_suppressed_frequency_cap" in p_by_id["edwin"]["cohort_membership"], str(p_by_id["edwin"]["push_state"]))
+    check("suppression reconciles: Bernice's seeded push_state matches her allocation row (clear)",
+          p_by_id["bernice"]["push_state"]["pushes_this_week"] == int(allocated[allocated["card_id"] == ids["bernice"]].iloc[0]["pushes_this_week"])
+          and not p_by_id["bernice"]["push_state"]["at_push_cap"])
+    check("suppression reconciles: personas flagged at the cap == suppressed_count (every suppression has a name in the demo)",
+          sum("push_suppressed_frequency_cap" in p["cohort_membership"] for p in personas) == summ["push"]["suppressed_count"])
+    check("state seed: every persona ships consent, weights summing to 1, push_state and offer history",
+          all("consent" in p and "push_state" in p and "offers" in p and abs(sum(p["profile"]["category_weights"].values()) - 1) < 0.001 for p in personas))
+    check("state seed: PROFILE_WEIGHT_STEP ships with a basis and is provisional",
+          const["constants"].get("PROFILE_WEIGHT_STEP", {}).get("provisional") is True and bool(const["constants"].get("PROFILE_WEIGHT_STEP", {}).get("basis")))
+    seeded_expired = [o for p in personas for o in p["offers"] if o["status"] == "expired"]
+    check("state seed: at least one expired reward comes from a real allocation row", len(seeded_expired) >= 1)
+
+    # -------------------------------------------------------------- src/ against the real contract
+    src_text = {f: open(f, encoding="utf-8").read() for f in _src_files()}
+    shipped = {fn for fn in os.listdir(PUB) if fn.endswith(".json")}
+    fetched = set(re.findall(r'"([a-z_]+\.json)"', src_text[os.path.join(ROOT, "src", "data", "DataProvider.jsx")]))
+    check("every JSON file the app fetches is one the pipeline writes", not (fetched - shipped), str(sorted(fetched - shipped)))
+    check("the app fetches constants.json, so the chrome has its scale line", "constants.json" in fetched)
+    ghost = {f: [w for w in ("merchant_directory", "merchantDirectory", "reward_cost_total_sgd",
+                             "reward_cost_ocbc_funded_sgd", "reward_cost_merchant_funded_sgd",
+                             "control_organic_conversion_rate", "ticket_p50_sgd", "top_adjacent_categories")
+                 if w in t] for f, t in src_text.items()}
+    ghost = {os.path.relpath(f, ROOT): w for f, w in ghost.items() if w}
+    check("no screen reads a field or file the pipeline stopped writing", not ghost, str(ghost))
+
+    # Cost-sharing is settled: the merchant funds the reward in full, so the vocabulary of a split
+    # must not exist in the app at all — not in a constant, a component, or a comment.
+    cost_share = re.compile(r"funding[_ -]?split|co[_-]?fund|cost[_ -]?shar|ocbc[_ -]?funded|ocbc[_ -]?contribut", re.I)
+    split_hits = {os.path.relpath(f, ROOT): sorted(set(m.group(0) for m in cost_share.finditer(t)))
+                  for f, t in src_text.items() if cost_share.search(t)}
+    check("no cost-sharing vocabulary anywhere in src/", not split_hits, str(split_hits))
+    pipeline_text = {f: open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read()
+                     for f in os.listdir(os.path.join(ROOT, "pipeline")) if f.endswith(".py")}
+    check("no cost-sharing vocabulary anywhere in pipeline/",
+          not [f for f, t in pipeline_text.items() if cost_share.search(t)],
+          str([f for f, t in pipeline_text.items() if cost_share.search(t)]))
+    check("every campaign's cost is the merchant's whole cost",
+          all(c["cost"]["funded_by"] == "merchant" for c in camps["completed"] if c.get("measured")))
 
     r1 = recs["M0001"]["ranked"]
     check("Soujourner shows six ranked reward types with overseas/FX disabled",

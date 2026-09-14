@@ -2,8 +2,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Eye } from "lucide-react";
 import { MockDataBadge } from "../components/ui";
+import { useDemoData, constantOf } from "../data/DataProvider";
+import { num } from "../data/format";
 
 export default function Landing() {
+  // Landing renders outside the load gate, so the dataset line degrades to a claim with no number
+  // rather than a number with no basis.
+  const { data } = useDemoData();
+  const sample = constantOf(data, "SAMPLE_CARDHOLDERS")?.value;
+
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
       <header className="max-w-container mx-auto w-full px-6 pt-8 flex items-center justify-between">
@@ -51,16 +58,16 @@ export default function Landing() {
             </div>
 
             <p className="text-[12px] text-ink-light mt-8 max-w-md">
-              This entire prototype runs on a seeded, synthetic dataset — 5,000 cardholders,
-              200 merchants, no real transactions or identities. Every number on every screen
-              traces back to a stated assumption.
+              This entire prototype runs on a seeded, synthetic dataset
+              {sample ? ` — ${num(sample)} cardholders, ` : " — "}no real transactions or
+              identities. Every number on every screen traces back to a stated basis.
             </p>
           </div>
         </div>
       </main>
 
       <footer className="max-w-container mx-auto w-full px-6 pb-8 text-[11px] text-ink-light">
-        Built for a 6-minute pitch. Use ← → or 1–6 to move through the demo once inside.
+        Built for a 6-minute pitch. Use ← → or 1–7 to move through the demo once inside.
       </footer>
     </div>
   );

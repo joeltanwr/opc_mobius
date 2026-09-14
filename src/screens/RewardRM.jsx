@@ -1,112 +1,145 @@
 import React, { useState } from "react";
-import { Check, ShieldAlert, ArrowRight, CircleUserRound } from "lucide-react";
-import { useDemoData, merchantById } from "../data/DataProvider";
+import { Check, ShieldAlert, ShieldCheck, ArrowRight, CircleUserRound, Ban } from "lucide-react";
+import { useDemoData, merchantById, merchantName } from "../data/DataProvider";
 import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, CONSTANTS } from "../data/constants";
-import { sgd, num, pct, humanize } from "../data/format";
+import { sgd, num, pct, pctOf, cellText, cellCount, humanize } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
-
-const MECHANICS = [
-  {
-    id: "fixed",
-    name: "Fixed-dollar cashback",
-    example: "S$2 off any drink, 2–5pm",
-    pro: "Simple to communicate, fully predictable cost per redemption — easiest to reason about in a first pilot.",
-    con: "Less compelling on already-high tickets.",
-    recommended: true,
-  },
-  {
-    id: "pct",
-    name: "Percentage cashback",
-    example: "10% off the bill",
-    pro: "Scales naturally with basket size.",
-    con: "Cost is less predictable — a few large baskets can move the bill sharply.",
-  },
-  {
-    id: "voucher",
-    name: "Return voucher",
-    example: "Visit 3×, 4th on us",
-    pro: "Built for habit formation — the actual off-peak goal, not just a single visit.",
-    con: "Redemption is delayed and harder to attribute to one campaign window.",
-  },
-  {
-    id: "bundle",
-    name: "Bundle",
-    example: "Coffee + pastry, S$1 off combo",
-    pro: "Lifts basket size, not just visit count.",
-    con: "Needs merchant-side menu/ops coordination — heavier to launch.",
-  },
-];
 
 export default function RewardRM() {
   const { data } = useDemoData();
-  const merchant = merchantById(data.merchantDirectory, HERO_MERCHANT_ID);
-  const rival = merchantById(data.merchantDirectory, HERO_RIVAL_MERCHANT_ID);
-  const campaign = data.campaignResults;
+  const profile = merchantById(data.merchantProfiles, HERO_MERCHANT_ID);
+  const rivalName = merchantName(data, HERO_RIVAL_MERCHANT_ID);
+  const recs = data.rewardRecommendations[HERO_MERCHANT_ID];
+  const allocation = data.allocationSummary;
   const segment = data.segments[HERO_MERCHANT_ID].find((s) => s.candidate_merchant === HERO_RIVAL_MERCHANT_ID);
   const charles = data.showcasePersonas.find((p) => p.id === "charles");
   const [confirmed, setConfirmed] = useState(false);
 
-  const requiresReview = segment.size > CONSTANTS.AUTO_APPROVE_MAX_REACH.value;
-  const organicRedeemers = Math.round(campaign.treated_size * campaign.control_organic_conversion_rate);
-  const incrementalRedeemers = campaign.redemption_count - organicRedeemers;
+  // The measured campaign that cleared its reward cost — real arms, real control group.
+  const winner = data.campaignResults.completed.find((c) => c.measured && c.cost.net_sign === "positive");
+  const reach = cellCount(segment.reach);
+  const requiresReview = reach === null || reach > CONSTANTS.AUTO_APPROVE_MAX_REACH.value;
+
+  // "Would have converted anyway": the held-out control group's own conversion rate, applied to
+  // the treated arm. Everything here is counted, never assumed.
+  const organicConverters = Math.round(winner.cohort.treated * (winner.conversion.control_rate_pct / 100));
+  const topRanked = recs.ranked.find((r) => !r.disabled);
 
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
         eyebrow="Screen 4 · Reward & RM handoff"
         title="Turning the gap into an offer — and who has to sign off"
-        subtitle={`Targeting the ${num(segment.size)}-cardholder ${rival.canonical_name} lookalike segment identified on the previous screen.`}
+        subtitle={`Targeting the ${cellText(segment.reach)}-cardholder ${rivalName} lookalike segment identified on the previous screen.`}
       />
 
+      <Card className="p-5 mb-6 flex items-start gap-3 border-success/40 bg-success-bg/30">
+        <ShieldCheck size={18} className="text-success shrink-0 mt-0.5" />
+        <div>
+          <p className="text-[13px] font-semibold text-ink">
+            Eligibility gate: {recs.eligibility.passed ? "cleared" : "not cleared"}
+          </p>
+          <p className="text-[12.5px] text-ink-secondary mt-0.5">
+            Mean closing balance {sgd(recs.eligibility.avg_balance_6m_sgd)} over{" "}
+            {recs.eligibility.balance_months} months against a {sgd(recs.eligibility.balance_threshold_sgd)}{" "}
+            threshold; internal band {recs.eligibility.internal_score_band} and external band{" "}
+            {recs.eligibility.external_score_band} against a maximum of {recs.eligibility.max_band}. Cleared by{" "}
+            {recs.eligibility.cleared_by.join(" and ")}.
+          </p>
+          <BasisNote>reward_recommendations.json — the same gate refuses merchants who fail it, visibly.</BasisNote>
+        </div>
+      </Card>
+
+      <h3 className="text-[15px] font-bold text-ink mb-1">
+        Six reward types, ranked for this gap ({recs.gap_type.replace(/_/g, " ")})
+      </h3>
+      <p className="text-[12.5px] text-ink-secondary mb-4 max-w-2xl">
+        {recs.gap_note} The ranking is deterministic — the gap type selects the order, and the rejected type stays on
+        screen with its reason rather than disappearing.
+      </p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        {MECHANICS.map((m) => (
-          <Card key={m.id} className={`p-5 ${m.recommended ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[14px] font-bold text-ink">{m.name}</h3>
-              {m.recommended && <Badge tone="brand">Recommended & piloted</Badge>}
+        {recs.ranked.map((r) => (
+          <Card
+            key={r.type}
+            className={`p-5 ${r.disabled ? "border-dashed bg-canvas/60" : r.rank === 1 ? "border-brand/30 ring-1 ring-brand/10" : ""}`}
+          >
+            <div className="flex items-center justify-between mb-1 gap-2">
+              <h4 className={`text-[14px] font-bold ${r.disabled ? "text-ink-light" : "text-ink"}`}>
+                {r.rank}. {r.label}
+              </h4>
+              {r.disabled ? (
+                <Badge tone="neutral">
+                  <Ban size={10} /> Ranked and rejected
+                </Badge>
+              ) : r.rank === 1 ? (
+                <Badge tone="brand">Recommended</Badge>
+              ) : null}
             </div>
-            <p className="text-[12px] font-medium text-ink-secondary mb-2">"{m.example}"</p>
-            <p className="text-[12.5px] text-success mb-1">+ {m.pro}</p>
-            <p className="text-[12.5px] text-ink-light">– {m.con}</p>
+            <p className={`text-[12.5px] ${r.disabled ? "text-ink-light" : "text-ink-secondary"}`}>{r.reason}</p>
+            {!r.disabled && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-ink-light">
+                <span>{r.new_or_returning}</span>
+                <span>·</span>
+                <span>
+                  Expected incremental share {pct(r.expected_incremental_share, 0)}
+                  {r.incremental_share_provisional && (
+                    <span className="ml-1 rounded bg-warning-bg px-1 py-0.5 text-warning font-medium">provisional</span>
+                  )}
+                </span>
+                {r.non_customer_reach && (
+                  <>
+                    <span>·</span>
+                    <span>Non-customer reach {cellText(r.non_customer_reach)}</span>
+                  </>
+                )}
+              </div>
+            )}
           </Card>
         ))}
       </div>
 
       <Card className="p-6 mb-6">
-        <h3 className="text-[15px] font-bold text-ink mb-4">Incrementality — the part a mailing list can't do</h3>
+        <h3 className="text-[15px] font-bold text-ink mb-1">Incrementality — the part a mailing list can't do</h3>
+        <p className="text-[12.5px] text-ink-secondary mb-4">
+          Measured on {winner.name} ({winner.window}): {num(winner.cohort.treated)} treated against{" "}
+          {num(winner.cohort.control)} held out.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <IncrementalityBlock
             label="Excluded before targeting"
             value="Price-insensitive customers"
-            detail={`Someone like ${charles.name} — average ticket ${humanize(charles.signature_pattern, data.merchantDirectory).match(/S\$\d+/)?.[0] ?? "S$180"}, never used a voucher — never enters this segment. His behaviour doesn't move with an incentive, so crediting his visits would overstate the campaign.`}
+            detail={`Someone like ${charles.name} — "${humanize(charles.signature_pattern, data, merchantName)}" — never enters this segment. His behaviour doesn't move with an incentive, so crediting his visits would overstate the campaign.`}
             icon={<CircleUserRound size={16} />}
             tone="warning"
           />
           <IncrementalityBlock
             label="Redeemed, but would have converted anyway"
-            value={`${num(organicRedeemers)} of ${num(campaign.redemption_count)} redemptions`}
-            detail={`Measured from the held-out control group's organic conversion rate (${pct(campaign.control_organic_conversion_rate)}), applied to the treated group.`}
+            value={`${num(organicConverters)} of ${num(winner.redemption.redeemers)} redeemers`}
+            detail={`The held-out control group converted at ${pctOf(winner.conversion.control_rate_pct, 1)} without any offer. Applied to the treated arm, that is what this campaign would have got for free.`}
             tone="neutral"
           />
           <IncrementalityBlock
             label="Real incremental transactions"
-            value={num(campaign.incremental_transactions, 1)}
-            detail={`${sgd(campaign.incremental_sales_sgd)} in incremental sales — the number this campaign is actually judged on.`}
+            value={num(winner.incremental.incremental_transactions, 1)}
+            detail={`${sgd(winner.incremental.incremental_sales_sgd)} in incremental sales — treated window sales minus control window sales, scaled by arm size. The number this campaign is judged on.`}
             tone="success"
           />
         </div>
-        <BasisNote>
-          incremental_transactions and control_organic_conversion_rate: campaign_results.json (test-vs-control, not before-vs-after — full breakdown on the next screen).
-        </BasisNote>
+        <BasisNote>{winner.incremental.basis} (campaign_results.json — full breakdown on the next screen).</BasisNote>
       </Card>
 
       <Card className="p-6 mb-6">
-        <h3 className="text-[15px] font-bold text-ink mb-3">Funding split — arithmetic, not negotiation</h3>
+        <h3 className="text-[15px] font-bold text-ink mb-3">What it costs the merchant — the whole cost</h3>
         <div className="font-num text-[15px] text-ink bg-canvas border border-border rounded-lg px-4 py-3 inline-block">
-          {sgd(campaign.reward_cost_total_sgd)} total reward cost = {sgd(campaign.reward_cost_ocbc_funded_sgd)} OCBC{" "}
-          <span className="text-ink-light">+</span> {sgd(campaign.reward_cost_merchant_funded_sgd)} {merchant.canonical_name}
+          {sgd(winner.cost.reward_cost_sgd)} reward cost, funded by {profile.name}
         </div>
-        <BasisNote>{CONSTANTS.FUNDING_SPLIT_OCBC_SHARE.basis}</BasisNote>
+        <p className="text-[12.5px] text-ink-secondary mt-3 max-w-2xl">
+          Every cost figure on every screen is the merchant's whole cost. OCBC supplies the targeting, the delivery
+          and the measurement, and does not contribute to the reward. The configured limit caps it before anything
+          launches: {sgd(winner.configuration.max_cost_sgd)} maximum, from a {num(winner.configuration.redemption_limit)}
+          -redemption limit at {sgd(winner.configuration.cap_per_txn_sgd)} per transaction.
+        </p>
+        <BasisNote>{winner.cost.basis}</BasisNote>
       </Card>
 
       <Card className={`p-5 mb-6 flex items-start gap-3 ${requiresReview ? "border-warning/40 bg-warning-bg/40" : "border-success/40 bg-success-bg/40"}`}>
@@ -116,11 +149,18 @@ export default function RewardRM() {
             {requiresReview ? "Above auto-approve threshold — routed to manual review" : "Within auto-approve threshold"}
           </p>
           <p className="text-[12.5px] text-ink-secondary mt-0.5">
-            Reach of {num(segment.size)} cardholders exceeds the {num(CONSTANTS.AUTO_APPROVE_MAX_REACH.value)}-cardholder
-            auto-approve limit, so an OCBC reviewer signs off on segment, offer and cost share before anything sends. A
-            portfolio-level frequency cap ({CONSTANTS.FREQUENCY_CAP_PER_WEEK.display}) applies underneath every approval, enforced by OCBC at
-            the send layer — no single reviewer can see every other campaign reaching the same cardholder that week.
+            Reach of {cellText(segment.reach)} cardholders exceeds the {num(CONSTANTS.AUTO_APPROVE_MAX_REACH.value)}
+            -cardholder auto-approve limit, so an OCBC reviewer signs off on segment, offer and window before anything
+            sends. Underneath every approval, OCBC's send layer caps exposure independently: no more than{" "}
+            {allocation.frequency_cap.offers_per_30_days} concurrent offers per cardholder in 30 days and{" "}
+            {allocation.push.cap_per_week} pushes per week — {allocation.push.suppressed_count} recipient
+            {allocation.push.suppressed_count === 1 ? "" : "s"} in this campaign already hit the push cap and
+            received the feed card only.
           </p>
+          <BasisNote>
+            allocation_summary.json. Portfolio ceiling this week: {num(allocation.portfolio.contacted_this_week)}{" "}
+            contacted of {num(allocation.portfolio.weekly_ceiling)} ({allocation.portfolio.ceiling_basis})
+          </BasisNote>
         </div>
       </Card>
 
@@ -129,9 +169,15 @@ export default function RewardRM() {
           <>
             <h3 className="text-[16px] font-bold mb-1">Your OCBC relationship manager receives:</h3>
             <ul className="text-[13px] text-white/80 mt-3 space-y-1.5">
-              <li>• A qualified demand gap: {num(segment.size)} cardholders, {sgd(segment.size * CONSTANTS.BASE_ENGAGEMENT_RATE.value * data.merchantProfiles[HERO_MERCHANT_ID].ticket_p50_sgd)} projected value</li>
-              <li>• Recommended mechanic: {MECHANICS.find((m) => m.recommended).name} ({MECHANICS.find((m) => m.recommended).example})</li>
-              <li>• Funding split: {sgd(campaign.reward_cost_ocbc_funded_sgd)} / {sgd(campaign.reward_cost_merchant_funded_sgd)}</li>
+              <li>
+                • A qualified demand gap: {cellText(segment.reach)} cardholders,{" "}
+                {sgd((reach ?? 0) * CONSTANTS.BASE_ENGAGEMENT_RATE.value * profile.trading_summary.avg_ticket_sgd)}{" "}
+                projected value
+              </li>
+              <li>
+                • Recommended reward: {topRanked.label} — {topRanked.reason}
+              </li>
+              <li>• Your whole cost, capped by the redemption limit you set</li>
               <li>• This review gate, already applied</li>
             </ul>
             <button

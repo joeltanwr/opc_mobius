@@ -1,21 +1,23 @@
 import React from "react";
 import { Card, Badge } from "./ui";
-import { useDemoData } from "../data/DataProvider";
+import { useDemoData, merchantName } from "../data/DataProvider";
 import { humanize } from "../data/format";
 
+// Keyed on showcase_personas.json `role` — the pipeline's own label for what each persona is
+// in the pitch. cohort_membership carries the machine-readable cohort, not a display role.
 const ROLE_TONE = {
-  h1_fingerprint: { label: "The fingerprint", tone: "brand" },
-  h1_target_cohort: { label: "The target — never walked in", tone: "success" },
-  h1_exclusion: { label: "The exclusion", tone: "warning" },
-  h3_seasonal_apparel: { label: "Seasonal buyer", tone: "analytics" },
-  h2_cold_start_category_peer: { label: "Cold-start reference", tone: "info" },
-  dormant_reactivation: { label: "Honest limit", tone: "neutral" },
+  fingerprint: { label: "The fingerprint", tone: "brand" },
+  target: { label: "The target — never walked in", tone: "success" },
+  exclusion: { label: "The exclusion", tone: "warning" },
+  seasonal: { label: "Seasonal buyer", tone: "analytics" },
+  suppressed_push: { label: "Push suppressed — feed only", tone: "info" },
+  dormant: { label: "Honest limit", tone: "neutral" },
 };
 
 export default function PersonaCard({ persona, emphasis = false }) {
   const { data } = useDemoData();
-  const role = ROLE_TONE[persona.cohort_membership?.[0]] ?? { label: "Illustrative", tone: "neutral" };
-  const signature = humanize(persona.signature_pattern, data?.merchantDirectory);
+  const role = ROLE_TONE[persona.role] ?? { label: "Illustrative", tone: "neutral" };
+  const signature = humanize(persona.signature_pattern, data, merchantName);
   return (
     <Card className={`p-5 flex flex-col ${emphasis ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
       <div className="flex items-start justify-between gap-2 mb-2">

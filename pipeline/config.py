@@ -39,7 +39,15 @@ CONSTANTS = {
     "DORMANT_PERCENTILE": C(10, "retailer-transaction-data-analysis Step 1 — distribution cutoff"),
     "MIN_SEGMENT_SIZE": C(250, "Brief §2 — privacy floor for every cell shown to a merchant or RM"),
     "REACH_ROUNDING": C(50, "Brief §2 — reach rounded to nearest 50; with the floor this closes sequential differencing"),
-    "NARROW_MAX_REFINEMENTS": C(5, "Merchant prompt §7.1 — narrowing cap per campaign"),
+    "NARROW_MAX_REFINEMENTS": C(5, "Merchant prompt §7.1 — narrowing cap per campaign; applied narrowings and floor refusals both count, a refusal is still a query"),
+    "NARROW_PROTECTED_TERMS": C({"nationality": ["nationality", "national", "foreigner", "foreigners", "expat", "expats", "citizen", "citizens", "pr", "singaporean", "singaporeans", "malaysian", "chinese national", "indian national", "filipino", "indonesian"],
+                                 "race": ["race", "ethnic", "ethnicity", "chinese", "malay", "indian", "eurasian", "caucasian", "asian"],
+                                 "religion": ["religion", "religious", "muslim", "christian", "buddhist", "hindu", "catholic", "halal", "church", "mosque", "temple"],
+                                 "gender": ["gender", "sex", "women", "woman", "female", "females", "men", "man", "male", "males", "ladies", "girls", "boys", "guys"],
+                                 "marital status": ["married", "single", "divorced", "widowed", "marital", "spouse", "wife", "husband"],
+                                 "health": ["health", "pregnant", "pregnancy", "disabled", "disability", "diabetic", "illness", "medical", "patients"]},
+                                "Merchant prompt §7.1 — narrowing that amounts to a differential offer by protected characteristic is refused and explained; "
+                                "age band and location stay permitted as ordinary commercial targeting"),
     "PRIORITY_TIERS": C([(70, "high"), (40, "medium"), (0, "low")], "sme-relationship-value-score Step 2"),
     "LIFT_MIN_SUPPORT": C(20, "mock_data_spec §8 lift specification"),
     "LIFT_PRICE_BAND_TOLERANCE": C(1, "Brief §5 — |cardholder pref − merchant band| ≤ 1; excludes Charles, keeps Bernice"),
@@ -57,6 +65,9 @@ CONSTANTS = {
     "PORTFOLIO_WEEKLY_CEIL_SHARE": C(0.0625, "RM prompt §3.2 — 50,000 cardholders contactable per week is 6.25% of the 800,000 base. "
                                             "Held as a share of the consented base, not a headcount, so the ceiling lands in whatever units the "
                                             "panel is counting; the share is still a placeholder until it has a basis", provisional=True),
+    "PROFILE_WEIGHT_STEP": C(0.05, "Customer view §5 / brief §4 — how much one redemption moves a cardholder's category weight toward the "
+                                   "redeemed merchant's category before renormalising; a placeholder learning rate until relevance is calibrated",
+                             provisional=True),
     "ASSUMED_GROSS_MARGIN": C(0.65, "Brief §5 — café gross margin assumed for net contribution; not merchant-reported", provisional=True),
     "RETURN_WINDOW_DAYS": C(30, "Brief §5 — unprompted return measured within 30 days of last redemption"),
     "RECENT_REPEATER_DAYS": C(30, "sme-business-customer-analysis Step 2"),
@@ -86,6 +97,7 @@ DORMANT_PERCENTILE = CONSTANTS["DORMANT_PERCENTILE"].value
 MIN_SEGMENT_SIZE = CONSTANTS["MIN_SEGMENT_SIZE"].value
 REACH_ROUNDING = CONSTANTS["REACH_ROUNDING"].value
 NARROW_MAX_REFINEMENTS = CONSTANTS["NARROW_MAX_REFINEMENTS"].value
+NARROW_PROTECTED_TERMS = CONSTANTS["NARROW_PROTECTED_TERMS"].value
 PRIORITY_TIERS = CONSTANTS["PRIORITY_TIERS"].value
 LIFT_MIN_SUPPORT = CONSTANTS["LIFT_MIN_SUPPORT"].value
 LIFT_PRICE_BAND_TOLERANCE = CONSTANTS["LIFT_PRICE_BAND_TOLERANCE"].value
@@ -101,6 +113,7 @@ GAP_MIN_VOLUME_12W = CONSTANTS["GAP_MIN_VOLUME_12W"].value
 PUSH_CAP_PER_WEEK = CONSTANTS["PUSH_CAP_PER_WEEK"].value
 FREQ_CAP_OFFERS = CONSTANTS["FREQ_CAP_OFFERS"].value
 PORTFOLIO_WEEKLY_CEIL_SHARE = CONSTANTS["PORTFOLIO_WEEKLY_CEIL_SHARE"].value
+PROFILE_WEIGHT_STEP = CONSTANTS["PROFILE_WEIGHT_STEP"].value
 ASSUMED_GROSS_MARGIN = CONSTANTS["ASSUMED_GROSS_MARGIN"].value
 RETURN_WINDOW_DAYS = CONSTANTS["RETURN_WINDOW_DAYS"].value
 RECENT_REPEATER_DAYS = CONSTANTS["RECENT_REPEATER_DAYS"].value
@@ -292,6 +305,20 @@ def composition_shares(shares, population, breakdown, subject):
         note = f"Share of transactions by tender across {n} {subject}."
     return dict(population=population, floor=MIN_SEGMENT_SIZE, breakdown=breakdown,
                 all_suppressed=below, shares=None if below else shares, note=note)
+
+
+def observation(count, subject):
+    """A direct merchant observation: exact, unrounded, with an empty state instead of a bare 0.
+
+    The merchant reads this off its own till, so neither the floor nor the rounding applies. Zero
+    is a state rather than a quantity — a literal 0 next to a chart reads as a broken feed, so it
+    is worded the way the card-mix panel words its own empty state.
+    """
+    count = int(count)
+    return dict(count=count, floor_applies=False,
+                note=(f"No {subject} yet." if count == 0 else
+                      f"{count:,} {subject}, counted exactly from your own records — your own "
+                      f"observation, so no floor or rounding applies."))
 
 
 def floor_policy(composition_keys, direct_observation_keys):
