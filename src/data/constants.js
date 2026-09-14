@@ -54,12 +54,6 @@ export const CONSTANTS = {
     basis: "Privacy floor enforced in data-generator/generate.py (MIN_SEGMENT_SIZE) and re-enforced at render time — segments below this never show a size or profile, only a suppressed state.",
   },
 
-  AUTO_APPROVE_MAX_REACH: {
-    value: 250,
-    display: "250",
-    basis: "Set equal to the minimum displayable segment size: the smallest segment a merchant can ever see auto-approves, anything larger routes to mandatory human review.",
-  },
-
   ANNUAL_LLM_COST_CEILING: {
     value: 1000,
     display: "< S$1,000 / year",

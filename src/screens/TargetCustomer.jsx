@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
 import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
-import { useDemoData, merchantById, categoryFor } from "../data/DataProvider";
+import { useDemoData, merchantById, categoryFor, constantOf } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { TAB3_ACCOUNTS, CONSTANTS, screenNum } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
@@ -24,18 +24,27 @@ import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard } from "
 // aggregate that no event can move, and is read straight from public/data.
 
 const AGE_BANDS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
-const RECENCY_BANDS = [
-  ["0-7", "0–7 days"],
-  ["8-30", "8–30 days"],
-  ["31-90", "31–90 days"],
-  ["90+", "over 90 days"],
-];
-const FREQ_BANDS = ["2", "3–4", "5–9", "10–19", "20+"];
 const RFM_ORDER = [
   "Champions", "Loyal Customers", "Potential Loyalists", "New Customers", "Promising",
   "Need Attention", "Can't Lose Them", "At Risk", "Hibernating", "Lost",
 ];
 const CARD_ORDER = ["OCBC", "DBS", "UOB", "other", "PayNow"];
+
+// Bucket labels are derived from the pipeline's own distribution keys rather than typed into a
+// parallel list here. A hand-kept list is a second source for something the pipeline already
+// knows: it drifts silently when a bucket boundary moves, and the chart keeps rendering a label
+// that no longer describes the number beside it.
+function bandLabel(key, unit) {
+  const [lo, hi] = String(key).split("-");
+  if (String(key).endsWith("+")) return `${String(key).slice(0, -1)} or more ${unit}`;
+  if (hi === undefined) return `${lo} ${unit}`;
+  return `${lo}–${hi} ${unit}`;
+}
+
+// Distribution objects ship as {bucket: share}; render them in the order the pipeline wrote them.
+function bandRows(distribution, unit) {
+  return Object.entries(distribution ?? {}).map(([key, share]) => ({ label: bandLabel(key, unit), share }));
+}
 
 export default function TargetCustomer() {
   const { data } = useDemoData();
@@ -54,6 +63,10 @@ export default function TargetCustomer() {
   // The merchant's own data gate is separate from the credit gate: a merchant can be perfectly
   // eligible and still have too little history for a profile.
   const hasProfile = profile.gate.passed && Boolean(profile.rfv);
+  // Window lengths the pipeline computed against, not window lengths retyped in a component: if
+  // the detector's trailing window ever moves, the prose moves with it.
+  const trailingMonths = constantOf(data, "TRAILING_MONTHS")?.value ?? null;
+  const trailingWeeks = constantOf(data, "GAP_TRAILING_WEEKS")?.value ?? null;
 
   // The campaign this merchant would apply for — the live demo campaign for the hero merchant, an
   // existing application for anyone who already has one. Read from state, not from JSON, because
@@ -83,10 +96,16 @@ export default function TargetCustomer() {
         <ThinHistory profile={profile} data={data} gap={gap} />
       ) : (
         <>
-          <TradingSummary profile={profile} />
+          <TradingSummary profile={profile} trailingMonths={trailingMonths} />
           <RecencyFrequencyValue profile={profile} />
-          <TradingPattern profile={profile} gap={gap} />
-          <CustomerAnalysis profile={profile} gap={gap} rationale={rationale} hasRecommendation={eligible && Boolean(recs)} />
+          <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} />
+          <CustomerAnalysis
+            profile={profile}
+            gap={gap}
+            rationale={rationale}
+            hasRecommendation={eligible && Boolean(recs)}
+            trailingWeeks={trailingWeeks}
+          />
         </>
       )}
 
@@ -243,7 +262,7 @@ function ThinHistory({ profile, data, gap }) {
 
 // ---------------------------------------------------------------------------- §6 trading summary
 
-function TradingSummary({ profile }) {
+function TradingSummary({ profile, trailingMonths }) {
   const t = profile.trading_summary;
   const months = useMemo(() => completeMonths(profile.series), [profile]);
   // The baseline is the merchant's own mean over the complete months on this chart — dashed slate,
@@ -257,8 +276,8 @@ function TradingSummary({ profile }) {
     <>
       <h3 className="text-[17px] font-bold text-ink mt-8 mb-3">Trading summary</h3>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-        <StatTile label="Average monthly transactions" value={num(t.avg_monthly_txns_6m)} sub={`Trailing 6 months, ${t.trailing_window}`} />
-        <StatTile label="Average monthly sales" value={sgd(t.avg_monthly_sales_6m_sgd)} sub="Same six months" />
+        <StatTile label="Average monthly transactions" value={num(t.avg_monthly_txns_6m)} sub={`Trailing ${trailingMonths} months, ${t.trailing_window}`} />
+        <StatTile label="Average monthly sales" value={sgd(t.avg_monthly_sales_6m_sgd)} sub={`The same ${trailingMonths} months`} />
         <StatTile label="Average spend per ticket" value={sgd(t.avg_ticket_sgd, 2)} sub={`Ticket trend ${t.ticket_trend.direction}`} />
         <StatTile label="Top payment method" value={t.top_payment_method ?? "—"} sub="By transaction count" />
         <StatTile label="Core customer base" value={cellText(t.core_customer_base)} sub={t.core_customer_base_basis} />
@@ -302,8 +321,8 @@ function TradingSummary({ profile }) {
 
 function RecencyFrequencyValue({ profile }) {
   const r = profile.rfv;
-  const recency = RECENCY_BANDS.map(([key, label]) => ({ label, share: r.days_since_last.distribution[key] ?? 0 }));
-  const freq = FREQ_BANDS.map((k) => ({ label: k === "2" ? "2 visits" : `${k} visits`, share: r.purchase_frequency_repeat_only[k] ?? 0 }));
+  const recency = bandRows(r.days_since_last.distribution, "days");
+  const freq = bandRows(r.purchase_frequency_repeat_only, "visits");
   const pctiles = [
     { label: "Top 10%", share: r.revenue_by_percentile.top_10_pct },
     { label: "Next 15%", share: r.revenue_by_percentile.next_15_pct },
@@ -378,7 +397,7 @@ function RecencyFrequencyValue({ profile }) {
 
 // --------------------------------------------------------------------------- §6 trading pattern
 
-function TradingPattern({ profile, gap }) {
+function TradingPattern({ profile, gap, trailingWeeks }) {
   const hourly = profile.trading_pattern.hourly;
   const trough = profile.trading_pattern.trough ?? null;
   const troughHours = trough ? gap?.hours ?? null : null;
@@ -431,7 +450,10 @@ function TradingPattern({ profile, gap }) {
           {troughHours && <LegendSwatch color="#ED1C24" label={`Trough — ${trough.window}`} />}
           <LegendSwatch color="#CBD5E1" label="Other hours" />
         </div>
-        <BasisNote>merchant_profiles.json trading_pattern.hourly, trailing 12 weeks · demand_gaps.json for the trough window.</BasisNote>
+        <BasisNote>
+          merchant_profiles.json trading_pattern.hourly, trailing {trailingWeeks} weeks · demand_gaps.json for the trough
+          window.
+        </BasisNote>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -504,7 +526,7 @@ function TradingPattern({ profile, gap }) {
 
 // ---------------------------------------------- §6 customer analysis — /sme-business-customer-analysis
 
-function CustomerAnalysis({ profile, gap, rationale, hasRecommendation }) {
+function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailingWeeks }) {
   const cp = profile.customer_profile;
   const rfm = profile.rfm;
   return (
@@ -563,7 +585,7 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation }) {
             <p className="text-[12.5px] text-ink-secondary mt-2 max-w-3xl">
               {gap.structural === true && `${gap.structural_basis}. `}
               {gap.structural === false && "Tied to a season rather than recurring weekly, so a campaign against it has to be timed to that season rather than left running. "}
-              {gap.weeks_below_min != null && `Below the threshold in ${gap.weeks_below_min} of the trailing 12 weeks. `}
+              {gap.weeks_below_min != null && `Below the threshold in ${gap.weeks_below_min} of the trailing ${trailingWeeks} weeks. `}
               Compared against {gap.peers_used} comparable merchants ({gap.peer_basis}).
             </p>
             {(gap.other_flagged_slots ?? []).length > 0 && (

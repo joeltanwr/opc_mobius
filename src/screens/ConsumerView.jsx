@@ -1,9 +1,10 @@
 import React from "react";
 import { Bell, Coffee, ChevronLeft } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
-import { HERO_MERCHANT_ID } from "../data/constants";
-import { pctOf } from "../data/format";
+import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID } from "../data/constants";
+import { pctOf, cellText } from "../data/format";
 import { Badge, SectionTitle, BasisNote } from "../components/ui";
+import PersonaCard from "../components/PersonaCard";
 
 export default function ConsumerView() {
   const { data } = useDemoData();
@@ -11,6 +12,8 @@ export default function ConsumerView() {
   const campaign = data.campaignResults.completed.find(
     (c) => c.measured && c.merchant_id === HERO_MERCHANT_ID && c.cost.net_sign === "positive"
   );
+  const bernice = (data.showcasePersonas ?? []).find((p) => p.id === "bernice") ?? null;
+  const segment = (data.segments?.[HERO_MERCHANT_ID] ?? []).find((s) => s.candidate_merchant === HERO_RIVAL_MERCHANT_ID) ?? null;
 
   return (
     <div className="max-w-container mx-auto px-6 py-10">
@@ -57,6 +60,20 @@ export default function ConsumerView() {
           </div>
         </div>
       </div>
+
+      {/* The one place the full persona rendering is appropriate: the cardholder is the viewer and
+          the details are her own. The merchant's side of the same cohort is a count and a pattern
+          with no person attached (CohortCard, screen 2). */}
+      {bernice && (
+        <div className="max-w-sm mx-auto mt-8">
+          <div className="text-[12px] font-medium text-ink-secondary mb-2 text-center">Who is holding this phone</div>
+          <PersonaCard persona={bernice} emphasis />
+          <p className="text-[11px] text-ink-light mt-2 text-center">
+            Her name, age and spending pattern are on her own screen because they are hers. {merchant.name} sees a
+            cohort of {cellText(segment?.reach)} and a behavioural pattern, and never this card.
+          </p>
+        </div>
+      )}
 
       <div className="max-w-md mx-auto mt-8 text-center">
         <Badge tone="neutral">Illustrative — one screen, not a flow</Badge>

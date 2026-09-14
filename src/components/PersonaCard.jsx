@@ -3,6 +3,14 @@ import { Card, Badge } from "./ui";
 import { useDemoData, merchantName } from "../data/DataProvider";
 import { humanize } from "../data/format";
 
+// The CARDHOLDER-FACING persona rendering: name, age, occupation, the lot.
+//
+// This belongs only where the cardholder is the viewer — their own screen, their own details,
+// which is exactly the case in which individual grain is appropriate. It must never appear in a
+// merchant-facing view: merchant §2.1 allows the merchant aggregate breakdowns of its own
+// customers and counts and labels only for cardholders it has never served, and a card carrying a
+// name and an age is neither. The merchant-facing equivalent is CohortCard.
+//
 // Keyed on showcase_personas.json `role` — the pipeline's own label for what each persona is
 // in the pitch. cohort_membership carries the machine-readable cohort, not a display role.
 const ROLE_TONE = {

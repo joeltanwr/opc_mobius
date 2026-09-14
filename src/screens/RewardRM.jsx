@@ -18,7 +18,6 @@ export default function RewardRM() {
   // The measured campaign that cleared its reward cost — real arms, real control group.
   const winner = data.campaignResults.completed.find((c) => c.measured && c.cost.net_sign === "positive");
   const reach = cellCount(segment.reach);
-  const requiresReview = reach === null || reach > CONSTANTS.AUTO_APPROVE_MAX_REACH.value;
 
   // "Would have converted anyway": the held-out control group's own conversion rate, applied to
   // the treated arm. Everything here is counted, never assumed.
@@ -142,20 +141,24 @@ export default function RewardRM() {
         <BasisNote>{winner.cost.basis}</BasisNote>
       </Card>
 
-      <Card className={`p-5 mb-6 flex items-start gap-3 ${requiresReview ? "border-warning/40 bg-warning-bg/40" : "border-success/40 bg-success-bg/40"}`}>
-        <ShieldAlert size={18} className={requiresReview ? "text-warning shrink-0 mt-0.5" : "text-success shrink-0 mt-0.5"} />
+      {/* There is no auto-approve threshold, and there used to be a panel here implying one: that a
+          small enough reach would skip review. The ladder has no edge from draft to active that
+          misses `pending`, and §2.4 forbids a one-click launch outright, so the concept is gone
+          rather than reworded. Every campaign is reviewed. What survives is the part that was
+          always true — the caps underneath the review, which bound exposure whatever a reviewer
+          decides. */}
+      <Card className="p-5 mb-6 flex items-start gap-3 border-info/40 bg-info-bg/40">
+        <ShieldAlert size={18} className="text-info shrink-0 mt-0.5" />
         <div>
-          <p className="text-[13px] font-semibold text-ink">
-            {requiresReview ? "Above auto-approve threshold — routed to manual review" : "Within auto-approve threshold"}
-          </p>
+          <p className="text-[13px] font-semibold text-ink">Every campaign is reviewed by OCBC before anything sends</p>
           <p className="text-[12.5px] text-ink-secondary mt-0.5">
-            Reach of {cellText(segment.reach)} cardholders exceeds the {num(CONSTANTS.AUTO_APPROVE_MAX_REACH.value)}
-            -cardholder auto-approve limit, so an OCBC reviewer signs off on segment, offer and window before anything
-            sends. Underneath every approval, OCBC's send layer caps exposure independently: no more than{" "}
-            {allocation.frequency_cap.offers_per_30_days} concurrent offers per cardholder in 30 days and{" "}
-            {allocation.push.cap_per_week} pushes per week — {allocation.push.suppressed_count} recipient
-            {allocation.push.suppressed_count === 1 ? "" : "s"} in this campaign already hit the push cap and
-            received the feed card only.
+            There is no size below which a campaign approves itself. An OCBC reviewer signs off on segment, offer and
+            window, whatever the reach — {cellText(segment.reach)} cardholders here. Underneath that approval the send
+            layer caps exposure independently, so the review is not the only thing standing between a merchant and a
+            cardholder's attention: no more than {allocation.frequency_cap.offers_per_30_days} concurrent offers per
+            cardholder in 30 days and {allocation.push.cap_per_week} pushes per week —{" "}
+            {allocation.push.suppressed_count} recipient{allocation.push.suppressed_count === 1 ? "" : "s"} in this
+            campaign already hit the push cap and received the feed card only.
           </p>
           <BasisNote>
             allocation_summary.json. Portfolio ceiling this week: {num(allocation.portfolio.contacted_this_week)}{" "}

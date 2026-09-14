@@ -1,11 +1,20 @@
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { useDemoData, merchantById, merchantName } from "../data/DataProvider";
-import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, screenNum } from "../data/constants";
+import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, CONSTANTS, screenNum } from "../data/constants";
 import { num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
-import PersonaCard from "../components/PersonaCard";
+import CohortCard from "../components/CohortCard";
 import { ArrowRight, Info } from "lucide-react";
+
+// Apply the privacy floor and the rounding to a raw count the pipeline shipped exactly. Returns
+// null below the floor, so the caller renders a suppressed state rather than a small number.
+const FLOOR = CONSTANTS.MIN_SEGMENT_SIZE.value;
+const ROUNDING = 50;
+function floorRound(n) {
+  if (n === null || n === undefined) return null;
+  return n < FLOOR ? null : Math.round(n / ROUNDING) * ROUNDING;
+}
 
 export default function DemandGap() {
   const { data } = useDemoData();
@@ -111,11 +120,27 @@ export default function DemandGap() {
             <li className="flex gap-2"><ArrowRight size={13} className="mt-0.5 text-brand shrink-0" />Within your catchment and price band</li>
             <li className="flex gap-2"><ArrowRight size={13} className="mt-0.5 text-brand shrink-0" />Zero visits here, ever</li>
           </ul>
+          {/* The funnel is floored and rounded like every other count on a merchant screen, and for
+              two reasons. The first is the rule itself: 87 and 104 are counts of cardholders below
+              the 250 floor, and a filter step is not exempt from it. The second is arithmetic —
+              exact removal counts against an exact evaluated total reconstruct the segment size to
+              the person, which is precisely what rounding reach to 50 exists to prevent. */}
           <div className="mt-3 rounded-lg bg-canvas border border-border px-3 py-2 text-[11.5px] text-ink-secondary">
-            {segment.filters.evaluated} evaluated ·{" "}
-            {Object.entries(segment.filters.removed)
-              .map(([rule, n]) => `${n} removed on ${rule.replace(/_/g, " ")}`)
-              .join(" · ")}
+            <div className="mb-1">
+              Evaluated: <span className="font-num text-ink">{num(floorRound(segment.filters.evaluated))}</span>
+            </div>
+            <ul className="space-y-0.5">
+              {Object.entries(segment.filters.removed).map(([rule, n]) => (
+                <li key={rule}>
+                  Removed on {rule.replace(/_/g, " ")}:{" "}
+                  {floorRound(n) === null ? (
+                    <span className="italic text-ink-light">below the reporting threshold</span>
+                  ) : (
+                    <span className="font-num text-ink">{num(floorRound(n))}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
           <p className="text-[11px] text-ink-light mt-3">
             Shown only as counts. No cardholder identity is visible to {profile.name} at any point.
@@ -124,21 +149,45 @@ export default function DemandGap() {
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <h3 className="text-[16px] font-bold text-ink">Who this actually means</h3>
-        <Badge tone="neutral">Illustrative composites, mock data</Badge>
+        <h3 className="text-[16px] font-bold text-ink">What this actually means</h3>
+        <Badge tone="neutral">Cohorts and counts, mock data</Badge>
       </div>
       <p className="text-[13px] text-ink-secondary mb-4 max-w-2xl">
-        Three standalone profiles, not real customers — built to make the {cellText(segment.reach)} legible in five
-        seconds instead of trusted as an abstract count.
+        Three cohorts, each a count and a behavioural pattern — built to make the {cellText(segment.reach)} legible in
+        five seconds instead of trusted as an abstract number. No cardholder identity appears here, which is why these
+        are cohorts and not people: a pattern with a count beside it is a segment; the same pattern with a name and an
+        age beside it is a customer record.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <PersonaCard persona={alvin} />
-        <PersonaCard persona={bernice} emphasis />
-        <PersonaCard persona={charles} />
+        <CohortCard
+          role={{ label: "The fingerprint", tone: "brand" }}
+          label={`Your Champions — most recent, most frequent, highest value`}
+          count={cellCount(profile.rfm.segments.Champions)}
+          suppressedReason="Below the reporting threshold."
+          pattern={alvin.signature_pattern}
+          basis="merchant_profiles.json rfm.segments — your own customers, rounded to 50."
+        />
+        <CohortCard
+          emphasis
+          role={{ label: "The target — never served", tone: "success" }}
+          label={segment.label}
+          count={reach}
+          suppressedReason="Below the reporting threshold."
+          pattern={bernice.signature_pattern}
+          basis="segments.json reach — a count and a label only, which is everything the merchant may see about cardholders it has never served."
+        />
+        <CohortCard
+          role={{ label: "The exclusion", tone: "warning" }}
+          label="Price-insensitive — removed before targeting"
+          count={null}
+          suppressedReason={`Removed on the price-band filter. The count is below the ${CONSTANTS.MIN_SEGMENT_SIZE.display}-cardholder floor, so no number is shown for it — the floor applies to an exclusion just as it does to a segment.`}
+          pattern={charles.signature_pattern}
+          basis="allocation_summary.json removed.price_band — excluded because their behaviour does not move with an incentive, so crediting their visits would overstate the campaign."
+        />
       </div>
       <p className="text-[12px] text-ink-light mt-3 max-w-2xl">
-        Charles converts on price alone and would have bought anyway — he's deliberately excluded from
-        targeting. Why that matters for the reward math is on the next screen.
+        The exclusion cohort converts on price alone and would have bought anyway, so it never enters targeting. Why
+        that matters for the reward math is on the next screen.
       </p>
     </div>
   );
