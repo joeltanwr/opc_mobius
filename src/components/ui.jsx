@@ -1,5 +1,6 @@
 import React from "react";
 import { Lock, AlertTriangle } from "lucide-react";
+import { CONSTANTS } from "../data/constants";
 
 export function Card({ children, className = "", interactive = false, ...props }) {
   return (
@@ -61,14 +62,18 @@ export function Badge({ children, tone = "neutral", className = "" }) {
   );
 }
 
+// The marker every screen carries. Label and tooltip both come from CONSTANTS.MOCK_DATA_LABEL, so
+// the one string the brief requires on every screen has a single source and a basis — it used to
+// be typed here while the constant sat unread beside it, which is exactly the drift the
+// no-number-without-a-basis rule exists to stop.
 export function MockDataBadge({ className = "" }) {
   return (
     <span
-      title="Every number on this screen comes from a seeded synthetic dataset. No real cardholder or merchant records."
+      title={CONSTANTS.MOCK_DATA_LABEL.basis}
       className={`inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning-bg px-2 py-0.5 text-[11px] font-semibold text-warning ${className}`}
     >
       <AlertTriangle size={11} strokeWidth={2.5} />
-      Mock data
+      {CONSTANTS.MOCK_DATA_LABEL.value}
     </span>
   );
 }
@@ -88,19 +93,4 @@ export function SuppressedCard({ reason = "Segment too small to display — mini
 
 export function BasisNote({ children }) {
   return <p className="text-[11px] text-ink-light mt-1 leading-snug">{children}</p>;
-}
-
-export function Num({ value, prefix = "", suffix = "", decimals = 0 }) {
-  if (value === null || value === undefined) return <span className="text-ink-light">—</span>;
-  const formatted = Number(value).toLocaleString(undefined, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-  return (
-    <span className="font-num">
-      {prefix}
-      {formatted}
-      {suffix}
-    </span>
-  );
 }
