@@ -12,7 +12,10 @@
 // Anything the pipeline computes belongs in public/data/*.json, not here: the
 // privacy floor, the send caps, the cardholder base and the campaign arm sizes
 // all ship in constants.json and allocation_summary.json with their own basis
-// strings. A figure duplicated in both places drifts. The merchant funds every
+// strings. A figure duplicated in both places drifts — and this file used to
+// contradict that sentence by redeclaring the cardholder base and the privacy
+// floor a few lines below it. Both are gone; read them with usePrivacyRules()
+// or constantOf(), which go to the manifest. The merchant funds every
 // reward in full — OCBC supplies targeting, delivery and measurement, never
 // money — so every cost figure here and on screen is the merchant's whole cost.
 // -----------------------------------------------------------------------------
@@ -21,12 +24,6 @@ export const CONSTANTS = {
   MOCK_DATA_LABEL: {
     value: "Mock data",
     basis: "Entire dataset is synthetically generated (data-generator/generate.py, seed=42). No real cardholder or merchant records anywhere in this build.",
-  },
-
-  TOTAL_OCBC_CARDHOLDERS: {
-    value: 800_000,
-    display: "800,000",
-    basis: "OCBC's stated active cardholder base — the resolved figure, not the unsupported \">1M\" claim in earlier drafts.",
   },
 
   BASE_ENGAGEMENT_RATE: {
@@ -42,16 +39,18 @@ export const CONSTANTS = {
     isUpside: true,
   },
 
+  // ---------------------------------------------------------------------------
+  // Deck-facing, deliberately. Both figures are real, both carry a basis, and
+  // neither belongs on a merchant's screen: a merchant has no use for how long
+  // OCBC's controlled pilot runs or what OCBC's inference bill comes to. They
+  // answer questions a judge asks, not questions a merchant asks, so they live
+  // here for the write-up and the Q&A rather than being wired into a component.
+  // Not dead code — do not delete them for being unreferenced.
+  // ---------------------------------------------------------------------------
   PILOT_LENGTH_WEEKS: {
     value: [12, 16],
     display: "12–16 weeks",
     basis: "Controlled pilot length. The 26-day figure elsewhere in the source material describes the hackathon-period survey window, not the pilot itself, and is not used here.",
-  },
-
-  MIN_SEGMENT_SIZE: {
-    value: 250,
-    display: "250",
-    basis: "Privacy floor enforced in data-generator/generate.py (MIN_SEGMENT_SIZE) and re-enforced at render time — segments below this never show a size or profile, only a suppressed state.",
   },
 
   ANNUAL_LLM_COST_CEILING: {

@@ -1,23 +1,18 @@
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { useDemoData, merchantById, merchantName } from "../data/DataProvider";
-import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, CONSTANTS, screenNum } from "../data/constants";
-import { num, pctOf, cellText, cellCount } from "../data/format";
+import { useDemoData, merchantById, merchantName, usePrivacyRules } from "../data/DataProvider";
+import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, screenNum } from "../data/constants";
+import { num, pctOf, cellText, cellCount, floorRound } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 import CohortCard from "../components/CohortCard";
 import { ArrowRight, Info } from "lucide-react";
 
-// Apply the privacy floor and the rounding to a raw count the pipeline shipped exactly. Returns
-// null below the floor, so the caller renders a suppressed state rather than a small number.
-const FLOOR = CONSTANTS.MIN_SEGMENT_SIZE.value;
-const ROUNDING = 50;
-function floorRound(n) {
-  if (n === null || n === undefined) return null;
-  return n < FLOOR ? null : Math.round(n / ROUNDING) * ROUNDING;
-}
-
 export default function DemandGap() {
   const { data } = useDemoData();
+  // Both rules come from the manifest. They used to be a module-level const apiece, one reading
+  // the floor from a src constant and the other a bare 50 doing real arithmetic.
+  const { floor, rounding } = usePrivacyRules();
+  const applyRules = (n) => floorRound(n, floor, rounding);
   const profile = merchantById(data.merchantProfiles, HERO_MERCHANT_ID);
   const rivalName = merchantName(data, HERO_RIVAL_MERCHANT_ID);
   const gap = data.demandGaps.find((g) => g.merchant_id === HERO_MERCHANT_ID);
@@ -61,7 +56,7 @@ export default function DemandGap() {
             </div>
             {reach !== null && (
               <div className="text-[11px] text-ink-light mt-2">
-                Rounded to the nearest 50. Counts below 250 are never shown, only suppressed.
+                Rounded to the nearest {rounding}. Counts below {floor} are never shown, only suppressed.
               </div>
             )}
           </div>
@@ -122,21 +117,21 @@ export default function DemandGap() {
           </ul>
           {/* The funnel is floored and rounded like every other count on a merchant screen, and for
               two reasons. The first is the rule itself: 87 and 104 are counts of cardholders below
-              the 250 floor, and a filter step is not exempt from it. The second is arithmetic —
+              the privacy floor, and a filter step is not exempt from it. The second is arithmetic —
               exact removal counts against an exact evaluated total reconstruct the segment size to
-              the person, which is precisely what rounding reach to 50 exists to prevent. */}
+              the person, which is precisely what the rounding exists to prevent. */}
           <div className="mt-3 rounded-lg bg-canvas border border-border px-3 py-2 text-[11.5px] text-ink-secondary">
             <div className="mb-1">
-              Evaluated: <span className="font-num text-ink">{num(floorRound(segment.filters.evaluated))}</span>
+              Evaluated: <span className="font-num text-ink">{num(applyRules(segment.filters.evaluated))}</span>
             </div>
             <ul className="space-y-0.5">
               {Object.entries(segment.filters.removed).map(([rule, n]) => (
                 <li key={rule}>
                   Removed on {rule.replace(/_/g, " ")}:{" "}
-                  {floorRound(n) === null ? (
+                  {applyRules(n) === null ? (
                     <span className="italic text-ink-light">below the reporting threshold</span>
                   ) : (
-                    <span className="font-num text-ink">{num(floorRound(n))}</span>
+                    <span className="font-num text-ink">{num(applyRules(n))}</span>
                   )}
                 </li>
               ))}
@@ -165,7 +160,7 @@ export default function DemandGap() {
           count={cellCount(profile.rfm.segments.Champions)}
           suppressedReason="Below the reporting threshold."
           pattern={alvin.signature_pattern}
-          basis="merchant_profiles.json rfm.segments — your own customers, rounded to 50."
+          basis={`merchant_profiles.json rfm.segments — your own customers, rounded to ${rounding}.`}
         />
         <CohortCard
           emphasis
@@ -180,7 +175,7 @@ export default function DemandGap() {
           role={{ label: "The exclusion", tone: "warning" }}
           label="Price-insensitive — removed before targeting"
           count={null}
-          suppressedReason={`Removed on the price-band filter. The count is below the ${CONSTANTS.MIN_SEGMENT_SIZE.display}-cardholder floor, so no number is shown for it — the floor applies to an exclusion just as it does to a segment.`}
+          suppressedReason={`Removed on the price-band filter. The count is below the ${floor}-cardholder floor, so no number is shown for it — the floor applies to an exclusion just as it does to a segment.`}
           pattern={charles.signature_pattern}
           basis="allocation_summary.json removed.price_band — excluded because their behaviour does not move with an incentive, so crediting their visits would overstate the campaign."
         />

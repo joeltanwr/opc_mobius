@@ -8,7 +8,7 @@ import { humanize, num } from "../data/format";
 // A merchant may see aggregate breakdowns of its own customers, and counts and labels only for
 // cardholders it has never served. It may not see an identity. PersonaCard — name, age,
 // occupation — is therefore a cardholder-facing component and belongs on the customer's own
-// screen; this is what the merchant gets instead: the cohort, its count under the 250 floor, and
+// screen; this is what the merchant gets instead: the cohort, its count under the privacy floor, and
 // the behavioural pattern that defines it, with no person attached to it.
 //
 // The count is the point. A pattern with a number beside it is a segment; the same pattern with a

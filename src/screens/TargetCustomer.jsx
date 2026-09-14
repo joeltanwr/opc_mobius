@@ -4,9 +4,9 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
 import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
-import { useDemoData, merchantById, categoryFor, constantOf } from "../data/DataProvider";
+import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
-import { TAB3_ACCOUNTS, CONSTANTS, screenNum } from "../data/constants";
+import { TAB3_ACCOUNTS, screenNum } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard } from "../components/ui";
 
@@ -67,6 +67,7 @@ export default function TargetCustomer() {
   // the detector's trailing window ever moves, the prose moves with it.
   const trailingMonths = constantOf(data, "TRAILING_MONTHS")?.value ?? null;
   const trailingWeeks = constantOf(data, "GAP_TRAILING_WEEKS")?.value ?? null;
+  const { floor, rounding } = usePrivacyRules();
 
   // The campaign this merchant would apply for — the live demo campaign for the hero merchant, an
   // existing application for anyone who already has one. Read from state, not from JSON, because
@@ -93,12 +94,12 @@ export default function TargetCustomer() {
       <Eligibility eligibility={eligibility} name={profile.name} />
 
       {!hasProfile ? (
-        <ThinHistory profile={profile} data={data} gap={gap} />
+        <ThinHistory profile={profile} data={data} gap={gap} rounding={rounding} />
       ) : (
         <>
-          <TradingSummary profile={profile} trailingMonths={trailingMonths} rounding={state.caps.reach_rounding} />
+          <TradingSummary profile={profile} trailingMonths={trailingMonths} rounding={rounding} />
           <RecencyFrequencyValue profile={profile} />
-          <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} />
+          <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} floor={floor} />
           <CustomerAnalysis
             profile={profile}
             gap={gap}
@@ -116,7 +117,7 @@ export default function TargetCustomer() {
             rationale={rationale}
             campaign={campaign}
             reachOf={reachOf}
-            rounding={state.caps.reach_rounding}
+            rounding={rounding}
             data={data}
           />
           <Apply campaign={campaign} profile={profile} state={state} dispatch={dispatch} display={display} />
@@ -223,7 +224,7 @@ function categoryBenchmark(benchmarks, profile) {
   };
 }
 
-function ThinHistory({ profile, data, gap }) {
+function ThinHistory({ profile, data, gap, rounding }) {
   const peer = categoryBenchmark(data.benchmarks, profile);
   return (
     <Card className="p-6 mb-6">
@@ -243,7 +244,7 @@ function ThinHistory({ profile, data, gap }) {
             <StatTile label="Merchants in the benchmark" value={num(peer.merchants)} sub={`${profile.category.replace(/_/g, " ")}, across ${peer.districts} districts`} />
             <StatTile label="Their average ticket" value={sgd(peer.ticket, 2)} sub="Weighted by transaction count" />
             <StatTile label="Their transactions, period" value={num(peer.txns)} />
-            <StatTile label="Their unique cardholders" value={num(peer.cardholders)} sub="Rounded to 50" />
+            <StatTile label="Their unique cardholders" value={num(peer.cardholders)} sub={`Rounded to ${rounding}`} />
           </div>
           <p className="text-[12px] text-ink-light mt-3 max-w-3xl">
             Rolled up across districts on purpose. A district row covering one merchant is that merchant, so it is never
@@ -449,7 +450,7 @@ function RecencyFrequencyValue({ profile }) {
 
 // --------------------------------------------------------------------------- §6 trading pattern
 
-function TradingPattern({ profile, gap, trailingWeeks }) {
+function TradingPattern({ profile, gap, trailingWeeks, floor }) {
   const hourly = profile.trading_pattern.hourly;
   const trough = profile.trading_pattern.trough ?? null;
   const troughHours = trough ? gap?.hours ?? null : null;
@@ -535,7 +536,7 @@ function TradingPattern({ profile, gap, trailingWeeks }) {
             })}
           </div>
           <BasisNote>
-            Bands under {CONSTANTS.MIN_SEGMENT_SIZE.display} are suppressed in the pipeline, which ships no count for
+            Bands under {floor} are suppressed in the pipeline, which ships no count for
             them at all — so there is nothing on this screen to recover by subtraction, and the bands that do show are
             rounded.
           </BasisNote>

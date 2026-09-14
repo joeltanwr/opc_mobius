@@ -53,6 +53,14 @@ export function cellText(cellValue, suppressedLabel = "Below reporting threshold
   return n === null ? suppressedLabel : num(n);
 }
 
+// Apply the privacy floor and the rounding to a count the pipeline shipped exactly. Returns null
+// below the floor, so a caller renders a suppressed state rather than a small number. Both rules
+// are arguments, never defaults: a silently wrong floor is worse than a loud missing one.
+export function floorRound(n, floor, rounding) {
+  if (n === null || n === undefined || floor === null || rounding === null) return null;
+  return n < floor ? null : Math.round(n / rounding) * rounding;
+}
+
 export function monthLabel(monthKey) {
   if (!monthKey) return "";
   const [y, m] = String(monthKey).split("-").map(Number);

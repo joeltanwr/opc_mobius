@@ -6,6 +6,17 @@ import { PER_CUSTOMER_OPTIONS } from "./store.js";
 
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+// A manifest constant the seed cannot proceed without. The privacy floor and the reach rounding
+// used to fall back to bare literals; a wrong floor that looks right is the worst failure mode
+// this build has, so a missing one now stops the demo instead of quietly becoming 250.
+function required(constants, key) {
+  const c = constants[key];
+  if (c?.value === undefined || c.value === null) {
+    throw new Error(`constants.json is missing ${key} — the app will not render a privacy rule it cannot read.`);
+  }
+  return c.value;
+}
+
 function counters(seeded = {}) {
   return {
     feed_delivered: seeded.feed_delivered ?? 0, pushes_sent: seeded.pushes_sent ?? 0, pushes_suppressed: seeded.pushes_suppressed ?? 0,
@@ -36,7 +47,7 @@ export function buildSeed(data) {
       push_per_week: constants.PUSH_CAP_PER_WEEK?.value ?? null,
       offers_per_30_days: constants.FREQ_CAP_OFFERS?.value ?? null,
       profile_weight_step: constants.PROFILE_WEIGHT_STEP?.value ?? 0,
-      reach_rounding: constants.REACH_ROUNDING?.value ?? 50,
+      reach_rounding: required(constants, "REACH_ROUNDING"),
       provisional: {
         push_per_week: Boolean(constants.PUSH_CAP_PER_WEEK?.provisional),
         offers_per_30_days: Boolean(constants.FREQ_CAP_OFFERS?.provisional),
@@ -128,7 +139,7 @@ export function buildSeed(data) {
         : "one reward per cardholder for this campaign — the default; the merchant's last campaign used a till-level rule the platform cannot enforce",
       days_of_week: "prefilled from demand_gaps.json — the trough window", hours: "prefilled from demand_gaps.json — the trough window",
       window_start: "the Monday after the demo clock", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
-      outlets: "every outlet that clears the 250 floor on its own (segments.json per_outlet)",
+      outlets: `every outlet that clears the ${required(constants, "MIN_SEGMENT_SIZE")} floor on its own (segments.json per_outlet)`,
       push_requested: "push is a request, not a setting — off until the merchant asks",
     };
     state.campaigns["C-SJ-03"] = campaignShell({
@@ -149,8 +160,8 @@ export function buildSeed(data) {
       segment: seg ? {
         segment_id: seg.segment_id, label: seg.label, description: seg.description, candidate_name: seg.candidate_name,
         base_reach: num(seg.reach?.count), reach: num(seg.reach?.count), constraints: {}, refinements_used: 0,
-        max_refinements: constants.NARROW_MAX_REFINEMENTS?.value ?? 5, floor: constants.MIN_SEGMENT_SIZE?.value ?? 250,
-        rounding: constants.REACH_ROUNDING?.value ?? 50, protected_terms: constants.NARROW_PROTECTED_TERMS?.value ?? {},
+        max_refinements: required(constants, "NARROW_MAX_REFINEMENTS"), floor: required(constants, "MIN_SEGMENT_SIZE"),
+        rounding: required(constants, "REACH_ROUNDING"), protected_terms: constants.NARROW_PROTECTED_TERMS?.value ?? {},
         per_outlet: seg.per_outlet, filters: seg.filters, narrowing: seg.narrowing, log: [],
       } : null,
     });

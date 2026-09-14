@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown, TrendingUp, Lock } from "lucide-react";
-import { useDemoData, merchantById, constantOf } from "../data/DataProvider";
+import { useDemoData, merchantById, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { HERO_MERCHANT_ID, CONSTANTS, screenNum } from "../data/constants";
 import { sgd, num, pct, cellCount } from "../data/format";
 import { Card, SectionTitle, BasisNote } from "../components/ui";
@@ -19,6 +19,7 @@ export default function OpportunityPanel() {
   const profile = merchantById(data.merchantProfiles, HERO_MERCHANT_ID);
   const avgTicket = profile.trading_summary.avg_ticket_sgd;
   const engagementRate = CONSTANTS.BASE_ENGAGEMENT_RATE.value;
+  const { floor, rounding } = usePrivacyRules();
   // Every segment on this screen comes from merchant-pair lift, so every one targets cardholders
   // the merchant has never served — the non_customers pool.
   const incrementalShareConst = constantOf(data, "INCREMENTAL_SHARE");
@@ -61,6 +62,8 @@ export default function OpportunityPanel() {
             key={op.segment_id}
             rank={i + 1}
             op={op}
+            floor={floor}
+            rounding={rounding}
             engagementRate={engagementRate}
             avgTicket={avgTicket}
             incrementalShare={incrementalShare}
@@ -77,7 +80,7 @@ export default function OpportunityPanel() {
           </h3>
           <p className="text-[12px] text-ink-secondary mb-4 max-w-2xl">
             The same lift computation found {suppressed.length === 1 ? "one more segment" : `${suppressed.length} more segments`} for{" "}
-            {profile.name} that {suppressed.length === 1 ? "sits" : "sit"} below the 250-cardholder reporting floor.
+            {profile.name} that {suppressed.length === 1 ? "sits" : "sit"} below the {floor}-cardholder reporting floor.
             The floor is enforced in the pipeline, not at render time: no count for{" "}
             {suppressed.length === 1 ? "it" : "them"} is sent to this screen, so there is nothing here to leak
             or to reconstruct by subtraction.
@@ -95,7 +98,7 @@ export default function OpportunityPanel() {
                 </div>
                 <p className="text-[13px] text-ink-light">
                   {op.reach?.reason === "below minimum segment size"
-                    ? "Below the 250-cardholder reporting threshold — no size, no profile, no expected value."
+                    ? `Below the ${floor}-cardholder reporting threshold — no size, no profile, no expected value.`
                     : op.reach?.reason ?? "Below the reporting threshold."}
                 </p>
               </Card>
@@ -107,7 +110,7 @@ export default function OpportunityPanel() {
   );
 }
 
-function OpportunityRow({ rank, op, engagementRate, avgTicket, incrementalShare, shareProvisional, shareBasis }) {
+function OpportunityRow({ rank, op, engagementRate, avgTicket, incrementalShare, shareProvisional, shareBasis, rounding }) {
   const [open, setOpen] = useState(rank === 1);
   return (
     <Card className="p-0 overflow-hidden">
@@ -154,8 +157,8 @@ function OpportunityRow({ rank, op, engagementRate, avgTicket, incrementalShare,
           </p>
           <BasisNote>
             Engagement rate: {CONSTANTS.BASE_ENGAGEMENT_RATE.basis} Incremental share: {shareBasis} Ticket size: this
-            merchant's own average ticket (merchant_profiles.json trading_summary). Reach is rounded to the nearest 50
-            in the pipeline.
+            merchant's own average ticket (merchant_profiles.json trading_summary). Reach is rounded to the nearest{" "}
+            {rounding} in the pipeline.
           </BasisNote>
         </div>
       )}

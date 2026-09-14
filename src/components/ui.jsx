@@ -1,6 +1,7 @@
 import React from "react";
 import { Lock, AlertTriangle } from "lucide-react";
 import { CONSTANTS } from "../data/constants";
+import { usePrivacyRules } from "../data/DataProvider";
 
 export function Card({ children, className = "", interactive = false, ...props }) {
   return (
@@ -78,7 +79,12 @@ export function MockDataBadge({ className = "" }) {
   );
 }
 
-export function SuppressedCard({ reason = "Segment too small to display — minimum 250 cardholders", label }) {
+// `reason` has no default string: the fallback sentence quotes the floor, and a default argument
+// is evaluated outside any data context, so it used to hardcode the number. The sentence is built
+// inside the component instead, from the manifest.
+export function SuppressedCard({ reason, label }) {
+  const { floor } = usePrivacyRules();
+  const text = reason ?? `Segment too small to display — minimum ${floor} cardholders`;
   return (
     <Card className="p-5 border-dashed bg-canvas/60">
       <div className="flex items-center gap-2 text-ink-light mb-1.5">
@@ -86,7 +92,7 @@ export function SuppressedCard({ reason = "Segment too small to display — mini
         <span className="text-[12px] font-semibold uppercase tracking-wide">Suppressed</span>
       </div>
       {label && <div className="text-[13px] font-medium text-ink-secondary mb-1">{label}</div>}
-      <p className="text-[13px] text-ink-light">{reason}</p>
+      <p className="text-[13px] text-ink-light">{text}</p>
     </Card>
   );
 }

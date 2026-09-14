@@ -90,6 +90,22 @@ export function merchantName(data, merchantId) {
   return merchantId;
 }
 
+// The privacy floor and the reach rounding, from the pipeline manifest, which is their only
+// source. Every screen that states either number reads it here rather than typing it, because a
+// floor that moves in the pipeline while the copy still says 250 is a promise the build no longer
+// keeps. Returns the bases too, so a component can attribute the rule as well as quote it.
+export function usePrivacyRules() {
+  const { data } = useDemoData();
+  const floor = data?.constants?.constants?.MIN_SEGMENT_SIZE ?? null;
+  const rounding = data?.constants?.constants?.REACH_ROUNDING ?? null;
+  return {
+    floor: floor?.value ?? null,
+    rounding: rounding?.value ?? null,
+    floorBasis: floor?.basis ?? null,
+    roundingBasis: rounding?.basis ?? null,
+  };
+}
+
 // The pipeline's own constants manifest: every figure with its basis and provisional flag.
 export function constantOf(data, key) {
   return data?.constants?.constants?.[key] ?? null;

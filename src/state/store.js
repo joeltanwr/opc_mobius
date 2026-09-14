@@ -316,7 +316,7 @@ export function reduce(state, event) {
       holder.feed = [];
       holder.notifications = [];
       // Out of every future segment: the pipeline's reach is static JSON, so the departure is
-      // recorded here and the live reach shown is reach − departures (still rounded to 50).
+      // recorded here and the live reach shown is reach − departures (still rounded).
       for (const campaign of Object.values(next.campaigns)) {
         if (!isTerminal(campaign.status)) campaign.segment_departures.consent += 1;
       }
@@ -468,9 +468,11 @@ export function reduce(state, event) {
 }
 
 // Live reach for display: the pipeline's rounded reach less consent departures, re-rounded so a
-// single departure never reveals itself as a count of one.
-export function liveReach(campaign, rounding = 50) {
-  if (campaign.reach == null) return null;
+// single departure never reveals itself as a count of one. `rounding` is required, not defaulted:
+// it used to fall back to a bare 50, which would have kept rounding to the old grain — silently,
+// and on the one figure the rounding exists to protect — if the manifest's value ever changed.
+export function liveReach(campaign, rounding) {
+  if (campaign.reach == null || rounding == null) return null;
   const raw = campaign.reach - (campaign.segment_departures?.consent ?? 0);
   return Math.max(0, Math.round(raw / rounding) * rounding);
 }

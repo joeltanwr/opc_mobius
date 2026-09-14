@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { ShieldCheck, X } from "lucide-react";
+import { usePrivacyRules } from "../data/DataProvider";
 
 export default function PrivacyAffordance() {
   const [open, setOpen] = useState(false);
+  // The panel states the floor, so it reads the floor rather than repeating it.
+  const { floor } = usePrivacyRules();
   return (
     <>
       <button
@@ -44,7 +47,7 @@ export default function PrivacyAffordance() {
                 this product, including behind the scenes.
               </p>
               <ul className="ml-4 list-disc space-y-1.5 marker:text-ink-light">
-                <li>Segments below 250 cardholders never render a size or profile — only a suppressed state.</li>
+                <li>Segments below {floor} cardholders never render a size or profile — only a suppressed state.</li>
                 <li>No free-form filtering. Merchants choose from pre-computed segments only.</li>
                 <li>No export, download, or print of segment data.</li>
                 <li>No demographic breakdown of cardholders the merchant has never served.</li>

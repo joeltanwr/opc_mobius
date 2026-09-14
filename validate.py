@@ -29,6 +29,15 @@ RAW, DERIVED, PUB = cfg.RAW_DIR, cfg.DERIVED_DIR, cfg.PUB_DIR
 FAILURES, PASSES = [], []
 
 
+
+def _walk_src(root):
+    """Every JS/JSX/MJS file under src/, for the source-level checks."""
+    for dirpath, _dirs, files in os.walk(root):
+        for f in sorted(files):
+            if f.endswith((".js", ".jsx", ".mjs")):
+                yield os.path.join(dirpath, f)
+
+
 def check(name, cond, detail=""):
     (PASSES if cond else FAILURES).append(name + (f" — {detail}" if detail and not cond else ""))
 
@@ -344,6 +353,36 @@ def main(rerun=True):
     src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
                 and os.path.basename(f) != "DataProvider.jsx"]
     check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+
+    # -------------------------------------------------------------- no retyped privacy rules
+    # The floor (250) and the reach rounding (50) ship once, in constants.json, and every screen
+    # that states either reads it from there. This catches the drift in the other direction from
+    # the "no number without a basis" rule: not a figure with no source, but a figure with a
+    # source that a component chose to retype anyway. Both had accumulated nine instances between
+    # them, one of which was arithmetic — a module-level `const ROUNDING = 50` actually rounding
+    # counts beside a floor that was read properly.
+    #
+    # Comments and Tailwind class values are stripped first: a class like `bg-canvas/50` or a
+    # comment explaining the rule is not a claim made to a merchant. What is left is code and
+    # user-visible copy, and a bare 250 or 50 is only flagged there when the line also talks about
+    # floors, rounding, thresholds, suppression or cardholders — so an unrelated
+    # `redemption_limit: 50` stays quiet.
+    floor_v = str(const["constants"]["MIN_SEGMENT_SIZE"]["value"])
+    round_v = str(const["constants"]["REACH_ROUNDING"]["value"])
+    rule_words = re.compile(r"floor|round|threshold|suppress|nearest|cardholder|segment size", re.I)
+    bare = re.compile(r"(?<![\w/\-.])(" + floor_v + "|" + round_v + r")(?![\w%\-.])")
+    retyped = []
+    for path in _walk_src(os.path.join(ROOT, "src")):
+        text = open(path, encoding="utf-8").read()
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)              # block and JSX comments
+        text = re.sub(r"(?<!:)//[^\n]*", "", text)                      # line comments, not URLs
+        text = re.sub(r'className=(?:"[^"]*"|\{`[^`]*`\}|\{"[^"]*"\})', "", text)   # Tailwind
+        for i, line in enumerate(text.splitlines(), 1):
+            if bare.search(line) and rule_words.search(line):
+                rel = os.path.relpath(path, ROOT).replace("\\", "/")
+                retyped.append(f"{rel}:{i} {line.strip()[:90]}")
+    check("no screen retypes the privacy floor or the reach rounding — both come from constants.json",
+          not retyped, "; ".join(retyped))
 
     # -------------------------------------------------------------- shared state module (brief §4)
     # The reducer, ladder and bus are JavaScript; the only honest check is to run them. selftest.mjs
