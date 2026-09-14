@@ -374,6 +374,34 @@ def main(rerun=True):
                      "bus: a tab opened later derives the same state from the log"):
             check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
 
+    # The narrowing agent's world (merchant §7.1): a lookup table of floored, rounded reaches, and
+    # the protected-characteristic policy, both shipped from the pipeline.
+    hero_seg = segments["M0001"][0]
+    nt = hero_seg.get("narrowing")
+    check("narrowing: the hero segment ships the agent's reach table", bool(nt) and nt["cells_shipped"] == len(nt["cells"]) > 0)
+    check("narrowing: every shipped cell clears the floor and is rounded — nothing below the floor is shipped at all",
+          bool(nt) and all(c["reach"]["suppressed"] is False and c["reach"]["count"] >= cfg.MIN_SEGMENT_SIZE and c["reach"]["count"] % cfg.REACH_ROUNDING == 0 for c in nt["cells"]))
+    check("narrowing: dimensions are outlet, daypart and age band only — weekday is the window, not the segment",
+          bool(nt) and set(nt["dimensions"]) == {"outlet", "daypart", "age_band"})
+    check("narrowing: a below-floor narrowing exists to refuse (lunch does not ship)",
+          bool(nt) and not any(c["constraints"] == {"daypart": "lunch"} for c in nt["cells"]))
+    check("narrowing: other segments carry no table (only the campaign's segment can be narrowed)", all(s.get("narrowing") is None for s in segments["M0001"][1:]))
+    prot = const["constants"].get("NARROW_PROTECTED_TERMS", {})
+    check("narrowing: protected-characteristic policy ships with the six characteristics and a basis",
+          set(prot.get("value", {})) == {"nationality", "race", "religion", "gender", "marital status", "health"} and bool(prot.get("basis")))
+    check("narrowing: refinement cap ships", const["constants"].get("NARROW_MAX_REFINEMENTS", {}).get("value") == cfg.NARROW_MAX_REFINEMENTS)
+    if st_report:
+        for name in ("narrow: below-floor narrowing refused with NO count reported",
+                     "narrow: protected characteristic refused, explained, and does not consume a refinement",
+                     "narrow: widening refused",
+                     "narrow: after reset the sixth narrowing is refused by the cap — reset does not refund",
+                     "permissions: OCBC staff cannot set the limit",
+                     "permissions: nobody can author the segment as a field",
+                     "submit: refused while a required field is missing, naming it",
+                     "cohort push: the reach cap fires — campaign capped with the reason, results frozen",
+                     "cohort push: Bernice's card is still honoured after the reach cap"):
+            check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
+
     # Suppression counts reconcile end to end: the shipped allocation_summary against the derived
     # per-cardholder allocation ledger, and the personas' seeded push state against the same ledger.
     allocated = alloc[alloc["exclusion_reason"].isna()]

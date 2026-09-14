@@ -75,10 +75,11 @@ export const SCREENS = [
   { key: "reward-rm", num: 4, label: "Reward & RM handoff", path: "/reward-rm" },
   { key: "results", num: 5, label: "Campaign results", path: "/results" },
   { key: "preview", num: 6, label: "Preview mode", path: "/preview" },
+  { key: "reward-setup", num: 7, label: "Reward set-up", path: "/reward-setup" },
 ];
 
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 7, label: "Cardholder view", path: "/consumer" },
+  { key: "consumer", num: 8, label: "Cardholder view", path: "/consumer" },
 ];
 
 export const HERO_MERCHANT_ID = "M0001";

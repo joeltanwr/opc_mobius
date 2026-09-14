@@ -16,8 +16,8 @@ function counters(seeded = {}) {
 function campaignShell(base) {
   return {
     configuration: null, recommended: null, window: null, reach: null, reach_cap: null, live_since: null,
-    frozen: null, capped: null, stopped: null, history: [], pushes: [], post_freeze: { redemptions: 0, offers: [] },
-    segment_departures: { consent: 0 }, ...base,
+    frozen: null, capped: null, stopped: null, history: [], changes: [], pushes: [], post_freeze: { redemptions: 0, offers: [] },
+    segment_departures: { consent: 0 }, segment: null, prefill: null, cohort_tag: null, ...base,
   };
 }
 
@@ -90,6 +90,37 @@ export function buildSeed(data) {
   const gap = (data.demandGaps ?? []).find((g) => g.merchant_id === alloc?.merchant_id);
   if (alloc) {
     const top = (recs?.ranked ?? []).find((r) => !r.disabled) ?? null;
+    const seg = (data.segments?.[alloc.merchant_id] ?? []).find((x) => x.narrowing) ?? null;
+    const weekdayIndex = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+    // Timing and money defaults come from the merchant's own last completed campaign of the same
+    // reward type; the window starts the Monday after the demo clock and runs as long as that one did.
+    const lastSame = (results.completed ?? []).filter((c) => c.merchant_id === alloc.merchant_id && c.measured && c.configuration?.reward_type === top?.type)
+      .sort((a, b) => (b.window ?? "").localeCompare(a.window ?? ""))[0] ?? null;
+    const clock = new Date(state.clock ?? Date.now());
+    const nextMonday = new Date(Date.UTC(clock.getUTCFullYear(), clock.getUTCMonth(), clock.getUTCDate() + ((8 - clock.getUTCDay()) % 7 || 7)));
+    const lastLen = lastSame?.window ? (Date.parse(lastSame.window.slice(-10)) - Date.parse(lastSame.window.slice(0, 10))) : 27 * 86_400_000;
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const prefillFields = {
+      reward_type: top?.type ?? null,
+      max_reward_value_sgd: lastSame?.configuration?.cap_per_txn_sgd ?? null,
+      discount_pct: lastSame?.configuration?.discount_pct ?? null,
+      days_of_week: gap?.weekdays ? gap.weekdays.map((d) => weekdayIndex[d]) : null,
+      hours: gap?.hours ?? null,
+      window_start: iso(nextMonday), window_end: iso(new Date(nextMonday.getTime() + lastLen)),
+      outlets: seg ? seg.per_outlet.filter((o) => o.suppressed === false).map((o) => o.outlet_id) : null,
+      redemption_limit: lastSame?.configuration?.redemption_limit ?? null,
+      per_customer_limit: lastSame?.configuration?.per_customer_limit ?? "once_per_visit",
+      push_requested: false,
+    };
+    const basisFrom = lastSame ? `prefilled from your last ${top?.label?.toLowerCase() ?? "reward"} campaign (${lastSame.name}, campaign_results.json)` : "no prior campaign of this type; left for the merchant";
+    const prefillBasis = {
+      reward_type: "prefilled from reward_recommendations.json — the top-ranked reward for this gap",
+      max_reward_value_sgd: basisFrom, discount_pct: basisFrom, redemption_limit: basisFrom, per_customer_limit: basisFrom,
+      days_of_week: "prefilled from demand_gaps.json — the trough window", hours: "prefilled from demand_gaps.json — the trough window",
+      window_start: "the Monday after the demo clock", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
+      outlets: "every outlet that clears the 250 floor on its own (segments.json per_outlet)",
+      push_requested: "push is a request, not a setting — off until the merchant asks",
+    };
     state.campaigns["C-SJ-03"] = campaignShell({
       id: "C-SJ-03", merchant_id: alloc.merchant_id, merchant_name: nameOf(alloc.merchant_id), merchant_category: categoryOf(alloc.merchant_id),
       name: `${nameOf(alloc.merchant_id)} — ${gap?.window ?? "next campaign"}`, status: "applied", source: "live",
@@ -103,6 +134,15 @@ export function buildSeed(data) {
                     cap_provisional: alloc.push.cap_provisional, week: alloc.push.week, note: alloc.push.note,
                     removed: alloc.removed, frequency_cap: alloc.frequency_cap },
       counters: counters(),
+      cohort_tag: "soujourner_acquisition_cohort",
+      prefill: { fields: Object.fromEntries(Object.entries(prefillFields).filter(([, v]) => v != null)), basis: prefillBasis },
+      segment: seg ? {
+        segment_id: seg.segment_id, label: seg.label, description: seg.description, candidate_name: seg.candidate_name,
+        base_reach: num(seg.reach?.count), reach: num(seg.reach?.count), constraints: {}, refinements_used: 0,
+        max_refinements: constants.NARROW_MAX_REFINEMENTS?.value ?? 5, floor: constants.MIN_SEGMENT_SIZE?.value ?? 250,
+        rounding: constants.REACH_ROUNDING?.value ?? 50, protected_terms: constants.NARROW_PROTECTED_TERMS?.value ?? {},
+        per_outlet: seg.per_outlet, filters: seg.filters, narrowing: seg.narrowing, log: [],
+      } : null,
     });
   }
 

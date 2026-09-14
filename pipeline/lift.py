@@ -13,6 +13,7 @@ import pandas as pd
 
 from config import (DERIVED_DIR, LOGIN_MERCHANTS, LIFT_MIN_SUPPORT, LIFT_PRICE_BAND_TOLERANCE, LIFT_MIN_DAYPART_AVAILABILITY,
                     MIN_SEGMENT_SIZE, cell, round_reach, in_catchment)
+from narrowing import narrowing_table
 
 EXCLUSION_ORDER = ["already_customer", "aggregator_source", "catchment", "price_band", "daypart", "consent", "frequency_cap", "dormant"]
 
@@ -117,6 +118,8 @@ def build_affinity_and_segments(raw, tags, gaps_by_merchant, profiles):
                              f"are within reach of your outlets" + (f", and are usually free in the {gap_daypart}" if gap_daypart else "") + ". None has transacted with you."),
                 reach=cell(size), filters=_filter_summary(cdf),
                 per_outlet=_per_outlet(raw, arow, cdf),
+                # The narrowing agent's whole world (merchant §7.1): only for the segment a campaign is built on.
+                narrowing=narrowing_table(raw, arow, cdf) if b == top[0]["merchant_id"] else None,
             ))
             if b == top[0]["merchant_id"]:
                 cohorts[a] = cdf

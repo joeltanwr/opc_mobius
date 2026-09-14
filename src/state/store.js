@@ -9,6 +9,19 @@
 // froze is honoured for the customer and counted apart from the frozen results.
 
 import { canTransition, isTerminal } from "./ladder.js";
+import { decideNarrowing } from "./narrow.js";
+
+// Field-level permissions on the joint set-up page (merchant §7.6). The merchant proposes and
+// sets the limit, since the limit bounds its own spend; OCBC staff adjust reward, timing and
+// location and decide push. Neither party can author the segment — it is only narrowed.
+export const FIELD_OWNERS = {
+  reward_type: ["merchant", "ocbc"], discount_pct: ["merchant", "ocbc"], max_reward_value_sgd: ["merchant", "ocbc"],
+  offer_headline: ["merchant", "ocbc"], offer_terms: ["merchant", "ocbc"],
+  days_of_week: ["merchant", "ocbc"], hours: ["merchant", "ocbc"], window_start: ["merchant", "ocbc"], window_end: ["merchant", "ocbc"],
+  outlets: ["merchant", "ocbc"], redemption_limit: ["merchant"], per_customer_limit: ["merchant"],
+  push_requested: ["merchant"], push_granted: ["ocbc"],
+};
+export const REQUIRED_TO_SUBMIT = ["reward_type", "max_reward_value_sgd", "days_of_week", "hours", "window_start", "window_end", "outlets", "redemption_limit"];
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -69,14 +82,32 @@ export function reduce(state, event) {
       const c = state.campaigns[event.campaign_id];
       if (!c) return reject(state, event, "unknown campaign");
       if (!canTransition(c.status, event.to)) return reject(state, event, `no transition ${c.status} → ${event.to}`);
+      if (event.to === "pending") {
+        const cfg = { ...(c.configuration ?? {}), ...(event.configuration ?? {}) };
+        const missing = REQUIRED_TO_SUBMIT.filter((f) => cfg[f] == null || (Array.isArray(cfg[f]) && cfg[f].length === 0) || cfg[f] === "");
+        if (missing.length) return reject(state, event, `cannot submit: missing ${missing.join(", ")}`);
+        if (!(Number(cfg.redemption_limit) > 0)) return reject(state, event, "cannot submit: redemption limit must be above zero");
+      }
       const next = clone(state);
       const campaign = next.campaigns[event.campaign_id];
       const from = campaign.status;
       campaign.status = event.to;
+      if (event.to === "draft" && campaign.prefill) {
+        // Mobius prefills from the recommendation; every prefilled field is a logged, attributed change.
+        campaign.configuration = { ...(campaign.configuration ?? {}) };
+        for (const [field, value] of Object.entries(campaign.prefill.fields)) {
+          campaign.configuration[field] = value;
+          campaign.changes.push({ field, from: null, to: value, by: "mobius", at: event.at, note: campaign.prefill.basis[field] ?? "prefilled by Mobius" });
+        }
+      }
       if (event.configuration) campaign.configuration = { ...(campaign.configuration ?? {}), ...event.configuration };
+      if (event.to === "pending") campaign.submitted_at = event.at;
       if (event.to === "active") {
         campaign.live_since = event.at;
-        if (event.window) campaign.window = event.window;
+        const cfg = campaign.configuration ?? {};
+        campaign.window = event.window ?? (cfg.window_start && cfg.window_end ? { start: cfg.window_start, end: cfg.window_end } : campaign.window);
+        campaign.configuration = { ...cfg, push_granted: event.push_granted ?? cfg.push_granted ?? false,
+                                   channel: { feed: true, push_requested: Boolean(cfg.push_requested), push_granted: Boolean(event.push_granted ?? cfg.push_granted) } };
       }
       if (event.to === "completed") freeze(campaign, event.at, "window ended");
       campaign.history.push({ from, to: event.to, by: event.by ?? null, at: event.at, note: event.note ?? null });
@@ -266,6 +297,103 @@ export function reduce(state, event) {
       return next;
     }
 
+    // ---------------------------------------------------------------- joint set-up page (merchant §7)
+    case "CONFIGURE": {
+      const c = state.campaigns[event.campaign_id];
+      if (!c) return reject(state, event, "unknown campaign");
+      const owners = FIELD_OWNERS[event.field];
+      if (!owners) return reject(state, event, `no such field ${event.field}`);
+      if (!owners.includes(event.by)) return reject(state, event, `${event.by} cannot set ${event.field}; only ${owners.join(" or ")} can`);
+      if (c.status === "draft") { /* both parties configure */ }
+      else if (c.status === "pending" && event.by === "ocbc") { /* staff edits after submission, visible to the merchant */ }
+      else return reject(state, event, `${event.field} cannot change while the campaign is ${c.status}${c.status === "pending" ? " (only OCBC staff edit a submitted campaign)" : ""}`);
+      const next = clone(state);
+      const campaign = next.campaigns[event.campaign_id];
+      campaign.configuration = { ...(campaign.configuration ?? {}) };
+      const from = campaign.configuration[event.field] ?? null;
+      if (JSON.stringify(from) === JSON.stringify(event.value)) return reject(state, event, `${event.field} unchanged`);
+      campaign.configuration[event.field] = event.value;
+      campaign.changes.push({ field: event.field, from, to: event.value, by: event.by, at: event.at, note: event.note ?? null });
+      log(next, event, { campaign_id: campaign.id, field: event.field, from, to: event.value, by: event.by });
+      return next;
+    }
+
+    case "NARROW": {
+      const c = state.campaigns[event.campaign_id];
+      if (!c) return reject(state, event, "unknown campaign");
+      if (!c.segment) return reject(state, event, "campaign has no segment to narrow");
+      if (!["draft", "pending"].includes(c.status)) return reject(state, event, `segment cannot change while the campaign is ${c.status}`);
+      const next = clone(state);
+      const campaign = next.campaigns[event.campaign_id];
+      const seg = campaign.segment;
+      const decision = decideNarrowing(seg, event.request);
+      if (decision.consumes) seg.refinements_used += 1;
+      if (decision.outcome === "applied") {
+        seg.constraints = decision.constraints;
+        seg.reach = decision.reach;
+      }
+      const entry = { at: event.at, by: event.by ?? "merchant", request: event.request, outcome: decision.outcome, code: decision.code,
+                      message: decision.message, consumed_refinement: decision.consumes,
+                      constraints_after: seg.constraints, reach_after: decision.outcome === "applied" ? seg.reach : (decision.code === "floor" ? null : seg.reach),
+                      refinements_used: seg.refinements_used, refinements_left: Math.max(0, seg.max_refinements - seg.refinements_used) };
+      seg.log.push(entry);
+      log(next, event, { campaign_id: campaign.id, ...entry });
+      return next;
+    }
+
+    case "RESET_SEGMENT": {
+      const c = state.campaigns[event.campaign_id];
+      if (!c?.segment) return reject(state, event, "campaign has no segment");
+      if (!["draft", "pending"].includes(c.status)) return reject(state, event, `segment cannot change while the campaign is ${c.status}`);
+      const next = clone(state);
+      const seg = next.campaigns[event.campaign_id].segment;
+      seg.constraints = {};
+      seg.reach = seg.base_reach;
+      const entry = { at: event.at, by: event.by ?? "merchant", request: "Reset to the AI segment", outcome: "reset", code: "reset",
+                      message: `Back to the segment Mobius proposed: ${seg.base_reach.toLocaleString()} cardholders. Refinements used stay used (${seg.refinements_used} of ${seg.max_refinements}).`,
+                      consumed_refinement: false, constraints_after: {}, reach_after: seg.reach, refinements_used: seg.refinements_used,
+                      refinements_left: Math.max(0, seg.max_refinements - seg.refinements_used) };
+      seg.log.push(entry);
+      log(next, event, { campaign_id: event.campaign_id, ...entry });
+      return next;
+    }
+
+    // ---------------------------------------------------------------- push to the whole cohort
+    // The named personas are six people out of a 400-cardholder allocation. This delivers to the
+    // named ones individually (so their feeds move) and advances the counters by the allocation's
+    // rounded figure for everyone else, so the reach cap can actually fire on stage.
+    case "PUSH_COHORT": {
+      const c = state.campaigns[event.campaign_id];
+      if (!c) return reject(state, event, "unknown campaign");
+      if (c.status !== "active") return reject(state, event, `campaign is ${c.status}, not active`);
+      if (c.reach == null) return reject(state, event, "campaign has no allocation to push to");
+      const named = Object.values(state.cardholders).filter((ch) => (ch.cohort_membership ?? []).some((m) => m === c.cohort_tag)).map((ch) => ch.id);
+      const individual = reduce(state, { ...event, type: "PUSH_FIRED", recipients: named });
+      if (individual.ledger.at(-1).type === "REJECTED") return individual;
+      const next = individual;
+      const campaign = next.campaigns[event.campaign_id];
+      const last = campaign.pushes.at(-1);
+      // Everyone in the allocation who is not a named persona: counted in aggregate, never listed.
+      const cohortSize = Math.max(0, (campaign.reach_cap ?? campaign.reach) - (campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered));
+      const expectedSuppressed = Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed);
+      const restDelivered = Math.max(0, cohortSize);
+      const restSuppressed = Math.min(restDelivered, expectedSuppressed);
+      const restSent = restDelivered - restSuppressed;
+      campaign.counters.feed_delivered += restDelivered;
+      campaign.counters.pushes_sent += restSent;
+      campaign.counters.pushes_suppressed += restSuppressed;
+      Object.assign(last, { cohort: true, recipients: last.recipients + restDelivered, delivered: last.delivered + restDelivered, sent: last.sent + restSent,
+                            suppressed: last.suppressed + restSuppressed, aggregate: { delivered: restDelivered, sent: restSent, suppressed: restSuppressed,
+                            basis: "allocation_summary.json final_allocation and push.suppressed_count, less the named personas delivered individually" },
+                            reconciles: (last.delivered + restDelivered) === (last.sent + restSent) + (last.suppressed + restSuppressed) });
+      next.ledger.at(-1).type = "PUSH_COHORT";
+      Object.assign(next.ledger.at(-1), { delivered: last.delivered, sent: last.sent, suppressed: last.suppressed, named: named.length, aggregate: last.aggregate });
+      if (campaign.reach_cap != null && campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered >= campaign.reach_cap && campaign.status === "active") {
+        cap(next, campaign, event, "reach cap reached");
+      }
+      return next;
+    }
+
     default:
       return reject(state, event, `unknown event type ${event.type}`);
   }
@@ -291,6 +419,14 @@ export function audit(state) {
     if (liveRedeemed !== c.counters.redemptions - (c.counters.seeded?.redemptions ?? 0) + c.post_freeze.redemptions) problems.push(`${c.id}: redeemed offers != counted redemptions`);
     if (isTerminal(c.status) && !c.frozen) problems.push(`${c.id}: terminal without frozen results`);
     if (c.frozen && c.status === "active") problems.push(`${c.id}: frozen while active`);
+  }
+  for (const c of Object.values(state.campaigns)) {
+    const seg = c.segment;
+    if (!seg) continue;
+    if (seg.reach < seg.floor || seg.reach % seg.rounding) problems.push(`${c.id}: segment reach ${seg.reach} is below the floor or unrounded`);
+    if (seg.refinements_used > seg.max_refinements) problems.push(`${c.id}: refinements over the cap`);
+    for (const e of seg.log) if (e.outcome === "refused" && e.code === "floor" && e.reach_after != null) problems.push(`${c.id}: a floor refusal reported a count`);
+    if (seg.log.filter((e) => e.consumed_refinement).length !== seg.refinements_used) problems.push(`${c.id}: refinements_used != consumed log entries`);
   }
   for (const ch of Object.values(state.cardholders)) {
     const total = Object.values(ch.profile.category_weights).reduce((a, b) => a + b, 0);

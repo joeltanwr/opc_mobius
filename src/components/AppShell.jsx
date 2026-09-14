@@ -101,7 +101,7 @@ export default function AppShell() {
             <span className="kbd">→</span>
             <span>navigate</span>
             <span className="mx-1.5 text-border">|</span>
-            <span className="kbd">1</span>–<span className="kbd">7</span>
+            <span className="kbd">1</span>–<span className="kbd">8</span>
             <span>jump to screen</span>
           </div>
         </div>

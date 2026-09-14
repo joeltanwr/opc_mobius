@@ -19,7 +19,7 @@ const load = (f) => JSON.parse(fs.readFileSync(path.join(PUB, f), "utf8"));
 const data = {
   constants: load("constants.json"), merchantProfiles: load("merchant_profiles.json"), campaignResults: load("campaign_results.json"),
   allocationSummary: load("allocation_summary.json"), showcasePersonas: load("showcase_personas.json"),
-  rewardRecommendations: load("reward_recommendations.json"), demandGaps: load("demand_gaps.json"),
+  rewardRecommendations: load("reward_recommendations.json"), demandGaps: load("demand_gaps.json"), segments: load("segments.json"),
 };
 
 const report = { checks: {}, notes: {} };
@@ -128,7 +128,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 {
   let r = seed;
   r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
-  r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", at: at(2), seq: 2, configuration: { ...CONFIG, redemption_limit: null } });
+  r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", at: at(2), seq: 2, configuration: { ...CONFIG, redemption_limit: 50 } });  // limit is required (§7.5); large so the reach cap fires first
   r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3, window: WINDOW });
   r.campaigns[DEMO].reach_cap = 2;      // test input: a two-person reach so the cap is reachable
   r = reduce(r, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin"], by: "rm", at: at(4), seq: 4 });
@@ -195,6 +195,95 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("event 5: a later push excludes them and counts the exclusion separately from suppression",
         p.delivered === 1 && p.excluded === 1 && p.suppressed === 0 && !v.offers[offerId(DEMO, "edwin")]);
   check("event 5: audit clean after offers off", audit(v).length === 0, audit(v));
+}
+
+// ---------------------------------------------------------------- set-up page: narrowing agent, permissions, submit
+{
+  let n = seed;
+  n = reduce(n, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  const segBefore = n.campaigns[DEMO].segment;
+  check("setup: prefill applied on → draft, every field logged and attributed to mobius",
+        n.campaigns[DEMO].configuration?.reward_type === "discount" && n.campaigns[DEMO].configuration.redemption_limit === 200
+        && n.campaigns[DEMO].changes.length >= 8 && n.campaigns[DEMO].changes.every((ch) => ch.by === "mobius" && ch.note), n.campaigns[DEMO].configuration);
+  check("setup: segment seeded with base reach and the narrowing table", segBefore?.base_reach === 550 && segBefore.narrowing.cells.length > 0);
+  const narrow = (req, by = "merchant") => { n = reduce(n, { type: "NARROW", campaign_id: DEMO, request: req, by, at: at(2), seq: n.ledger.length + 1 }); return n.campaigns[DEMO].segment.log.at(-1); };
+  let e = narrow("only around the Tanjong Pagar outlet");
+  check("narrow: outlet narrowing applied with a rounded reach", e.outcome === "applied" && e.reach_after === 550 && n.campaigns[DEMO].segment.constraints.outlet === "M0001-O1", e);
+  e = narrow("only the weekday lunch regulars");
+  check("narrow: below-floor narrowing refused with NO count reported",
+        e.outcome === "refused" && e.code === "floor" && e.reach_after === null && !/\d{3}/.test(e.message.replace(String(seed.campaigns[DEMO].segment.floor), "")) && n.campaigns[DEMO].segment.reach === 550, e);
+  check("narrow: a floor refusal consumes a refinement", n.campaigns[DEMO].segment.refinements_used === 2);
+  e = narrow("only women");
+  check("narrow: protected characteristic refused, explained, and does not consume a refinement",
+        e.outcome === "refused" && e.code === "protected" && /gender/.test(e.message) && n.campaigns[DEMO].segment.refinements_used === 2, e);
+  e = narrow("only Malaysians");
+  check("narrow: nationality refused", e.code === "protected" && /nationality/.test(e.message));
+  e = narrow("add everyone in the CBD");
+  check("narrow: widening refused", e.code === "widen");
+  e = narrow("weekends only");
+  check("narrow: weekday/weekend redirected to the window, not treated as a segment property", e.code === "window_not_segment");
+  e = narrow("only 25-34");
+  check("narrow: age band applied on top of outlet (two constraints, cell exists)", e.outcome === "applied" && e.reach_after === 400 && n.campaigns[DEMO].segment.constraints.age_band === "25-34", e);
+  e = narrow("only the Raffles Place kiosk");
+  check("narrow: changing an existing constraint is refused as not-a-narrowing", e.code === "already_narrowed");
+  e = narrow("evening only");
+  check("narrow: third dimension below floor refused without a count", e.code === "floor" && e.reach_after === null);
+  check("narrow: refinements 4 of 5 used", n.campaigns[DEMO].segment.refinements_used === 4);
+  e = narrow("morning only");
+  check("narrow: fifth refinement applied (outlet × age × morning cell exists) and uses the last slot", n.campaigns[DEMO].segment.refinements_used === 5 && e.outcome === "applied" && e.reach_after === 400, e);
+  e = narrow("afternoon only");
+  check("narrow: changing the daypart once set is refused as not-a-narrowing, and does not consume", e.code === "already_narrowed" && n.campaigns[DEMO].segment.refinements_used === 5, e);
+  n = reduce(n, { type: "RESET_SEGMENT", campaign_id: DEMO, by: "merchant", at: at(3), seq: n.ledger.length + 1 });
+  check("narrow: reset restores the AI segment but not the refinements", n.campaigns[DEMO].segment.reach === 550 && Object.keys(n.campaigns[DEMO].segment.constraints).length === 0 && n.campaigns[DEMO].segment.refinements_used === 5);
+  e = narrow("afternoon only");
+  check("narrow: after reset the sixth narrowing is refused by the cap — reset does not refund", e.code === "cap" && n.campaigns[DEMO].segment.refinements_used === 5 && n.campaigns[DEMO].segment.reach === 550, e);
+  check("narrow: the log is on the segment, every attempt attributed", n.campaigns[DEMO].segment.log.length === 13 && n.campaigns[DEMO].segment.log.every((x) => x.by && x.request && x.message));
+  check("narrow: audit clean", audit(n).length === 0, audit(n));
+
+  const conf = (field, value, by) => { n = reduce(n, { type: "CONFIGURE", campaign_id: DEMO, field, value, by, at: at(4), seq: n.ledger.length + 1 }); return n.ledger.at(-1); };
+  check("permissions: merchant sets the limit", conf("redemption_limit", 150, "merchant").type === "CONFIGURE" && n.campaigns[DEMO].configuration.redemption_limit === 150);
+  check("permissions: OCBC staff cannot set the limit", conf("redemption_limit", 999, "ocbc").type === "REJECTED" && n.campaigns[DEMO].configuration.redemption_limit === 150);
+  check("permissions: merchant requests push; cannot grant it", conf("push_requested", true, "merchant").type === "CONFIGURE" && conf("push_granted", true, "merchant").type === "REJECTED");
+  check("permissions: OCBC staff adjust timing", conf("hours", [15, 17], "ocbc").type === "CONFIGURE");
+  check("permissions: nobody can author the segment as a field", conf("segment", {}, "merchant").type === "REJECTED" && conf("segment", {}, "ocbc").type === "REJECTED");
+  check("audit: every change attributed and timestamped", n.campaigns[DEMO].changes.every((ch) => ch.by && ch.at && "from" in ch && "to" in ch));
+
+  n = reduce(n, { type: "CONFIGURE", campaign_id: DEMO, field: "outlets", value: [], by: "merchant", at: at(5), seq: n.ledger.length + 1 });
+  n = reduce(n, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(6), seq: n.ledger.length + 1 });
+  check("submit: refused while a required field is missing, naming it", n.ledger.at(-1).type === "REJECTED" && /outlets/.test(n.ledger.at(-1).reason), n.ledger.at(-1));
+  n = reduce(n, { type: "CONFIGURE", campaign_id: DEMO, field: "outlets", value: ["M0001-O1", "M0001-O2"], by: "merchant", at: at(7), seq: n.ledger.length + 1 });
+  n = reduce(n, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(8), seq: n.ledger.length + 1 });
+  check("submit: complete configuration moves draft → pending (display 'Submitted')", n.campaigns[DEMO].status === "pending" && seed.status_display.pending === "Submitted" && n.campaigns[DEMO].submitted_at);
+  check("after submit: merchant cannot edit, OCBC staff can, and the edit is logged",
+        conf("hours", [14, 16], "merchant").type === "REJECTED" && conf("hours", [14, 16], "ocbc").type === "CONFIGURE" && n.campaigns[DEMO].changes.at(-1).by === "ocbc");
+  n = reduce(n, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(9), seq: n.ledger.length + 1 });
+  check("approval: → active takes the window from the configuration and records push as granted at approval",
+        n.campaigns[DEMO].status === "active" && n.campaigns[DEMO].window?.start === n.campaigns[DEMO].configuration.window_start && n.campaigns[DEMO].configuration.channel.push_granted === true);
+  n = reduce(n, { type: "NARROW", campaign_id: DEMO, request: "afternoon only", by: "merchant", at: at(10), seq: n.ledger.length + 1 });
+  check("live: the segment cannot be narrowed once live", n.ledger.at(-1).type === "REJECTED");
+}
+
+// ---------------------------------------------------------------- push to the whole cohort → reach cap fires
+{
+  let k = seed;
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(2), seq: 2 });
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(3), seq: 3 });
+  k = reduce(k, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
+  const p = k.campaigns[DEMO].pushes[0], cnt = k.campaigns[DEMO].counters;
+  check("cohort push: delivers to every named cohort persona individually (Bernice pushed, Edwin feed-only)",
+        k.offers[offerId(DEMO, "bernice")]?.via === "push" && k.offers[offerId(DEMO, "edwin")]?.via === "feed_only");
+  check("cohort push: counters advance by the allocation figure — delivered == reach, and reconcile",
+        cnt.feed_delivered === data.allocationSummary.final_allocation.count && p.reconciles && p.delivered === p.sent + p.suppressed, { p, cnt });
+  check("cohort push: suppressed total equals the pipeline's suppressed_count (Edwin is the one)",
+        cnt.pushes_suppressed === data.allocationSummary.push.suppressed_count && p.suppressed_detail.some((d) => d.id === "edwin"));
+  check("cohort push: the reach cap fires — campaign capped with the reason, results frozen",
+        k.campaigns[DEMO].status === "capped" && k.campaigns[DEMO].capped.why === "reach cap reached" && k.campaigns[DEMO].frozen != null);
+  k = reduce(k, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["farah"], by: "rm", at: at(5), seq: 5 });
+  check("cohort push: no further pushes after the reach cap", k.ledger.at(-1).type === "REJECTED");
+  k = reduce(k, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: at(6), seq: 6 });
+  check("cohort push: Bernice's card is still honoured after the reach cap", k.offers[offerId(DEMO, "bernice")].status === "redeemed");
+  check("cohort push: audit clean", audit(k).length === 0, audit(k));
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges

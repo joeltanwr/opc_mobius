@@ -13,6 +13,7 @@ import RewardRM from "./screens/RewardRM";
 import CampaignResults from "./screens/CampaignResults";
 import PreviewMode from "./screens/PreviewMode";
 import ConsumerView from "./screens/ConsumerView";
+import RewardSetup from "./screens/RewardSetup";
 
 function LoadGate({ children }) {
   const { status, error } = useDemoData();
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/reward-rm" element={<RewardRM />} />
           <Route path="/results" element={<CampaignResults />} />
           <Route path="/preview" element={<PreviewMode />} />
+          <Route path="/reward-setup" element={<RewardSetup />} />
           <Route path="/consumer" element={<ConsumerView />} />
         </Route>
       </Routes>
