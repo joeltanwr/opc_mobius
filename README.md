@@ -38,13 +38,18 @@ Screens (keyboard-navigable — ← → or 1–7, deep-linked by URL):
 | # | Route | What it shows |
 |---|---|---|
 | — | `/` | Landing — one CTA into the demo |
-| 1 | `/merchant-view` | The merchant's own POS-level view (deliberately unremarkable) |
-| 2 | `/demand-gap` | The turn: a named, sized, reachable demand gap via lift, plus the Alvin/Bernice/Charles trio |
-| 3 | `/opportunity` | Every reachable gap for this merchant, ranked by expected value — includes a suppressed segment |
-| 4 | `/reward-rm` | Reward mechanic, incrementality (Charles's exclusion made explicit), funding split, human-review gate, RM handoff |
-| 5 | `/results` | Test vs. control campaign results — a win *and* an unflattering scenario, side by side |
+| 1 | `/target-customer` | Merchant Tab 3. The whole merchant story: eligibility gate, trading summary, the recency/frequency/value ladder into RFM, floored composition, the demand gap, all six reward types ranked with the rejected one, and the application that moves the campaign to `applied` |
+| 2 | `/demand-gap` | The evidence under Tab 3's new-customer count: merchant-pair lift, support, the filter funnel, and three cohorts as counts and patterns (never as people — §2.1) |
+| 3 | `/opportunity` | Every reachable segment for this merchant, ranked by expected **incremental** value — includes a suppressed segment |
+| 4 | `/reward-setup` | Merchant Tab 4. The joint merchant/RM configuration page and the approval artifact: narrowing agent, field permissions, change log, submit |
+| 5 | `/results` | Test vs. control campaign results — a win *and* a campaign that did not clear its reward cost |
 | 6 | `/preview` | Preview mode for a non-acquired prospect and a freshly-acquired cold-start merchant |
-| 7 | `/consumer` | Bonus: the offer as the cardholder receives it in the OCBC app |
+| 7 | `/consumer` | The offer as the cardholder receives it in the OCBC app, and the one screen where a persona is rendered in full — the viewer is the subject |
+
+Two routes were retired once Tab 3 and Tab 4 landed, because they had become duplicates:
+`/merchant-view` (its trading summary and its exact-versus-floored contrast are in
+`/target-customer`) and `/reward-rm` (its ranked reward types duplicated Tab 3's, its handoff is
+now the `APPLY` event, and its incrementality block sits beside the reward ranking it explains).
 
 **`public/data/`** is the contract between the interface and the generator.
 It holds precomputed aggregates only — taxonomy, merchant profiles, detected

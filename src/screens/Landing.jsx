@@ -42,7 +42,7 @@ export default function Landing() {
 
             <div className="flex items-center gap-4">
               <Link
-                to="/merchant-view"
+                to="/target-customer"
                 className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-hover active:bg-brand-active transition-colors"
               >
                 Enter the dashboard demo

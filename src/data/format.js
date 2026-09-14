@@ -65,6 +65,3 @@ export function completeMonths(series) {
   return (series?.monthly ?? []).filter((m) => !m.partial);
 }
 
-export function sumBy(rows, key) {
-  return (rows ?? []).reduce((total, row) => total + (Number(row[key]) || 0), 0);
-}

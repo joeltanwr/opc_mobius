@@ -62,22 +62,38 @@ export const CONSTANTS = {
 
 };
 
-// Nav labels are deliberately short. The chrome is one row at 1280px and the labels are set at
-// 14px — the design system's floor for anything meaningful on a projector — so the width has to
-// come out of the words, not out of the type. Keep every label at or under ten characters.
+// Nav labels are short because the chrome is one row and the type is fixed at 14px — the design
+// system's floor for anything meant to be read off a projector. Width comes out of the words,
+// never out of the type.
+//
+// The real constraint is a measured budget, not a character count: at the 1280px container the
+// header row has 1232px, of which the logo lockup takes ~193px, the cardholder link ~86px and the
+// gaps 48px. Measured at seven entries the nav uses 578px of the ~905px available, leaving ~327px
+// spare. Adding an entry or lengthening a label is fine while that stays positive; check it in the
+// browser rather than estimating, because the last time this overflowed it clipped a label to
+// "Reward s" and nothing failed loudly.
+// Order is the demo sequence, walked left to right with the arrow keys.
+//
+// Screen 1 is the merchant's whole story and ends in the application. Screens 2 and 3 are the
+// evidence under the two numbers it shows, placed immediately after it because that is when a
+// sceptical reviewer asks for them — and before screen 4, where the merchant commits budget.
+// Screens 4 and 5 walk the campaign up the ladder; 6 covers the merchants this cannot help yet.
+//
+// Retired: "Your view" (screen 1's trading summary, absorbed into Target customer along with the
+// exact-versus-floored contrast it alone used to make) and "RM handoff" (its six ranked reward
+// types duplicated Target customer's, its handoff is now the APPLY event, and its incrementality
+// block moved next to the reward ranking it explains).
 export const SCREENS = [
-  { key: "merchant-view", num: 1, label: "Your view", path: "/merchant-view" },
+  { key: "target-customer", num: 1, label: "Target customer", path: "/target-customer" },
   { key: "demand-gap", num: 2, label: "Demand gap", path: "/demand-gap" },
-  { key: "target-customer", num: 3, label: "Target", path: "/target-customer" },
-  { key: "opportunity", num: 4, label: "Segments", path: "/opportunity" },
-  { key: "reward-rm", num: 5, label: "RM handoff", path: "/reward-rm" },
-  { key: "reward-setup", num: 6, label: "Set-up", path: "/reward-setup" },
-  { key: "results", num: 7, label: "Results", path: "/results" },
-  { key: "preview", num: 8, label: "Preview", path: "/preview" },
+  { key: "opportunity", num: 3, label: "Segments", path: "/opportunity" },
+  { key: "reward-setup", num: 4, label: "Set-up", path: "/reward-setup" },
+  { key: "results", num: 5, label: "Results", path: "/results" },
+  { key: "preview", num: 6, label: "Preview", path: "/preview" },
 ];
 
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 9, label: "Cardholder", path: "/consumer" },
+  { key: "consumer", num: 7, label: "Cardholder", path: "/consumer" },
 ];
 
 // The screen number a view prints in its eyebrow. Derived from SCREENS so reordering the nav can

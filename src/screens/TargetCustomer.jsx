@@ -96,7 +96,7 @@ export default function TargetCustomer() {
         <ThinHistory profile={profile} data={data} gap={gap} />
       ) : (
         <>
-          <TradingSummary profile={profile} trailingMonths={trailingMonths} />
+          <TradingSummary profile={profile} trailingMonths={trailingMonths} rounding={state.caps.reach_rounding} />
           <RecencyFrequencyValue profile={profile} />
           <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} />
           <CustomerAnalysis
@@ -111,7 +111,14 @@ export default function TargetCustomer() {
 
       {eligible && hasProfile && recs && (
         <>
-          <RewardOptions recs={recs} rationale={rationale} campaign={campaign} reachOf={reachOf} rounding={state.caps.reach_rounding} />
+          <RewardOptions
+            recs={recs}
+            rationale={rationale}
+            campaign={campaign}
+            reachOf={reachOf}
+            rounding={state.caps.reach_rounding}
+            data={data}
+          />
           <Apply campaign={campaign} profile={profile} state={state} dispatch={dispatch} display={display} />
         </>
       )}
@@ -262,7 +269,7 @@ function ThinHistory({ profile, data, gap }) {
 
 // ---------------------------------------------------------------------------- §6 trading summary
 
-function TradingSummary({ profile, trailingMonths }) {
+function TradingSummary({ profile, trailingMonths, rounding }) {
   const t = profile.trading_summary;
   const months = useMemo(() => completeMonths(profile.series), [profile]);
   // The baseline is the merchant's own mean over the complete months on this chart — dashed slate,
@@ -282,6 +289,8 @@ function TradingSummary({ profile, trailingMonths }) {
         <StatTile label="Top payment method" value={t.top_payment_method ?? "—"} sub="By transaction count" />
         <StatTile label="Core customer base" value={cellText(t.core_customer_base)} sub={t.core_customer_base_basis} />
       </div>
+
+      <ExactVersusFloored trading={t} rounding={rounding} />
 
       <Card className="p-5 mb-4">
         <h4 className="text-[14px] font-semibold text-ink mb-1">Transaction volume, month on month</h4>
@@ -314,6 +323,49 @@ function TradingSummary({ profile, trailingMonths }) {
         </BasisNote>
       </Card>
     </>
+  );
+}
+
+// Two counts of the same crowd, deliberately treated differently. Absorbed from the retired
+// screen 1, which was the only place the app made this point — and it is the sharpest privacy
+// statement in the build, because it shows the floor being applied selectively and for a reason
+// rather than as a blanket.
+function ExactVersusFloored({ trading, rounding }) {
+  const own = trading.all_customers_seen;
+  const ocbc = trading.core_customer_base;
+  if (!own?.count || isSuppressed(ocbc)) return null;
+  return (
+    <Card className="p-5 mb-4">
+      <h4 className="text-[14px] font-semibold text-ink mb-3">Two counts of the same crowd, and only one of them is rounded</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-lg border border-border bg-canvas/40 p-4">
+          <div className="font-num text-[30px] font-extrabold text-ink leading-none">{num(own.count)}</div>
+          <div className="text-[13px] font-medium text-ink mt-1">customers at your terminals</div>
+          <div className="text-[12px] text-ink-secondary mt-1.5">
+            <span className="font-semibold text-ink">Exact. No floor, no rounding.</span> These are your own records —
+            you already have every one of these transactions in your own till. Mobius withholding a number you already
+            hold would be theatre, not privacy.
+          </div>
+        </div>
+        <div className="rounded-lg border border-brand/30 bg-[#FFF8F8] p-4">
+          <div className="font-num text-[30px] font-extrabold text-brand leading-none">{cellText(ocbc)}</div>
+          <div className="text-[13px] font-medium text-ink mt-1">OCBC cardholders among them</div>
+          <div className="text-[12px] text-ink-secondary mt-1.5">
+            <span className="font-semibold text-ink">Rounded to the nearest {rounding}.</span>{" "}
+            This one is ours, not yours: it is a count of identifiable cardholders, so it is floored and rounded like
+            every other OCBC-derived figure on this page. These are also the only ones we can reach for you.
+          </div>
+        </div>
+      </div>
+      <p className="text-[12.5px] text-ink-secondary mt-3 max-w-3xl">
+        The difference between the two is the part of your trade OCBC can neither see nor reach — other issuers, and
+        cash. It is also the honest limit of what a campaign here can move.
+      </p>
+      <BasisNote>
+        merchant_profiles.json trading_summary — all_customers_seen is counted exactly from your own acquiring records;
+        core_customer_base is {trading.core_customer_base_basis}.
+      </BasisNote>
+    </Card>
   );
 }
 
@@ -646,7 +698,7 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
 
 // ------------------------------------------- §6 reward options — /reward-programme-recommendation
 
-function RewardOptions({ recs, rationale, campaign, reachOf, rounding }) {
+function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
   // Post-consent, post-frequency-cap reach lives in the state module, because a cardholder turning
   // offers off in the customer view moves it while this page is open.
   const liveReach = campaign ? reachOf(campaign) : null;
@@ -728,6 +780,8 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding }) {
       </div>
       <BasisNote>Score: {recs.score_basis}</BasisNote>
 
+      <Incrementality data={data} />
+
       {acquisition && (
         <Card className="p-6 mt-4">
           <h4 className="text-[15px] font-bold text-ink mb-2">New customer reach</h4>
@@ -767,6 +821,67 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding }) {
         </Card>
       )}
     </>
+  );
+}
+
+// What the "expected incremental share" on each reward type above actually means, measured rather
+// than asserted. Absorbed from the retired screen 4, and placed here on purpose: a share of 75% is
+// a claim, and the claim needs its working adjacent to it rather than two screens away.
+//
+// Nothing here is a before-and-after. Every figure comes off a held-out control group from a
+// campaign that has already run, which is the only way an incrementality number survives a banker
+// asking how it was arrived at (§2.5).
+//
+// The excluded cohort is described without a person attached, for the same reason CohortCard
+// exists: this is a merchant-facing screen and §2.1 allows it counts and labels only.
+function Incrementality({ data }) {
+  const winner = (data.campaignResults?.completed ?? []).find((c) => c.measured && c.cost?.net_sign === "positive");
+  if (!winner) return null;
+  // The held-out arm's own conversion rate, applied to the treated arm: what this campaign would
+  // have got for free. Counted, never assumed.
+  const organic = Math.round(winner.cohort.treated * (winner.conversion.control_rate_pct / 100));
+
+  return (
+    <Card className="p-6 mt-4">
+      <h4 className="text-[15px] font-bold text-ink mb-1">Where the incremental share comes from</h4>
+      <p className="text-[12.5px] text-ink-secondary mb-4 max-w-3xl">
+        Measured on {winner.name} ({winner.window}): {num(winner.cohort.treated)} cardholders treated against{" "}
+        {num(winner.cohort.control)} held out and shown nothing. The held-out arm is what turns a redemption count into
+        an incrementality claim — without it, every campaign looks like a success.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <IncrementalityBlock
+          label="Excluded before targeting"
+          value="The price-insensitive cohort"
+          tone="warning"
+          detail="Cardholders whose spend does not move with an incentive — high average ticket, no voucher use, buying regardless. They are filtered out before a segment is built, because crediting their visits to a campaign would overstate it."
+        />
+        <IncrementalityBlock
+          label="Redeemed, but would have converted anyway"
+          value={`${num(organic)} of ${num(winner.redemption.redeemers)} redeemers`}
+          tone="neutral"
+          detail={`The control group converted at ${pctOf(winner.conversion.control_rate_pct, 1)} with no offer at all. Applied to the treated arm, that is what this campaign would have got for free — and it is what the incremental share above discounts for.`}
+        />
+        <IncrementalityBlock
+          label="Real incremental transactions"
+          value={num(winner.incremental.incremental_transactions, 1)}
+          tone="success"
+          detail={`${sgd(winner.incremental.incremental_sales_sgd)} in incremental sales — treated-arm sales minus control-arm sales, scaled by arm size. Never before-versus-after: this is the number the campaign is judged on.`}
+        />
+      </div>
+      <BasisNote>{winner.incremental.basis} (campaign_results.json — the full breakdown is on the results screen.)</BasisNote>
+    </Card>
+  );
+}
+
+function IncrementalityBlock({ label, value, detail, tone }) {
+  const toneClass = { success: "text-success", warning: "text-warning", neutral: "text-ink" }[tone] ?? "text-ink";
+  return (
+    <div className="rounded-lg border border-border bg-canvas/50 p-4">
+      <div className="text-[11.5px] font-medium text-ink-secondary mb-1">{label}</div>
+      <div className={`text-[16px] font-bold mb-1.5 ${toneClass}`}>{value}</div>
+      <p className="text-[12.5px] text-ink-secondary leading-snug">{detail}</p>
+    </div>
   );
 }
 
