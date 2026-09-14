@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const FILES = {
+  constants: "constants.json",
   taxonomy: "taxonomy.json",
   merchantProfiles: "merchant_profiles.json",
   demandGaps: "demand_gaps.json",

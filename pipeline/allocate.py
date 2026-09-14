@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import pandas as pd
 
-from config import (DERIVED_DIR, DEMO_DATE, DEMO_CLOCK_NAIVE, FREQ_CAP_OFFERS, PUSH_CAP_PER_WEEK, PORTFOLIO_WEEKLY_CEIL, CONSTANTS,
-                    RETENTION_POOLS, cell, round_reach, in_catchment)
+from config import (DERIVED_DIR, DEMO_DATE, DEMO_CLOCK_NAIVE, FREQ_CAP_OFFERS, PUSH_CAP_PER_WEEK, PORTFOLIO_WEEKLY_CEIL_SHARE,
+                    CONSTANTS, RETENTION_POOLS, SAMPLE_CARDHOLDERS, cap_from_share, cell, round_reach, in_catchment)
 
 WEEK_START = DEMO_DATE - timedelta(days=DEMO_DATE.weekday())          # Monday of the demo week
 WEEK_END = WEEK_START + timedelta(days=6)
@@ -76,7 +76,10 @@ def allocate(raw, tags, cohorts, rfm_by_merchant, mid="M0001"):
         retention["_note"] = "Existing customers by RFM segment, consented, OCBC-resolvable. Below-floor segments must be grouped before selection."
 
     # Portfolio exposure (RM only): the panel no merchant can see.
-    consented_base = int(consent.sum())
+    # The ceiling is a share of the consented base, turned into a headcount here, against the base
+    # this panel is actually counting — so the ceiling and the week's contacts are the same units.
+    consented_base = round_reach(int(consent.sum()))
+    weekly_ceiling = cap_from_share(PORTFOLIO_WEEKLY_CEIL_SHARE, consented_base)
     contacted_week = int(pushes_this_week["card_id"].nunique())
     concurrent = int((held >= 2).sum())
     summary = dict(
@@ -92,10 +95,17 @@ def allocate(raw, tags, cohorts, rfm_by_merchant, mid="M0001"):
         frequency_cap=dict(offers_per_30_days=FREQ_CAP_OFFERS, provisional=CONSTANTS["FREQ_CAP_OFFERS"].provisional,
                            window=f"{CAP_WINDOW_START.isoformat()} to {DEMO_DATE.isoformat()}"),
         per_outlet=per_outlet, retention_pools=retention,
-        portfolio=dict(contacted_this_week=contacted_week, weekly_ceiling=PORTFOLIO_WEEKLY_CEIL, ceiling_provisional=CONSTANTS["PORTFOLIO_WEEKLY_CEIL"].provisional,
-                       consented_base=round_reach(consented_base), share_of_consented_base_reached_pct=round(100 * contacted_week / consented_base, 2) if consented_base else None,
+        portfolio=dict(contacted_this_week=contacted_week, weekly_ceiling=weekly_ceiling,
+                       weekly_ceiling_share_of_consented_base=PORTFOLIO_WEEKLY_CEIL_SHARE,
+                       ceiling_provisional=CONSTANTS["PORTFOLIO_WEEKLY_CEIL_SHARE"].provisional,
+                       ceiling_basis=(f"{PORTFOLIO_WEEKLY_CEIL_SHARE:.2%} of the {consented_base:,} consented cardholders on this panel. "
+                                      f"The share is the constant; the headcount is computed against whichever base is on screen, "
+                                      f"so it reads in the same units as the week's contacts."),
+                       headroom_this_week=weekly_ceiling - contacted_week,
+                       consented_base=consented_base,
+                       share_of_consented_base_reached_pct=round(100 * contacted_week / consented_base, 2) if consented_base else None,
                        cardholders_with_2plus_concurrent_offers=concurrent, campaigns_live=int(raw["campaigns"]["status"].eq("active").sum()),
                        week=f"{WEEK_START.isoformat()} to {WEEK_END.isoformat()}",
-                       note="Counts are in sample units (12,000 cardholders); the ceiling is stated at the 800,000 base and is provisional."),
+                       note=f"Every count here is in sample units ({SAMPLE_CARDHOLDERS:,} cardholders), the ceiling included. The share behind it is provisional."),
     )
     return summary, df

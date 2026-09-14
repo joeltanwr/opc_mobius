@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { SCREENS, OPTIONAL_SCREENS } from "../data/constants";
+import { useDemoData } from "../data/DataProvider";
 import PrivacyAffordance from "./PrivacyAffordance";
 import { MockDataBadge } from "./ui";
 
@@ -9,6 +10,10 @@ const ALL_NAV = [...SCREENS, ...OPTIONAL_SCREENS];
 export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
+  // One scale disclosure for all three views, shipped by the pipeline in constants.json so the
+  // sentence and the figures in it have a single source. Counts on screen are sample units.
+  const { data } = useDemoData();
+  const scaleDisclosure = data?.constants?.scale_disclosure;
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -88,8 +93,9 @@ export default function AppShell() {
       </main>
 
       <footer className="border-t border-border bg-white">
-        <div className="max-w-container mx-auto px-6 h-12 flex items-center justify-between text-ink-light">
+        <div className="max-w-container mx-auto px-6 min-h-12 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between text-ink-light">
           <PrivacyAffordance />
+          {scaleDisclosure && <p className="text-[12px] text-ink-light max-w-xl leading-snug">{scaleDisclosure}</p>}
           <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
             <span className="kbd">←</span>
             <span className="kbd">→</span>

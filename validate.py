@@ -38,6 +38,13 @@ def load_pub(name):
         return json.load(f)
 
 
+def _src_files():
+    out = []
+    for root, _, files in os.walk(os.path.join(ROOT, "src")):
+        out += [os.path.join(root, f) for f in sorted(files) if f.endswith((".js", ".jsx"))]
+    return out
+
+
 def walk(obj, path="$"):
     if isinstance(obj, dict):
         yield path, obj
@@ -182,6 +189,7 @@ def main(rerun=True):
           edwin.to_dict("records"))
     check("push suppression count in allocation_summary >= 1", summ["push"]["suppressed_count"] >= 1)
 
+    const = load_pub("constants.json")
     profiles = load_pub("merchant_profiles.json")
     check("Boba Lane below 100 OCBC acquiring transactions (gate fires)", not profiles["M0002"]["gate"]["passed"], str(profiles["M0002"]["gate"]))
     check("Soujourner above 100 (gate does not fire)", profiles["M0001"]["gate"]["passed"])
@@ -215,6 +223,99 @@ def main(rerun=True):
     ab = profiles["M0001"]["age_bands"]
     check("at least one demographic band renders suppressed for Soujourner", any(v["suppressed"] for v in ab.values()) and any(not v["suppressed"] for v in ab.values()))
 
+    # -------------------------------------------------------------- fix 1: the floor's scope
+    # The 250 floor belongs on composition breakdowns — who a group of people is made of. It does
+    # not belong on the merchant's own observations of its own trade, which must render exactly.
+    for cid, c in measured.items():
+        rp = c["redeemer_profile"]
+        redeemers = c["redemption"]["redeemers"]
+        for key, comp in (("age_bands", rp["age_bands"]), ("rfm_at_redemption", rp["rfm_at_redemption"])):
+            check(f"{cid} {key} is a floored composition block carrying its floor and population",
+                  comp.get("floor") == cfg.MIN_SEGMENT_SIZE and comp.get("population") == redeemers and isinstance(comp.get("cells"), dict),
+                  str({k: comp.get(k) for k in ("floor", "population")}))
+            check(f"{cid} {key} suppression copy names the actual redeemer count",
+                  f"{redeemers:,}" in comp.get("note", ""), comp.get("note"))
+            check(f"{cid} {key} is withheld in full while the group is under the floor",
+                  comp["all_suppressed"] == (redeemers < cfg.MIN_SEGMENT_SIZE)
+                  and (all(v["suppressed"] for v in comp["cells"].values()) if comp["all_suppressed"] else True),
+                  str(comp["all_suppressed"]))
+        # Direct merchant observations: exact, unrounded, never a suppressible cell.
+        check(f"{cid} new vs returning is exact and sums to the redeemer count",
+              rp["new_to_business"] + rp["returning"] == redeemers, f"{rp['new_to_business']} + {rp['returning']} vs {redeemers}")
+        direct = dict(redeemers=redeemers, new_to_business=rp["new_to_business"], returning=rp["returning"],
+                      returned_within_30d=c["repeat"]["returned_within_30d"], control_returned=c["repeat"]["control_returned"],
+                      incremental_transactions=c["incremental"]["incremental_transactions"])
+        check(f"{cid} direct observations are not rounded to the reach granularity",
+              any(v % cfg.REACH_ROUNDING for v in direct.values() if isinstance(v, int) and v),
+              str(direct))
+        for name, block in (("repeat", c["repeat"]), ("incremental", c["incremental"]), ("cost", c["cost"])):
+            check(f"{cid} {name} renders normally — no suppression state anywhere in it",
+                  not any("suppressed" in obj for _, obj in walk(block)), name)
+        fp = c["floor_policy"]
+        check(f"{cid} floor_policy names the floored composition keys and the exempt observations",
+              fp["floor"] == cfg.MIN_SEGMENT_SIZE
+              and set(fp["floored_composition"]) == {"redeemer_profile.age_bands", "redeemer_profile.rfm_at_redemption"}
+              and {"repeat", "incremental", "cost"} <= set(fp["direct_observations"]), str(fp))
+
+    # Card mix is a composition breakdown too: the floor lands on the population behind the shares.
+    mixes = {m: p["card_mix"] for m, p in profiles.items() if "card_mix" in p}
+    bad_mix = [(m, x.get("population")) for m, x in mixes.items()
+               if x.get("floor") != cfg.MIN_SEGMENT_SIZE or x.get("population") is None
+               or (x["population"] < cfg.MIN_SEGMENT_SIZE) != bool(x["all_suppressed"])
+               or (x["all_suppressed"] and x["shares"] is not None)
+               or (not x["all_suppressed"] and not x["shares"])]
+    check("every card-mix panel carries the floor and its population, and withholds shares below the floor", not bad_mix, str(bad_mix[:5]))
+    names_population = lambda x: (f"{x['population']:,}" in x["note"]) if x["population"] else x["note"].lower().startswith("no ")
+    check("a below-floor card mix exists and its copy accounts for the population behind it",
+          any(x["all_suppressed"] for x in mixes.values()) and all(names_population(x) for x in mixes.values() if x["all_suppressed"]),
+          str([(m, x["population"], x["note"]) for m, x in mixes.items() if x["all_suppressed"] and not names_population(x)][:5]))
+    check("Soujourner card mix still ships shares summing to ~100%",
+          abs(sum(mixes["M0001"]["shares"].values()) - 100) < 1.5, str(mixes["M0001"]["shares"]))
+
+    # -------------------------------------------------------------- fix 2: caps scale with the base
+    cap_like = [k for k in cfg.CONSTANTS if re.search(r"CAP|CEIL|MAX|MIN|LIMIT", k)]
+    buckets = cfg.SCALE_POLICY
+    classified = set(buckets["share_of_consented_base"]) | set(buckets["per_cardholder_rates"]) | set(buckets["absolute_by_design"])
+    check("every cap-like constant is classified in SCALE_POLICY", not (set(cap_like) - classified), str(sorted(set(cap_like) - classified)))
+    check("SCALE_POLICY classifies nothing that isn't a constant", not (classified - set(cfg.CONSTANTS)), str(sorted(classified - set(cfg.CONSTANTS))))
+    check("no constant is classified in two buckets",
+          len(classified) == len(buckets["share_of_consented_base"]) + len(buckets["per_cardholder_rates"]) + len(buckets["absolute_by_design"]))
+    check("every share-of-base cap is a fraction, not a headcount",
+          all(0 < cfg.CONSTANTS[k].value < 1 for k in buckets["share_of_consented_base"]),
+          str({k: cfg.CONSTANTS[k].value for k in buckets["share_of_consented_base"]}))
+    check("every per-cardholder cap is a small scale-free rate",
+          all(isinstance(cfg.CONSTANTS[k].value, int) and 1 <= cfg.CONSTANTS[k].value <= 100 for k in buckets["per_cardholder_rates"]),
+          str({k: cfg.CONSTANTS[k].value for k in buckets["per_cardholder_rates"]}))
+    check("every absolute-by-design threshold states why it stays absolute",
+          all(len(v.split()) >= 5 for v in buckets["absolute_by_design"].values()))
+    check("the absolute portfolio ceiling is gone from config", "PORTFOLIO_WEEKLY_CEIL" not in cfg.CONSTANTS)
+
+    pf = summ["portfolio"]
+    check("portfolio ceiling is computed from the share and the consented base on the panel",
+          pf["weekly_ceiling"] == cfg.cap_from_share(pf["weekly_ceiling_share_of_consented_base"], pf["consented_base"]),
+          str({k: pf[k] for k in ("weekly_ceiling", "weekly_ceiling_share_of_consented_base", "consented_base")}))
+    check("portfolio ceiling is in the same sample units as the week's contacts",
+          pf["weekly_ceiling"] <= cfg.SAMPLE_CARDHOLDERS and pf["consented_base"] <= cfg.SAMPLE_CARDHOLDERS,
+          str({k: pf[k] for k in ("weekly_ceiling", "consented_base")}))
+    check("portfolio headroom reconciles with the ceiling and the contacts",
+          pf["headroom_this_week"] == pf["weekly_ceiling"] - pf["contacted_this_week"], str(pf))
+    # No cap or ceiling anywhere in public/data may be a headcount drawn from the 800,000 base:
+    # every count that ships is in sample units, so a cap above the sample is two scales on one panel.
+    base_scale_caps = [(f, path, k, v) for f in sorted(os.listdir(PUB)) if f.endswith(".json")
+                       for path, o in walk(load_pub(f)) for k, v in o.items()
+                       if re.search(r"ceiling|ceil|cap(?!tion)", k, re.I) and isinstance(v, (int, float))
+                       and not isinstance(v, bool) and v > cfg.SAMPLE_CARDHOLDERS]
+    check("no shipped cap or ceiling is a headcount from the 800,000 base", not base_scale_caps, str(base_scale_caps[:5]))
+
+    check("constants.json ships one scale disclosure naming both the sample and the base",
+          f"{cfg.SAMPLE_CARDHOLDERS:,}" in const["scale_disclosure"] and f"{cfg.CARDHOLDER_BASE:,}" in const["scale_disclosure"],
+          const.get("scale_disclosure"))
+    shell = open(os.path.join(ROOT, "src", "components", "AppShell.jsx"), encoding="utf-8").read()
+    check("the shared chrome renders the shipped scale disclosure", "scale_disclosure" in shell)
+    src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
+                and os.path.basename(f) != "DataProvider.jsx"]
+    check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+
     r1 = recs["M0001"]["ranked"]
     check("Soujourner shows six ranked reward types with overseas/FX disabled",
           r1 is not None and len(r1) == 6 and [x["type"] for x in r1 if x["disabled"]] == ["overseas_fx"] and len({x["type"] for x in r1}) == 6)
@@ -232,7 +333,6 @@ def main(rerun=True):
         for kk, s in v.items():
             if isinstance(s, str) and len(s.split()) > 60:
                 FAILURES.append(f"rationale {k}.{kk} exceeds 60 words ({len(s.split())})")
-    const = load_pub("constants.json")
     check("every shipped constant carries a basis string", all(c.get("basis") for c in const["constants"].values()))
     check("status display map ships once", const["status_display"] == cfg.STATUS_DISPLAY)
 

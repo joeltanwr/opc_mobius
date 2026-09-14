@@ -17,7 +17,7 @@ import pandas as pd
 from config import (DERIVED_DIR, DEMO_DATE, PERIOD_START, LOGIN_MERCHANTS, HERO_ACQUIRING_MERCHANTS, GATE_MIN_OCBC_TXNS,
                     GAP_SLOT_RATIO, GAP_MIN_WEEKS, GAP_HIGH_CONF_WEEKS, GAP_TRAILING_WEEKS, GAP_COLD_START_WEEKS,
                     GAP_PEER_RATIO, GAP_MIN_SLOT_BASELINE, GAP_MIN_VOLUME_12W, RECENT_REPEATER_DAYS, TRAILING_MONTHS, DAYPARTS, DAYPART_HOURS, WEEKDAY_NAMES,
-                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, round_reach)
+                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, composition_shares, round_reach)
 from common import daypart_of_hour, pct, key_merchants
 
 # Trailing 12 complete weeks (Mon–Sun) before the demo clock.
@@ -384,14 +384,17 @@ def analyse_merchant(raw, mid, tags):
     profile["age_bands"] = {b: cell(int(ages.get(b, 0))) for b in AGE_BANDS}
     profile["age_bands_basis"] = "OCBC cardholders who transacted here; bands under 250 suppressed, others rounded to 50"
 
-    # Card mix — only meaningful where OCBC acquires.
+    # Card mix — only meaningful where OCBC acquires, and a composition breakdown either way, so
+    # the floor lands on the population behind the percentages rather than on the percentages.
     if coverage["coverage"] == "acquiring":
-        profile["card_mix"] = dict(reduced=False, label="From your OCBC merchant acquiring records",
-                                   shares={k: round(float(tender.get(k, 0.0)) * 100, 1) for k in ["OCBC", "DBS", "UOB", "other", "PayNow"]},
+        mix = composition_shares({k: round(float(tender.get(k, 0.0)) * 100, 1) for k in ["OCBC", "DBS", "UOB", "other", "PayNow"]},
+                                 int(src["cust"].nunique()), "card mix", "customers at your terminals")
+        profile["card_mix"] = dict(reduced=False, label="From your OCBC merchant acquiring records", **mix,
                                    cash_note="Cash is not visible to any bank and is not shown.")
     else:
-        profile["card_mix"] = dict(reduced=True, label="OCBC-issued cards only", shares={"OCBC": 100.0},
-                                   note="Moving your acquiring to OCBC completes this picture with every card and PayNow at your terminals.")
+        mix = composition_shares({"OCBC": 100.0}, int(len(resolvable)), "card mix", "OCBC cardholders who transacted here")
+        profile["card_mix"] = dict(reduced=True, label="OCBC-issued cards only", **mix,
+                                   cross_sell_note="Moving your acquiring to OCBC completes this picture with every card and PayNow at your terminals.")
 
     # Daily series for merchants with transaction-level acquiring data.
     if mid in HERO_ACQUIRING_MERCHANTS and len(src):
