@@ -60,12 +60,6 @@ export const CONSTANTS = {
     basis: "Set equal to the minimum displayable segment size: the smallest segment a merchant can ever see auto-approves, anything larger routes to mandatory human review.",
   },
 
-  OCBC_ACQUIRED_CARD_SHARE: {
-    value: 0.25,
-    display: "~25%",
-    basis: "Share of a hero merchant's own acquiring volume that runs on OCBC-issued cards (data-generator: TARGET_OCBC_SHARE) — the concrete version of \"you only see a quarter of your customers, we see all of them.\"",
-  },
-
   ANNUAL_LLM_COST_CEILING: {
     value: 1000,
     display: "< S$1,000 / year",

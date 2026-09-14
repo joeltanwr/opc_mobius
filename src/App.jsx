@@ -1,7 +1,10 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { DataProvider, useDemoData } from "./data/DataProvider";
+import { StateProvider } from "./state/StateProvider";
 import AppShell from "./components/AppShell";
+import TestRM from "./screens/_test/TestRM";
+import TestCustomer from "./screens/_test/TestCustomer";
 import Landing from "./screens/Landing";
 import MerchantView from "./screens/MerchantView";
 import DemandGap from "./screens/DemandGap";
@@ -39,8 +42,12 @@ function LoadGate({ children }) {
 export default function App() {
   return (
     <DataProvider>
+      <StateProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
+        {/* Throwaway propagation test pages — no chrome, no styling. Delete with src/screens/_test/. */}
+        <Route path="/_test/rm" element={<LoadGate><TestRM /></LoadGate>} />
+        <Route path="/_test/customer" element={<LoadGate><TestCustomer /></LoadGate>} />
         <Route
           element={
             <LoadGate>
@@ -57,6 +64,7 @@ export default function App() {
           <Route path="/consumer" element={<ConsumerView />} />
         </Route>
       </Routes>
+      </StateProvider>
     </DataProvider>
   );
 }

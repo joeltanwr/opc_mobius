@@ -57,6 +57,9 @@ CONSTANTS = {
     "PORTFOLIO_WEEKLY_CEIL_SHARE": C(0.0625, "RM prompt §3.2 — 50,000 cardholders contactable per week is 6.25% of the 800,000 base. "
                                             "Held as a share of the consented base, not a headcount, so the ceiling lands in whatever units the "
                                             "panel is counting; the share is still a placeholder until it has a basis", provisional=True),
+    "PROFILE_WEIGHT_STEP": C(0.05, "Customer view §5 / brief §4 — how much one redemption moves a cardholder's category weight toward the "
+                                   "redeemed merchant's category before renormalising; a placeholder learning rate until relevance is calibrated",
+                             provisional=True),
     "ASSUMED_GROSS_MARGIN": C(0.65, "Brief §5 — café gross margin assumed for net contribution; not merchant-reported", provisional=True),
     "RETURN_WINDOW_DAYS": C(30, "Brief §5 — unprompted return measured within 30 days of last redemption"),
     "RECENT_REPEATER_DAYS": C(30, "sme-business-customer-analysis Step 2"),
@@ -101,6 +104,7 @@ GAP_MIN_VOLUME_12W = CONSTANTS["GAP_MIN_VOLUME_12W"].value
 PUSH_CAP_PER_WEEK = CONSTANTS["PUSH_CAP_PER_WEEK"].value
 FREQ_CAP_OFFERS = CONSTANTS["FREQ_CAP_OFFERS"].value
 PORTFOLIO_WEEKLY_CEIL_SHARE = CONSTANTS["PORTFOLIO_WEEKLY_CEIL_SHARE"].value
+PROFILE_WEIGHT_STEP = CONSTANTS["PROFILE_WEIGHT_STEP"].value
 ASSUMED_GROSS_MARGIN = CONSTANTS["ASSUMED_GROSS_MARGIN"].value
 RETURN_WINDOW_DAYS = CONSTANTS["RETURN_WINDOW_DAYS"].value
 RECENT_REPEATER_DAYS = CONSTANTS["RECENT_REPEATER_DAYS"].value

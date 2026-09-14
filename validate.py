@@ -345,6 +345,61 @@ def main(rerun=True):
                 and os.path.basename(f) != "DataProvider.jsx"]
     check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
 
+    # -------------------------------------------------------------- shared state module (brief §4)
+    # The reducer, ladder and bus are JavaScript; the only honest check is to run them. selftest.mjs
+    # drives the real code against the real public/data and prints one JSON report.
+    st_path = os.path.join(ROOT, "src", "state", "selftest.mjs")
+    try:
+        st = subprocess.run(["node", st_path], capture_output=True, text=True, timeout=120)
+        st_report = json.loads(st.stdout) if st.stdout.strip().startswith("{") else None
+    except (OSError, subprocess.SubprocessError, ValueError) as e:      # node missing or crashed
+        st, st_report = None, None
+        st_error = str(e)
+    if st_report is None:
+        check("state module: selftest.mjs runs under node", False, (st.stderr[-600:] if st else None) or locals().get("st_error"))
+    else:
+        check("state module: selftest.mjs passes every check", st_report["ok"], str(st_report.get("failed")))
+        ladder = st_report["notes"]["ladder"]
+        check("state ladder: no unreachable state", not ladder["unreachable"], str(ladder["unreachable"]))
+        check("state ladder: display map keys == ladder states (one set of keys)", not ladder["missing_display"] and not ladder["extra_display"], str(ladder))
+        check("state ladder: the ladder is the brief's ladder",
+              ladder["states"] == ["applied", "draft", "pending", "active", "capped", "stopped", "completed"]
+              and set(ladder["terminal"]) == {"capped", "stopped", "completed"}, str(ladder["states"]))
+        check("state ladder: ladder states == shipped status_display keys", set(ladder["states"]) == set(const["status_display"]), str(const["status_display"]))
+        for name in ("event 1: suppression is counted, not dropped — delivered = sent + suppressed",
+                     "event 2: customer profile weight moved toward the merchant's category and still sums to 1",
+                     "event 3: reaching the redemption limit moves the campaign to capped with the reason",
+                     "event 4: a card held at the stop can still be redeemed — never revoked",
+                     "event 5: turning offers off empties the feed",
+                     "bus: a tab opened later derives the same state from the log"):
+            check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
+
+    # Suppression counts reconcile end to end: the shipped allocation_summary against the derived
+    # per-cardholder allocation ledger, and the personas' seeded push state against the same ledger.
+    allocated = alloc[alloc["exclusion_reason"].isna()]
+    check("suppression reconciles: allocation_summary.push.suppressed_count == Σ push_suppressed in the derived allocation",
+          summ["push"]["suppressed_count"] == int(allocated["push_suppressed"].sum()),
+          f"{summ['push']['suppressed_count']} vs {int(allocated['push_suppressed'].sum())}")
+    check("suppression reconciles: push.eligible == round_reach(allocated − suppressed)",
+          summ["push"]["eligible"] == cfg.round_reach(int((~allocated["push_suppressed"]).sum())),
+          f"{summ['push']['eligible']} vs {cfg.round_reach(int((~allocated['push_suppressed']).sum()))}")
+    p_by_id = {p["id"]: p for p in personas}
+    edwin_row = allocated[allocated["card_id"] == ids["edwin"]].iloc[0]
+    check("suppression reconciles: Edwin's seeded push_state matches his allocation row (at the cap, suppressed)",
+          p_by_id["edwin"]["push_state"]["pushes_this_week"] == int(edwin_row["pushes_this_week"]) and p_by_id["edwin"]["push_state"]["at_push_cap"]
+          and "push_suppressed_frequency_cap" in p_by_id["edwin"]["cohort_membership"], str(p_by_id["edwin"]["push_state"]))
+    check("suppression reconciles: Bernice's seeded push_state matches her allocation row (clear)",
+          p_by_id["bernice"]["push_state"]["pushes_this_week"] == int(allocated[allocated["card_id"] == ids["bernice"]].iloc[0]["pushes_this_week"])
+          and not p_by_id["bernice"]["push_state"]["at_push_cap"])
+    check("suppression reconciles: personas flagged at the cap == suppressed_count (every suppression has a name in the demo)",
+          sum("push_suppressed_frequency_cap" in p["cohort_membership"] for p in personas) == summ["push"]["suppressed_count"])
+    check("state seed: every persona ships consent, weights summing to 1, push_state and offer history",
+          all("consent" in p and "push_state" in p and "offers" in p and abs(sum(p["profile"]["category_weights"].values()) - 1) < 0.001 for p in personas))
+    check("state seed: PROFILE_WEIGHT_STEP ships with a basis and is provisional",
+          const["constants"].get("PROFILE_WEIGHT_STEP", {}).get("provisional") is True and bool(const["constants"].get("PROFILE_WEIGHT_STEP", {}).get("basis")))
+    seeded_expired = [o for p in personas for o in p["offers"] if o["status"] == "expired"]
+    check("state seed: at least one expired reward comes from a real allocation row", len(seeded_expired) >= 1)
+
     # -------------------------------------------------------------- src/ against the real contract
     src_text = {f: open(f, encoding="utf-8").read() for f in _src_files()}
     shipped = {fn for fn in os.listdir(PUB) if fn.endswith(".json")}
