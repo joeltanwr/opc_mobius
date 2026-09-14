@@ -272,6 +272,35 @@ def main(rerun=True):
     check("Soujourner card mix still ships shares summing to ~100%",
           abs(sum(mixes["M0001"]["shares"].values()) - 100) < 1.5, str(mixes["M0001"]["shares"]))
 
+    # all_customers_seen is the merchant's own count of its own terminals: exact, unrounded, and a
+    # stated empty state rather than a literal 0 next to a chart.
+    seen = {m: p["trading_summary"]["all_customers_seen"] for m, p in profiles.items()
+            if p["trading_summary"].get("all_customers_seen") is not None}
+    bad_seen = [(m, v) for m, v in seen.items()
+                if v.get("floor_applies") is not False or not isinstance(v.get("count"), int)
+                or (v["count"] == 0 and not v["note"].lower().startswith("no "))
+                or (v["count"] and f"{v['count']:,}" not in v["note"])]
+    check("all_customers_seen is a direct observation with its own copy, never a floored cell", not bad_seen, str(bad_seen[:3]))
+    check("all_customers_seen is exact, not rounded to the reach granularity",
+          any(v["count"] % cfg.REACH_ROUNDING for v in seen.values() if v["count"]),
+          str({m: v["count"] for m, v in seen.items()}))
+    check("a merchant with no trade yet states it instead of shipping a bare 0",
+          any(v["count"] == 0 and v["note"].lower().startswith("no ") for v in seen.values()),
+          str([(m, v["note"]) for m, v in seen.items() if v["count"] == 0]))
+
+    # Every shipped file has to survive a strict JSON parser — the browser's JSON.parse rejects
+    # bare NaN and Infinity, and one of them takes down every screen that reads the file.
+    nonfinite = []
+    for fn in sorted(os.listdir(PUB)):
+        if not fn.endswith(".json"):
+            continue
+        raw_text = open(os.path.join(PUB, fn), encoding="utf-8").read()
+        try:
+            json.loads(raw_text, parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))
+        except ValueError as e:
+            nonfinite.append((fn, str(e)))
+    check("every shipped JSON file parses under a strict parser (no NaN or Infinity)", not nonfinite, str(nonfinite[:3]))
+
     # -------------------------------------------------------------- fix 2: caps scale with the base
     cap_like = [k for k in cfg.CONSTANTS if re.search(r"CAP|CEIL|MAX|MIN|LIMIT", k)]
     buckets = cfg.SCALE_POLICY
@@ -315,6 +344,33 @@ def main(rerun=True):
     src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
                 and os.path.basename(f) != "DataProvider.jsx"]
     check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+
+    # -------------------------------------------------------------- src/ against the real contract
+    src_text = {f: open(f, encoding="utf-8").read() for f in _src_files()}
+    shipped = {fn for fn in os.listdir(PUB) if fn.endswith(".json")}
+    fetched = set(re.findall(r'"([a-z_]+\.json)"', src_text[os.path.join(ROOT, "src", "data", "DataProvider.jsx")]))
+    check("every JSON file the app fetches is one the pipeline writes", not (fetched - shipped), str(sorted(fetched - shipped)))
+    check("the app fetches constants.json, so the chrome has its scale line", "constants.json" in fetched)
+    ghost = {f: [w for w in ("merchant_directory", "merchantDirectory", "reward_cost_total_sgd",
+                             "reward_cost_ocbc_funded_sgd", "reward_cost_merchant_funded_sgd",
+                             "control_organic_conversion_rate", "ticket_p50_sgd", "top_adjacent_categories")
+                 if w in t] for f, t in src_text.items()}
+    ghost = {os.path.relpath(f, ROOT): w for f, w in ghost.items() if w}
+    check("no screen reads a field or file the pipeline stopped writing", not ghost, str(ghost))
+
+    # Cost-sharing is settled: the merchant funds the reward in full, so the vocabulary of a split
+    # must not exist in the app at all — not in a constant, a component, or a comment.
+    cost_share = re.compile(r"funding[_ -]?split|co[_-]?fund|cost[_ -]?shar|ocbc[_ -]?funded|ocbc[_ -]?contribut", re.I)
+    split_hits = {os.path.relpath(f, ROOT): sorted(set(m.group(0) for m in cost_share.finditer(t)))
+                  for f, t in src_text.items() if cost_share.search(t)}
+    check("no cost-sharing vocabulary anywhere in src/", not split_hits, str(split_hits))
+    pipeline_text = {f: open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read()
+                     for f in os.listdir(os.path.join(ROOT, "pipeline")) if f.endswith(".py")}
+    check("no cost-sharing vocabulary anywhere in pipeline/",
+          not [f for f, t in pipeline_text.items() if cost_share.search(t)],
+          str([f for f, t in pipeline_text.items() if cost_share.search(t)]))
+    check("every campaign's cost is the merchant's whole cost",
+          all(c["cost"]["funded_by"] == "merchant" for c in camps["completed"] if c.get("measured")))
 
     r1 = recs["M0001"]["ranked"]
     check("Soujourner shows six ranked reward types with overseas/FX disabled",

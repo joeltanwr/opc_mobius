@@ -294,6 +294,20 @@ def composition_shares(shares, population, breakdown, subject):
                 all_suppressed=below, shares=None if below else shares, note=note)
 
 
+def observation(count, subject):
+    """A direct merchant observation: exact, unrounded, with an empty state instead of a bare 0.
+
+    The merchant reads this off its own till, so neither the floor nor the rounding applies. Zero
+    is a state rather than a quantity — a literal 0 next to a chart reads as a broken feed, so it
+    is worded the way the card-mix panel words its own empty state.
+    """
+    count = int(count)
+    return dict(count=count, floor_applies=False,
+                note=(f"No {subject} yet." if count == 0 else
+                      f"{count:,} {subject}, counted exactly from your own records — your own "
+                      f"observation, so no floor or rounding applies."))
+
+
 def floor_policy(composition_keys, direct_observation_keys):
     """The floor's scope, shipped next to the numbers it governs so a view cannot guess wrong."""
     return dict(floor=MIN_SEGMENT_SIZE, rounding=REACH_ROUNDING,

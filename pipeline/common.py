@@ -83,10 +83,26 @@ def _default(o):
     return str(o)
 
 
+def _finite(o):
+    """Replace NaN and ±Infinity with null, recursively.
+
+    json.dump writes them as bare NaN/Infinity tokens, which are not JSON: the browser's
+    JSON.parse rejects the whole file, so one unmeasured campaign's missing discount_pct takes
+    down every screen that reads it. A missing number ships as null.
+    """
+    if isinstance(o, float):
+        return None if (o != o or o in (float("inf"), float("-inf"))) else o
+    if isinstance(o, dict):
+        return {k: _finite(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_finite(v) for v in o]
+    return o
+
+
 def dump_json(obj, name):
     path = os.path.join(PUB_DIR, name)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, separators=(",", ":"), ensure_ascii=False, default=_default)
+        json.dump(_finite(obj), f, separators=(",", ":"), ensure_ascii=False, default=_default, allow_nan=False)
     return os.path.getsize(path)
 
 

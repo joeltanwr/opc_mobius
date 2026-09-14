@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+// Every file the pipeline writes to public/data/. This list is the app's whole data contract:
+// pipeline/run_all.py is the only writer, and nothing here is hand-maintained. The old standalone
+// merchant directory file is gone for good — merchant names, districts and categories live in
+// merchant_profiles.json, and names for merchants OCBC does not bank come with the segment or
+// affinity row that references them (see merchantName below).
 const FILES = {
   constants: "constants.json",
   taxonomy: "taxonomy.json",
@@ -8,11 +13,13 @@ const FILES = {
   affinity: "affinity.json",
   segments: "segments.json",
   benchmarks: "benchmarks.json",
+  rewardRecommendations: "reward_recommendations.json",
+  merchantPriority: "merchant_priority.json",
+  allocationSummary: "allocation_summary.json",
   campaignResults: "campaign_results.json",
   rationales: "rationales.json",
   showcasePersonas: "showcase_personas.json",
   depositFlows: "deposit_flows.json",
-  merchantDirectory: "merchant_directory.json",
 };
 
 const DataContext = createContext(null);
@@ -57,8 +64,33 @@ export function categoryFor(taxonomy, categoryId) {
   return taxonomy?.categories?.find((c) => c.id === categoryId) ?? null;
 }
 
-// Convenience helper: look up a merchant's public directory entry (name,
-// category, district — never cardholder-level data) by id.
-export function merchantById(directory, merchantId) {
-  return directory?.find((m) => m.merchant_id === merchantId) ?? null;
+// A merchant's profile — name, district, category, its own trading data. Present only for
+// merchants OCBC banks; everyone else is a name on a segment or affinity row, nothing more.
+export function merchantById(profiles, merchantId) {
+  return profiles?.[merchantId] ?? null;
+}
+
+// A display name for any merchant id, including one with no profile (a lift-pair candidate such
+// as Brew & Co. is a comparable merchant, not an OCBC customer). Falls back to the id.
+export function merchantName(data, merchantId) {
+  const profile = data?.merchantProfiles?.[merchantId];
+  if (profile) return profile.name;
+  for (const list of Object.values(data?.segments ?? {})) {
+    const hit = list.find((s) => s.candidate_merchant === merchantId);
+    if (hit?.candidate_name) return hit.candidate_name;
+  }
+  for (const entry of Object.values(data?.affinity ?? {})) {
+    const hit = (entry?.pairs ?? []).find((p) => p.merchant_id === merchantId);
+    if (hit?.name) return hit.name;
+  }
+  for (const persona of data?.showcasePersonas ?? []) {
+    const hit = (persona.top_merchants ?? []).find((m) => m.merchant_id === merchantId);
+    if (hit?.canonical_name) return hit.canonical_name;
+  }
+  return merchantId;
+}
+
+// The pipeline's own constants manifest: every figure with its basis and provisional flag.
+export function constantOf(data, key) {
+  return data?.constants?.constants?.[key] ?? null;
 }

@@ -17,7 +17,7 @@ import pandas as pd
 from config import (DERIVED_DIR, DEMO_DATE, PERIOD_START, LOGIN_MERCHANTS, HERO_ACQUIRING_MERCHANTS, GATE_MIN_OCBC_TXNS,
                     GAP_SLOT_RATIO, GAP_MIN_WEEKS, GAP_HIGH_CONF_WEEKS, GAP_TRAILING_WEEKS, GAP_COLD_START_WEEKS,
                     GAP_PEER_RATIO, GAP_MIN_SLOT_BASELINE, GAP_MIN_VOLUME_12W, RECENT_REPEATER_DAYS, TRAILING_MONTHS, DAYPARTS, DAYPART_HOURS, WEEKDAY_NAMES,
-                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, composition_shares, round_reach)
+                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, composition_shares, observation, round_reach)
 from common import daypart_of_hour, pct, key_merchants
 
 # Trailing 12 complete weeks (Mon–Sun) before the demo clock.
@@ -363,7 +363,9 @@ def analyse_merchant(raw, mid, tags):
             avg_ticket_sgd=round(float(src["amount"].mean()), 2) if len(src) else None,
             top_payment_method=(str(scheme.index[0]).title() if len(scheme) else None),
             core_customer_base=cell(ocbc_customers), core_customer_base_basis="unique OCBC cardholders transacting, rounded to 50",
-            all_customers_seen=round_reach(src["cust"].nunique()) if coverage["coverage"] == "acquiring" else None,
+            # Every customer at the merchant's own terminals: its own count, so exact and unrounded.
+            all_customers_seen=(observation(src["cust"].nunique(), "customers at your terminals")
+                                if coverage["coverage"] == "acquiring" else None),
             volume_trend=_trend([x["txn_count"] for x in complete]), ticket_trend=_trend([x["avg_ticket_sgd"] or 0 for x in complete]),
         ),
         series=dict(monthly=monthly),
