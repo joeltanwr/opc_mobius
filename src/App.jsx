@@ -7,6 +7,7 @@ import TestRM from "./screens/_test/TestRM";
 import TestCustomer from "./screens/_test/TestCustomer";
 import Landing from "./screens/Landing";
 import MerchantView from "./screens/MerchantView";
+import TargetCustomer from "./screens/TargetCustomer";
 import DemandGap from "./screens/DemandGap";
 import OpportunityPanel from "./screens/OpportunityPanel";
 import RewardRM from "./screens/RewardRM";
@@ -58,6 +59,7 @@ export default function App() {
         >
           <Route path="/merchant-view" element={<MerchantView />} />
           <Route path="/demand-gap" element={<DemandGap />} />
+          <Route path="/target-customer" element={<TargetCustomer />} />
           <Route path="/opportunity" element={<OpportunityPanel />} />
           <Route path="/reward-rm" element={<RewardRM />} />
           <Route path="/results" element={<CampaignResults />} />

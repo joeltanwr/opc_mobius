@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Info } from "lucide-react";
 import { useDemoData, categoryFor, merchantById } from "../data/DataProvider";
-import { HERO_MERCHANT_ID } from "../data/constants";
+import { HERO_MERCHANT_ID, screenNum } from "../data/constants";
 import { sgd, num, pctOf, monthLabel, completeMonths, sumBy, cellText } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote } from "../components/ui";
 
@@ -49,7 +49,7 @@ export default function MerchantView() {
         <Badge tone="info">{profile.data_source.label}</Badge>
       </div>
       <SectionTitle
-        eyebrow="Screen 1 · Your view"
+        eyebrow={`Screen ${screenNum("merchant-view")} · Your view`}
         title={`${profile.name} — ${category?.label ?? profile.category}, District ${profile.district}`}
         subtitle="This is everything your own point-of-sale already tells you: your transactions, your repeat customers, your ticket sizes, your trading pattern over the year."
       />

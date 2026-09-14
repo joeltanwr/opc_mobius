@@ -1,7 +1,7 @@
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { useDemoData, merchantById, merchantName } from "../data/DataProvider";
-import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID } from "../data/constants";
+import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, screenNum } from "../data/constants";
 import { num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 import PersonaCard from "../components/PersonaCard";
@@ -33,7 +33,7 @@ export default function DemandGap() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow="Screen 2 · The demand gap"
+        eyebrow={`Screen ${screenNum("demand-gap")} · The demand gap`}
         title="The turn: this is what your own POS can never show you"
         subtitle={`${profile.name} sees every card that taps at its own counter. It has no way to see the ${cellText(segment.reach, "below-floor number of")} people who tap at a café just like it, two streets over.`}
       />

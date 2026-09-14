@@ -33,6 +33,48 @@ const redemptionCode = (offer, seq) => `MOB-${offer.campaign_id.replace(/[^A-Z0-
 
 const endOfDay = (isoDate) => (isoDate ? `${isoDate}T23:59:59+08:00` : null);
 
+// ---------------------------------------------------------------------------------------------
+// The per-customer limit (merchant §7.5). Two values, both enforced here, so the control on the
+// set-up page is a rule and not a label:
+//
+//   once_per_customer — one reward per cardholder for this campaign. The offer model already
+//     issues exactly one card per cardholder per campaign (offerId is campaign:cardholder), so
+//     this is enforced by construction; asserting it here makes it a checked invariant rather
+//     than an accident of how ids are built, and it survives any later change to that model.
+//   once_per_week — one reward from THIS MERCHANT per rolling seven days, across its campaigns.
+//     Within a single campaign a cardholder holds one card, so the merchant scope is the only
+//     reading under which a weekly limit does any work — and it is what a merchant means by it.
+//
+// Historical configurations shipped by the generator use once_per_campaign (same rule as
+// once_per_customer) and once_per_day (one day instead of seven). once_per_visit is a rule at the
+// till — the app never sees a visit — so it constrains nothing here and is not offered at set-up.
+// A value this table does not know constrains nothing: the reducer never invents a rule.
+// ---------------------------------------------------------------------------------------------
+export const PER_CUSTOMER_LIMITS = {
+  once_per_customer: { scope: "campaign", days: null, label: "once per customer, for this campaign" },
+  once_per_campaign: { scope: "campaign", days: null, label: "once per customer, for this campaign" },
+  once_per_week: { scope: "merchant", days: 7, label: "once per customer per week, across this merchant's campaigns" },
+  once_per_day: { scope: "merchant", days: 1, label: "once per customer per day, across this merchant's campaigns" },
+};
+
+// What the set-up page offers (merchant §7.5 names exactly these two). The table above is wider
+// because it also has to read the generator's historical configurations back.
+export const PER_CUSTOMER_OPTIONS = ["once_per_customer", "once_per_week"];
+
+// The prior redemption that a per-customer limit refuses this one for, or null if none does.
+function perCustomerBlocker(state, campaign, cardholderId, at) {
+  const rule = PER_CUSTOMER_LIMITS[campaign.configuration?.per_customer_limit];
+  if (!rule) return null;
+  const cutoff = rule.days == null ? null : Date.parse(at) - rule.days * 86_400_000;
+  return Object.values(state.offers).find((o) => {
+    if (o.cardholder_id !== cardholderId || o.status !== "redeemed") return false;
+    if (rule.scope === "campaign" ? o.campaign_id !== campaign.id : o.merchant_id !== campaign.merchant_id) return false;
+    if (cutoff === null) return true;
+    // A redemption we cannot date cannot be shown to fall inside the window, so it does not refuse.
+    return o.redeemed_at != null && Date.parse(o.redeemed_at) >= cutoff;
+  }) ?? null;
+}
+
 function reject(state, event, reason) {
   const next = clone(state);
   next.ledger.push({ seq: event.seq ?? null, at: event.at ?? null, type: "REJECTED", event: event.type, reason, detail: { ...event, type: undefined } });
@@ -112,6 +154,27 @@ export function reduce(state, event) {
       if (event.to === "completed") freeze(campaign, event.at, "window ended");
       campaign.history.push({ from, to: event.to, by: event.by ?? null, at: event.at, note: event.note ?? null });
       log(next, event, { campaign_id: campaign.id, from, to: event.to, by: event.by ?? null });
+      return next;
+    }
+
+    // ---------------------------------------------------------------- merchant §6: the application
+    // Tab 3's only action. The campaign sits at `applied` from the seed because Mobius has already
+    // computed the recommendation — but a recommendation is not an application, and `applied_at` is
+    // what separates them. Applying stamps who applied and when, and nothing else: no configuration
+    // exists yet, nothing is reviewable yet, and the next move belongs to the relationship manager.
+    case "APPLY": {
+      const c = state.campaigns[event.campaign_id];
+      if (!c) return reject(state, event, "unknown campaign");
+      if (c.status !== "applied") return reject(state, event, `campaign is ${c.status}; an application only exists at the foot of the ladder`);
+      if (c.applied_at) return reject(state, event, `already applied on ${String(c.applied_at).slice(0, 10)}`);
+      const next = clone(state);
+      const campaign = next.campaigns[event.campaign_id];
+      campaign.applied_at = event.at;
+      campaign.applied_by = event.by ?? "merchant";
+      campaign.rm_message = event.rm_message ?? "A relationship manager will be in touch within the week.";
+      campaign.history.push({ from: null, to: "applied", by: event.by ?? "merchant", at: event.at, note: "merchant applied on Tab 3; nothing configured, nothing sent" });
+      log(next, event, { campaign_id: campaign.id, by: campaign.applied_by, rm_message: campaign.rm_message,
+                         note: "application received; configuration happens on the set-up page once the RM is in the conversation" });
       return next;
     }
 
@@ -197,6 +260,11 @@ export function reduce(state, event) {
       // No status check beyond that: a delivered card is a reward the customer holds. A redemption
       // limit closes the cards themselves (status "closed", caught above); a reach cap, a stop or
       // a completed window leave them valid until expiry, and the redemption is honoured.
+      const blocker = perCustomerBlocker(state, c, o.cardholder_id, event.at);
+      if (blocker) {
+        const rule = PER_CUSTOMER_LIMITS[c.configuration.per_customer_limit];
+        return reject(state, event, `per-customer limit: this campaign is ${rule.label}, and ${o.cardholder_id} redeemed ${blocker.id}${blocker.redeemed_at ? ` on ${blocker.redeemed_at.slice(0, 10)}` : ""}`);
+      }
       const next = clone(state);
       const offer = next.offers[event.offer_id];
       const campaign = next.campaigns[o.campaign_id];

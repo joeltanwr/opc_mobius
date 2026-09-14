@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown, TrendingUp, Lock } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
-import { HERO_MERCHANT_ID, CONSTANTS } from "../data/constants";
+import { HERO_MERCHANT_ID, CONSTANTS, screenNum } from "../data/constants";
 import { sgd, num, pct, cellCount } from "../data/format";
 import { Card, SectionTitle, BasisNote } from "../components/ui";
 
@@ -33,7 +33,7 @@ export default function OpportunityPanel() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow="Screen 3 · Opportunity panel"
+        eyebrow={`Screen ${screenNum("opportunity")} · Segments, ranked`}
         title={`Every reachable gap for ${profile.name}, ranked by expected value`}
         subtitle="Not sorted by segment size — sorted by what it's actually worth, using the same deterministic formula for every row."
       />

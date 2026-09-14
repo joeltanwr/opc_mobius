@@ -33,3 +33,13 @@ body {
   @apply inline-flex items-center justify-center rounded border border-border bg-white px-1.5 py-0.5 text-[11px] font-num text-ink-secondary shadow-sm;
   min-width: 20px;
 }
+
+/* The nav row scrolls rather than clips below ~1100px; hide the bar so the sticky chrome keeps
+   its 64px height. Labels stay at 14px — width comes out of the words, never the type. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

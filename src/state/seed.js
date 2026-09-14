@@ -2,6 +2,8 @@
 // one the pipeline wrote with a basis; the module adds structure (counters, ledgers, the live
 // demo campaign's identity) but no numbers of its own.
 
+import { PER_CUSTOMER_OPTIONS } from "./store.js";
+
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 function counters(seeded = {}) {
@@ -109,13 +111,21 @@ export function buildSeed(data) {
       window_start: iso(nextMonday), window_end: iso(new Date(nextMonday.getTime() + lastLen)),
       outlets: seg ? seg.per_outlet.filter((o) => o.suppressed === false).map((o) => o.outlet_id) : null,
       redemption_limit: lastSame?.configuration?.redemption_limit ?? null,
-      per_customer_limit: lastSame?.configuration?.per_customer_limit ?? "once_per_visit",
+      // §7.5 offers two values and the reducer enforces both. The last campaign of this type used
+      // a till-level rule (once per visit) that constrains nothing Mobius can observe, so the
+      // prefill falls back to the campaign-level default rather than seeding a dead setting.
+      per_customer_limit: PER_CUSTOMER_OPTIONS.includes(lastSame?.configuration?.per_customer_limit)
+        ? lastSame.configuration.per_customer_limit
+        : "once_per_customer",
       push_requested: false,
     };
     const basisFrom = lastSame ? `prefilled from your last ${top?.label?.toLowerCase() ?? "reward"} campaign (${lastSame.name}, campaign_results.json)` : "no prior campaign of this type; left for the merchant";
     const prefillBasis = {
       reward_type: "prefilled from reward_recommendations.json — the top-ranked reward for this gap",
-      max_reward_value_sgd: basisFrom, discount_pct: basisFrom, redemption_limit: basisFrom, per_customer_limit: basisFrom,
+      max_reward_value_sgd: basisFrom, discount_pct: basisFrom, redemption_limit: basisFrom,
+      per_customer_limit: PER_CUSTOMER_OPTIONS.includes(lastSame?.configuration?.per_customer_limit)
+        ? basisFrom
+        : "one reward per cardholder for this campaign — the default; the merchant's last campaign used a till-level rule the platform cannot enforce",
       days_of_week: "prefilled from demand_gaps.json — the trough window", hours: "prefilled from demand_gaps.json — the trough window",
       window_start: "the Monday after the demo clock", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
       outlets: "every outlet that clears the 250 floor on its own (segments.json per_outlet)",

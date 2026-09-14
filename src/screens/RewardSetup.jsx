@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ShieldCheck, Lock, RotateCcw, AlertTriangle, Send, Sparkles, Ban } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
-import { FIELD_OWNERS, REQUIRED_TO_SUBMIT } from "../state/store.js";
+import { FIELD_OWNERS, REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS } from "../state/store.js";
 import { expectedOutcome, windowLoad } from "../state/expected.js";
-import { CONSTANTS } from "../data/constants";
+import { CONSTANTS, screenNum } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 
@@ -53,7 +54,7 @@ export default function RewardSetup() {
         <ViewAs value={viewAs} onChange={setViewAs} />
       </div>
       <SectionTitle
-        eyebrow="Screen 7 · Reward set-up"
+        eyebrow={`Screen ${screenNum("reward-setup")} · Reward set-up`}
         title={`${c.merchant_name} — ${c.name.split(" — ")[1] ?? "next campaign"}`}
         subtitle="One shared page, one reward, one segment that can only be narrowed. Every change is attributed and logged here, because this page is the approval artifact."
         right={<Ladder status={c.status} display={display} />}
@@ -63,18 +64,31 @@ export default function RewardSetup() {
         <Card className="p-5 mb-6 flex items-start gap-3 border-warning/40 bg-warning-bg/40">
           <ShieldCheck size={18} className="text-warning shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-[13px] font-semibold text-ink">{display(c.status)} — waiting for the relationship manager to make contact.</p>
-            <p className="text-[12.5px] text-ink-secondary mt-0.5">
-              The merchant applied on Tab 3. Nothing is configured until the RM opens this page; opening it is what moves the status to{" "}
-              <span className="font-medium text-ink">{display("draft")}</span>.
-            </p>
-            {viewAs === "ocbc" ? (
-              <button onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "draft", by: "rm" })}
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-hover">
-                Open set-up as the relationship manager
-              </button>
+            {!c.applied_at ? (
+              <>
+                <p className="text-[13px] font-semibold text-ink">No application yet — this page has nothing to open.</p>
+                <p className="text-[12.5px] text-ink-secondary mt-0.5">
+                  Mobius has computed a recommendation for {c.merchant_name}, but a recommendation is not an application. The merchant applies on{" "}
+                  <Link to="/target-customer" className="font-medium text-brand hover:underline">Tab 3</Link>; the RM then makes contact, and this page is
+                  where the two of them work. That order is the product, so the button below stays out of reach until it has been followed.
+                </p>
+              </>
             ) : (
-              <p className="text-[12px] text-ink-light mt-2">Switch to "View as OCBC staff" to open the set-up — the merchant cannot start it alone.</p>
+              <>
+                <p className="text-[13px] font-semibold text-ink">{display(c.status)} — waiting for the relationship manager to make contact.</p>
+                <p className="text-[12.5px] text-ink-secondary mt-0.5">
+                  The merchant applied on Tab 3 on {String(c.applied_at).slice(0, 10)}. Nothing is configured until the RM opens this page; opening it is what
+                  moves the status to <span className="font-medium text-ink">{display("draft")}</span>.
+                </p>
+                {viewAs === "ocbc" ? (
+                  <button onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "draft", by: "rm" })}
+                          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-hover">
+                    Open set-up as the relationship manager
+                  </button>
+                ) : (
+                  <p className="text-[12px] text-ink-light mt-2">Switch to "View as OCBC staff" to open the set-up — the merchant cannot start it alone.</p>
+                )}
+              </>
             )}
           </div>
         </Card>
@@ -289,10 +303,13 @@ export default function RewardSetup() {
                   <NumberInput value={cfg.redemption_limit} disabled={!can("redemption_limit")} onCommit={(v) => set("redemption_limit", v)} />
                 </Field>
                 <Field label="Per customer" editable={can("per_customer_limit")}>
+                  {/* Only the values the reducer enforces at redemption are offered. A setting that
+                      does nothing is worse than no setting, so once-per-visit — a rule at the till,
+                      which the platform never observes — is not on the list. */}
                   <select value={cfg.per_customer_limit ?? ""} disabled={!can("per_customer_limit")} onChange={(e) => set("per_customer_limit", e.target.value)} className={selectCls}>
-                    <option value="once_per_visit">once per visit</option>
-                    <option value="once_per_customer">once per customer</option>
-                    <option value="once_per_week">once per week</option>
+                    {PER_CUSTOMER_OPTIONS.map((k) => (
+                      <option key={k} value={k}>{k.replace(/_/g, " ")}</option>
+                    ))}
                   </select>
                 </Field>
               </div>
@@ -301,6 +318,12 @@ export default function RewardSetup() {
                 <div className="font-num text-[32px] font-extrabold text-ink leading-tight">{sgd(outcome.max_cost_sgd)}</div>
                 <div className="text-[12px] text-ink-secondary">{num(cfg.redemption_limit)} redemptions × {sgd(cfg.max_reward_value_sgd, 2)} maximum value each</div>
               </div>
+              {PER_CUSTOMER_LIMITS[cfg.per_customer_limit] && (
+                <p className="text-[12px] text-ink-secondary mt-3">
+                  <span className="font-medium text-ink">Per customer:</span> {PER_CUSTOMER_LIMITS[cfg.per_customer_limit].label}. Enforced when the reward is
+                  redeemed, not at set-up — a redemption that breaks it is refused and the refusal is logged with the reason.
+                </p>
+              )}
               <p className="text-[12px] text-ink-secondary mt-3">
                 This is not the {seg.floor} segment floor. A redemption limit of 100 is fine; a segment of 100 is not — the floor is about who can be
                 described, the limit is about what you will spend.
@@ -322,7 +345,7 @@ export default function RewardSetup() {
               <Row k="Window" v={`${(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} ${fmtHours(cfg.hours)} · ${cfg.window_start ?? "—"} to ${cfg.window_end ?? "—"}`} />
               <Row k="Outlets" v={(cfg.outlets ?? []).map((id) => seg.per_outlet.find((o) => o.outlet_id === id)?.name ?? id).join(", ") || "none"} />
               <Row k="Channel" v={`In-app feed${cfg.push_requested ? " + push requested (granted at approval)" : "; push not requested"}`} />
-              <Row k="Limit and maximum cost" v={`${num(cfg.redemption_limit)} redemptions, ${cfg.per_customer_limit?.replace(/_/g, " ") ?? "—"} → maximum ${sgd(outcome.max_cost_sgd)}, your whole cost`} />
+              <Row k="Limit and maximum cost" v={`${num(cfg.redemption_limit)} redemptions, ${PER_CUSTOMER_LIMITS[cfg.per_customer_limit]?.label ?? "no per-customer limit"} → maximum ${sgd(outcome.max_cost_sgd)}, your whole cost`} />
               <Row k="Reach in this window" v={outcome.reach_in_window === null ? `fewer than ${seg.floor} of the segment are usually free in this window — it cannot be offered to them` : `${num(outcome.reach_in_window)} (${outcome.reach_basis})`} />
               <Row k="Expected redemptions" v={range(outcome, "redemptions", num)} />
               <Row k="Expected cost" v={range(outcome, "cost_sgd", sgd)} />

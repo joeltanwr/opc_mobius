@@ -68,22 +68,43 @@ export const CONSTANTS = {
 
 };
 
+// Nav labels are deliberately short. The chrome is one row at 1280px and the labels are set at
+// 14px — the design system's floor for anything meaningful on a projector — so the width has to
+// come out of the words, not out of the type. Keep every label at or under ten characters.
 export const SCREENS = [
   { key: "merchant-view", num: 1, label: "Your view", path: "/merchant-view" },
-  { key: "demand-gap", num: 2, label: "The demand gap", path: "/demand-gap" },
-  { key: "opportunity", num: 3, label: "Opportunity panel", path: "/opportunity" },
-  { key: "reward-rm", num: 4, label: "Reward & RM handoff", path: "/reward-rm" },
-  { key: "results", num: 5, label: "Campaign results", path: "/results" },
-  { key: "preview", num: 6, label: "Preview mode", path: "/preview" },
-  { key: "reward-setup", num: 7, label: "Reward set-up", path: "/reward-setup" },
+  { key: "demand-gap", num: 2, label: "Demand gap", path: "/demand-gap" },
+  { key: "target-customer", num: 3, label: "Target", path: "/target-customer" },
+  { key: "opportunity", num: 4, label: "Segments", path: "/opportunity" },
+  { key: "reward-rm", num: 5, label: "RM handoff", path: "/reward-rm" },
+  { key: "reward-setup", num: 6, label: "Set-up", path: "/reward-setup" },
+  { key: "results", num: 7, label: "Results", path: "/results" },
+  { key: "preview", num: 8, label: "Preview", path: "/preview" },
 ];
 
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 8, label: "Cardholder view", path: "/consumer" },
+  { key: "consumer", num: 9, label: "Cardholder", path: "/consumer" },
 ];
+
+// The screen number a view prints in its eyebrow. Derived from SCREENS so reordering the nav can
+// never leave a screen announcing a number the chrome disagrees with.
+export const screenNum = (key) =>
+  [...SCREENS, ...OPTIONAL_SCREENS].find((s) => s.key === key)?.num ?? "";
 
 export const HERO_MERCHANT_ID = "M0001";
 export const HERO_RIVAL_MERCHANT_ID = "M0055";
 export const COLD_START_MERCHANT_ID = "M0002";
 export const SEASONAL_MERCHANT_ID = "M0003";
 export const PROSPECT_MERCHANT_ID = "M0004";
+// Fails the SME eligibility gate on its transaction score — the not-eligible state on Tab 3 has
+// to be reachable in the demo, or the gate is a claim rather than a control.
+export const INELIGIBLE_MERCHANT_ID = "M0010";
+
+// The accounts Tab 3 can be loaded as. Merchant §3 asks for the first three; the fourth is the
+// only way to show the eligibility gate refusing someone.
+export const TAB3_ACCOUNTS = [
+  { id: HERO_MERCHANT_ID, note: "OCBC-acquired, full profile" },
+  { id: PROSPECT_MERCHANT_ID, note: "Not acquired by OCBC — reduced card mix" },
+  { id: INELIGIBLE_MERCHANT_ID, note: "Fails the eligibility gate" },
+  { id: COLD_START_MERCHANT_ID, note: "Thin history — degrades to benchmarks" },
+];

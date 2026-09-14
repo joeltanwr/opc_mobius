@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
-import { reduce, audit, offerId } from "./store.js";
+import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS } from "./store.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -195,6 +195,54 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("event 5: a later push excludes them and counts the exclusion separately from suppression",
         p.delivered === 1 && p.excluded === 1 && p.suppressed === 0 && !v.offers[offerId(DEMO, "edwin")]);
   check("event 5: audit clean after offers off", audit(v).length === 0, audit(v));
+}
+
+// ---------------------------------------------------------------- per-customer limit (merchant §7.5)
+// The set-up page offers two values and the reducer enforces both, so the control is a rule and
+// not a label. once_per_customer is enforced by construction (one card per cardholder per
+// campaign); once_per_week only bites across a merchant's campaigns, which is the reading the
+// reducer implements. The second campaign below is hand-built because the reducer creates no
+// campaigns — the rule is what is under test, not the seed — so audit() is not run on this branch.
+{
+  const atDays = (d) => new Date(T0 + d * 86_400_000).toISOString();
+  let q = seed;
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  check("limit: the prefill seeds a value the reducer can actually enforce",
+        PER_CUSTOMER_OPTIONS.includes(q.campaigns[DEMO].configuration.per_customer_limit), q.campaigns[DEMO].configuration.per_customer_limit);
+  q = reduce(q, { type: "CONFIGURE", campaign_id: DEMO, field: "per_customer_limit", value: "once_per_week", by: "merchant", at: at(2), seq: 2 });
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(3), seq: 3 });
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(4), seq: 4 });
+  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], by: "rm", at: at(5), seq: 5 });
+  q = reduce(q, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: atDays(3), seq: 6 });
+  check("limit: the first redemption under a weekly per-customer limit is honoured",
+        q.offers[offerId(DEMO, "bernice")].status === "redeemed" && q.offers[offerId(DEMO, "bernice")].redeemed_at === atDays(3));
+
+  // A second Soujourner campaign, same merchant, its own card in Bernice's feed.
+  const second = JSON.parse(JSON.stringify(q.campaigns[DEMO]));
+  Object.assign(second, { id: "C-SJ-04", counters: { ...second.counters, feed_delivered: 0, pushes_sent: 0, pushes_suppressed: 0, redemptions: 0, redeemers: [],
+                          seeded: { feed_delivered: 0, pushes_sent: 0, pushes_suppressed: 0, redemptions: 0 } }, pushes: [], post_freeze: { redemptions: 0, offers: [] } });
+  const twin = { ...q.offers[offerId(DEMO, "bernice")], id: offerId("C-SJ-04", "bernice"), campaign_id: "C-SJ-04", status: "delivered", redeemed_at: undefined, code: undefined };
+  q = { ...q, campaigns: { ...q.campaigns, "C-SJ-04": second }, offers: { ...q.offers, [twin.id]: twin } };
+
+  let r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(5), seq: 7 });
+  check("limit: a second reward from the same merchant inside the week is refused, with the reason and the prior redemption named",
+        r.ledger.at(-1).type === "REJECTED" && /per-customer limit/.test(r.ledger.at(-1).reason) && /bernice/.test(r.ledger.at(-1).reason)
+        && r.offers[twin.id].status === "delivered", r.ledger.at(-1));
+  r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(11), seq: 7 });
+  check("limit: the same reward eight days later is honoured — the window is rolling, not a ban",
+        r.offers[twin.id].status === "redeemed", r.ledger.at(-1));
+
+  // once_per_customer is campaign-scoped: the merchant's other campaign is none of its business.
+  q.campaigns["C-SJ-04"].configuration.per_customer_limit = "once_per_customer";
+  r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(5), seq: 7 });
+  check("limit: once per customer is scoped to its own campaign, so another campaign's redemption does not refuse it",
+        r.offers[twin.id].status === "redeemed", r.ledger.at(-1));
+
+  // A value the table does not know constrains nothing — the reducer never invents a rule.
+  q.campaigns["C-SJ-04"].configuration.per_customer_limit = "once_per_visit";
+  r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(5), seq: 7 });
+  check("limit: a till-level rule the platform cannot observe constrains nothing here",
+        r.offers[twin.id].status === "redeemed", r.ledger.at(-1));
 }
 
 // ---------------------------------------------------------------- set-up page: narrowing agent, permissions, submit

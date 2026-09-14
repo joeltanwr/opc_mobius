@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Lock, Sparkles, CalendarClock } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, merchantName } from "../data/DataProvider";
-import { COLD_START_MERCHANT_ID, PROSPECT_MERCHANT_ID } from "../data/constants";
+import { COLD_START_MERCHANT_ID, PROSPECT_MERCHANT_ID, screenNum } from "../data/constants";
 import { sgd, num, pctOf, cellText } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 
@@ -10,7 +10,7 @@ export default function PreviewMode() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow="Screen 6 · Preview mode"
+        eyebrow={`Screen ${screenNum("preview")} · Preview mode`}
         title="What the flywheel looks like from a standing stop"
         subtitle="Two merchants OCBC's own transaction detail can't help yet — one it doesn't acquire, one that just switched its terminals on."
       />

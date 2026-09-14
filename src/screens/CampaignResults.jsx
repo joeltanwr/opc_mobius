@@ -2,7 +2,7 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { CheckCircle2, XCircle, Lock, ShieldCheck } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
-import { HERO_MERCHANT_ID } from "../data/constants";
+import { HERO_MERCHANT_ID, screenNum } from "../data/constants";
 import { sgd, num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 
@@ -18,7 +18,7 @@ export default function CampaignResults() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow="Screen 5 · Campaign results"
+        eyebrow={`Screen ${screenNum("results")} · Campaign results`}
         title="Test vs. control — not before vs. after"
         subtitle={`${profile.name}'s completed campaigns, each measured against a held-out group from the same segment, not against its own pre-campaign baseline.`}
       />

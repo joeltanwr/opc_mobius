@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Check, ShieldAlert, ShieldCheck, ArrowRight, CircleUserRound, Ban } from "lucide-react";
 import { useDemoData, merchantById, merchantName } from "../data/DataProvider";
-import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, CONSTANTS } from "../data/constants";
+import { HERO_MERCHANT_ID, HERO_RIVAL_MERCHANT_ID, CONSTANTS, screenNum } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, humanize } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 
@@ -28,7 +28,7 @@ export default function RewardRM() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow="Screen 4 · Reward & RM handoff"
+        eyebrow={`Screen ${screenNum("reward-rm")} · Reward & RM handoff`}
         title="Turning the gap into an offer — and who has to sign off"
         subtitle={`Targeting the ${cellText(segment.reach)}-cardholder ${rivalName} lookalike segment identified on the previous screen.`}
       />

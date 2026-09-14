@@ -350,7 +350,10 @@ def main(rerun=True):
     # drives the real code against the real public/data and prints one JSON report.
     st_path = os.path.join(ROOT, "src", "state", "selftest.mjs")
     try:
-        st = subprocess.run(["node", st_path], capture_output=True, text=True, timeout=120)
+        # encoding is explicit: selftest.mjs writes UTF-8, and on a cp1252 console text=True would
+        # decode the em dashes in the check names into mojibake, so every lookup below would miss
+        # and report a passing check as a failure.
+        st = subprocess.run(["node", st_path], capture_output=True, text=True, encoding="utf-8", timeout=120)
         st_report = json.loads(st.stdout) if st.stdout.strip().startswith("{") else None
     except (OSError, subprocess.SubprocessError, ValueError) as e:      # node missing or crashed
         st, st_report = None, None

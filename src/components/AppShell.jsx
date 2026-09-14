@@ -54,13 +54,16 @@ export default function AppShell() {
             <MockDataBadge className="ml-1" />
           </div>
 
-          <nav className="flex items-center gap-1 overflow-x-auto">
+          {/* Labels are short by design (constants.js) so the type can stay at 14px — the design
+              system's floor for anything meant to be read off a projector. min-w-0 lets the row
+              scroll below ~1100px instead of clipping the last entry to half a word. */}
+          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto no-scrollbar">
             {SCREENS.map((s) => (
               <NavLink
                 key={s.key}
                 to={s.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                  `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[14px] font-medium whitespace-nowrap transition-colors ${
                     isActive
                       ? "bg-[#FDECEC] text-brand"
                       : "text-ink-secondary hover:bg-canvas hover:text-ink"
@@ -77,10 +80,10 @@ export default function AppShell() {
             <NavLink
               to="/consumer"
               className={({ isActive }) =>
-                `text-[12px] font-medium whitespace-nowrap ${isActive ? "text-brand" : "text-ink-light hover:text-ink-secondary"}`
+                `text-[13px] font-medium whitespace-nowrap ${isActive ? "text-brand" : "text-ink-light hover:text-ink-secondary"}`
               }
             >
-              Cardholder view →
+              Cardholder →
             </NavLink>
           </div>
         </div>
@@ -101,7 +104,7 @@ export default function AppShell() {
             <span className="kbd">→</span>
             <span>navigate</span>
             <span className="mx-1.5 text-border">|</span>
-            <span className="kbd">1</span>–<span className="kbd">8</span>
+            <span className="kbd">1</span>–<span className="kbd">{ALL_NAV.length}</span>
             <span>jump to screen</span>
           </div>
         </div>
