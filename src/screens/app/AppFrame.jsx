@@ -1,8 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Home, Gift, UserRound, Smartphone } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { MockDataBadge, ScaleDisclosure } from "../../components/ui";
+import PersonaSwitcher from "../../components/PersonaSwitcher";
 import { CARDHOLDER_ID } from "./cardholder";
 
 // ---------------------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ export default function AppFrame() {
             </nav>
             <div className="ml-auto flex items-center gap-3 shrink-0">
               <MockDataBadge />
-              <Link to="/rm" className="hidden sm:inline text-[12px] font-medium text-white/60 hover:text-white">RM view →</Link>
+              <PersonaSwitcher tone="dark" />
             </div>
           </div>
         </header>
