@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
-import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS } from "./store.js";
+import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView } from "./store.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -332,6 +332,79 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   k = reduce(k, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: at(6), seq: 6 });
   check("cohort push: Bernice's card is still honoured after the reach cap", k.offers[offerId(DEMO, "bernice")].status === "redeemed");
   check("cohort push: audit clean", audit(k).length === 0, audit(k));
+}
+
+// ---------------------------------------------------------------- RM §3.2/§3.4: portfolio exposure, throttle, kill switch
+{
+  const pf = data.allocationSummary.portfolio, pf_alloc = data.allocationSummary;
+  check("portfolio: seeded from allocation_summary in sample units, ceiling provisional, nothing engaged",
+        seed.portfolio.contacted_this_week === pf.contacted_this_week && seed.portfolio.weekly_ceiling === pf.weekly_ceiling
+        && seed.portfolio.ceiling_provisional === true && seed.portfolio.throttle === null && seed.portfolio.halted === null, seed.portfolio);
+  check("portfolio: the ceiling is a share of the consented base, not a headcount off the 800,000",
+        Math.round(seed.portfolio.ceiling_share_of_consented_base * seed.portfolio.consented_base) === seed.portfolio.weekly_ceiling,
+        { share: seed.portfolio.ceiling_share_of_consented_base, base: seed.portfolio.consented_base, ceiling: seed.portfolio.weekly_ceiling });
+
+  // Walk the campaign live, then look at what a cohort push would do before doing it.
+  let g = seed;
+  g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", configuration: CONFIG, at: at(2), seq: 2 });
+  g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, window: WINDOW, at: at(3), seq: 3 });
+
+  const preview = pushPreview(g, DEMO, { cohort: true });
+  check("push confirmation: the preview names the suppressed cardholder and counts the suppression before anything is sent",
+        preview.suppressed >= 1 && preview.named.some((n) => n.id === "edwin" && n.outcome === "suppressed" && /already had 2 of 2/.test(n.why)), preview.named);
+  check("push confirmation: the preview reports how many recipients already had an offer this week",
+        preview.named_already_pushed_this_week === 1 && preview.allocation_suppressed_expected === pf_alloc.push.suppressed_count,
+        { already: preview.named_already_pushed_this_week, expected: preview.allocation_suppressed_expected });
+
+  const fired = reduce(g, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
+  const p0 = fired.campaigns[DEMO].pushes.at(-1);
+  check("push confirmation: the preview and the event agree exactly — delivered, sent, suppressed",
+        preview.delivered === p0.delivered && preview.sent === p0.sent && preview.suppressed === p0.suppressed,
+        { preview: { d: preview.delivered, s: preview.sent, x: preview.suppressed }, event: { d: p0.delivered, s: p0.sent, x: p0.suppressed } });
+  check("portfolio: every delivered feed card moves the portfolio counter, including the suppressed one",
+        fired.portfolio.contacted_this_week === seed.portfolio.contacted_this_week + p0.delivered, { after: fired.portfolio.contacted_this_week, delivered: p0.delivered });
+  check("portfolio: crossing the provisional ceiling is recorded on the push, not silently allowed",
+        p0.portfolio.over_ceiling === true && p0.portfolio.over_by === fired.portfolio.contacted_this_week - fired.portfolio.weekly_ceiling, p0.portfolio);
+  check("portfolio: audit clean after a cohort push", audit(fired).length === 0, audit(fired));
+
+  // The throttle: the control that binds.
+  let t = reduce(g, { type: "THROTTLE_SET", limit: 400, by: "rm", note: "holding the book back this week", at: at(4), seq: 4 });
+  check("throttle: set below the ceiling, logged with who moved it",
+        t.portfolio.throttle.limit === 400 && t.portfolio.throttle.by === "rm" && t.portfolio.log.at(-1).action === "throttle set", t.portfolio.throttle);
+  const over = reduce(t, { type: "THROTTLE_SET", limit: t.portfolio.weekly_ceiling + 1, by: "rm", at: at(5), seq: 5 });
+  check("throttle: cannot be raised above the weekly ceiling — it tightens only",
+        over.ledger.at(-1).type === "REJECTED" && /cannot raise it/.test(over.ledger.at(-1).reason) && over.portfolio.throttle.limit === 400);
+  const blocked = reduce(t, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(6), seq: 6 });
+  check("throttle: a send that does not fit is refused whole, naming the headroom, and nothing is delivered",
+        blocked.ledger.at(-1).type === "REJECTED" && /the throttle allows 400/.test(blocked.ledger.at(-1).reason)
+        && blocked.campaigns[DEMO].counters.feed_delivered === 0 && blocked.portfolio.contacted_this_week === seed.portfolio.contacted_this_week,
+        blocked.ledger.at(-1).reason);
+  check("throttle: the preview refuses in the same words the reducer will use, so the dialog cannot promise a send that will fail",
+        pushPreview(t, DEMO, { cohort: true }).gate.ok === false && pushPreview(t, DEMO, { cohort: true }).gate.reason === blocked.ledger.at(-1).reason);
+  const cleared = reduce(blocked, { type: "THROTTLE_CLEAR", by: "rm", at: at(7), seq: 7 });
+  const afterClear = reduce(cleared, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(8), seq: 8 });
+  check("throttle: cleared, the same send goes through", afterClear.campaigns[DEMO].counters.feed_delivered === p0.delivered);
+  check("throttle: headroom is reported against the throttle, not the ceiling, once one is set",
+        portfolioView(t.portfolio).throttle_headroom === 400 - t.portfolio.contacted_this_week && portfolioView(cleared.portfolio).throttle_headroom === null);
+
+  // The kill switch: portfolio-wide, not per campaign.
+  let h = reduce(g, { type: "HALT_SENDING", by: "rm", reason: "complaint spike under review", at: at(4), seq: 4 });
+  check("kill switch: engaged, logged with who and why", h.portfolio.halted.by === "rm" && /complaint spike/.test(h.portfolio.halted.reason));
+  const haltedCohort = reduce(h, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(5), seq: 5 });
+  check("kill switch: the campaign's own push is refused while it is engaged",
+        haltedCohort.ledger.at(-1).type === "REJECTED" && /halted across the portfolio/.test(haltedCohort.ledger.at(-1).reason));
+  const otherLive = Object.values(seed.campaigns).find((c) => c.status === "active" && c.id !== DEMO);
+  const haltedOther = reduce(h, { type: "PUSH_FIRED", campaign_id: otherLive.id, recipients: ["farah"], by: "rm", at: at(5), seq: 5 });
+  check("kill switch: it halts every campaign in the book, not just this one",
+        haltedOther.ledger.at(-1).type === "REJECTED" && /halted across the portfolio/.test(haltedOther.ledger.at(-1).reason), otherLive.id);
+  check("kill switch: cards already delivered are untouched by it",
+        Object.values(h.offers).filter((o) => o.status === "delivered").length === Object.values(g.offers).filter((o) => o.status === "delivered").length);
+  const resumed = reduce(h, { type: "RESUME_SENDING", by: "rm", at: at(6), seq: 6 });
+  check("kill switch: released, sending works again and both moves are in the portfolio log",
+        resumed.portfolio.halted === null && resumed.portfolio.log.map((l) => l.action).join(" → ") === "sending halted → sending resumed"
+        && reduce(resumed, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(7), seq: 7 }).campaigns[DEMO].counters.feed_delivered === p0.delivered);
+  check("portfolio: audit clean after the controls have been moved", audit(resumed).length === 0 && audit(cleared).length === 0);
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges

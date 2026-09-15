@@ -13,6 +13,10 @@ import CampaignResults from "./screens/CampaignResults";
 import PreviewMode from "./screens/PreviewMode";
 import ConsumerView from "./screens/ConsumerView";
 import RewardSetup from "./screens/RewardSetup";
+import PortfolioDashboard from "./screens/rm/PortfolioDashboard";
+import PendingProgramme from "./screens/rm/PendingProgramme";
+import RewardConfiguration from "./screens/rm/RewardConfiguration";
+import RMCampaignDetail from "./screens/rm/CampaignDetail";
 
 function LoadGate({ children }) {
   const { status, error } = useDemoData();
@@ -62,6 +66,21 @@ export default function App() {
           <Route path="/preview" element={<PreviewMode />} />
           <Route path="/reward-setup" element={<RewardSetup />} />
           <Route path="/consumer" element={<ConsumerView />} />
+        </Route>
+
+        {/* The OCBC relationship manager's four screens. Same shell, slate "OCBC internal" chrome,
+            its own nav — one platform, two sides, and a judge can tell which is which at a glance. */}
+        <Route
+          element={
+            <LoadGate>
+              <AppShell variant="rm" />
+            </LoadGate>
+          }
+        >
+          <Route path="/rm" element={<PortfolioDashboard />} />
+          <Route path="/rm/pending/:campaignId" element={<PendingProgramme />} />
+          <Route path="/rm/configure/:campaignId" element={<RewardConfiguration />} />
+          <Route path="/rm/campaign/:campaignId" element={<RMCampaignDetail />} />
         </Route>
       </Routes>
       </StateProvider>

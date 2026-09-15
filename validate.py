@@ -180,6 +180,17 @@ def main(rerun=True):
     tiers = {p["tier"] for p in priority.values()}
     check("one merchant per priority tier (high/medium/low/insufficient_data)", {"high", "medium", "low", "insufficient_data"} <= tiers, str(tiers))
     check("Soujourner priority tier is high", priority["M0001"]["tier"] == "high", str(priority["M0001"]))
+    # The RM pending row shows tier, score and all three components so the RM can answer "why is
+    # this one first" without opening anything (sme-relationship-value-score, output contract).
+    scored = [p for p in priority.values() if p["tier"] != "insufficient_data"]
+    check("every scored merchant ships all three score components for the pending row",
+          all({"size_points", "upside_points", "quality_points"} <= set(p.get("components", {})) and p.get("score") is not None for p in scored))
+    unranked = [p for p in priority.values() if p["tier"] == "insufficient_data"]
+    check("the unranked merchant carries no score and its own RM-facing text, so it renders unranked rather than zero",
+          unranked and all(p.get("score") is None and p.get("rm_text") for p in unranked), str(unranked[:1]))
+    applied_ids = {a["merchant_id"] for a in load_pub("campaign_results.json")["applied"]}
+    check("every merchant with an application has a priority record, so no pending row is unrankable",
+          applied_ids <= set(priority), str(sorted(applied_ids - set(priority))))
 
     dormant_tier = cardholders[cardholders["engagement_tier"] == "dormant"]["card_id"]
     flagged = set(tags[tags["dormant"]]["card_id"])
@@ -489,6 +500,24 @@ def main(rerun=True):
     split_hits = {os.path.relpath(f, ROOT): sorted(set(m.group(0) for m in cost_share.finditer(t)))
                   for f, t in src_text.items() if cost_share.search(t)}
     check("no cost-sharing vocabulary anywhere in src/", not split_hits, str(split_hits))
+
+    # ---------------------------------------------------------- the RM view against its own sources
+    # The RM view is the control point (RM §3): the pending list ranks on merchant_priority.json
+    # and the exposure panel is the portfolio block of allocation_summary.json. Both are RM-only —
+    # a merchant screen reading either would be a leak, not a bug.
+    rm_files = {f: t for f, t in src_text.items() if os.sep + "rm" + os.sep in f}
+    check("the RM view exists as its own screens", len(rm_files) >= 4, str(sorted(os.path.basename(f) for f in rm_files)))
+    check("the RM pending list ranks on merchant_priority.json", any("merchantPriority" in t for t in rm_files.values()))
+    check("the RM exposure panel reads the portfolio slice of the shared state, not a screen-local figure",
+          any("state.portfolio" in t or "portfolioView" in t for t in rm_files.values()))
+    check("the push confirmation and the push event are computed by the same helper",
+          any("pushPreview" in t for t in rm_files.values()) and "export function pushPreview" in src_text[os.path.join(ROOT, "src", "state", "store.js")])
+    merchant_screens = {f: t for f, t in src_text.items()
+                        if os.sep + "screens" + os.sep in f and os.sep + "rm" + os.sep not in f and os.sep + "_test" + os.sep not in f}
+    check("no merchant-facing screen reads the RM's caseload score",
+          not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "merchantPriority" in t])
+    check("no merchant-facing screen reads the portfolio exposure panel's figures",
+          not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "contacted_this_week" in t or "concurrent_2plus" in t])
     pipeline_text = {f: open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read()
                      for f in os.listdir(os.path.join(ROOT, "pipeline")) if f.endswith(".py")}
     check("no cost-sharing vocabulary anywhere in pipeline/",

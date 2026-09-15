@@ -55,6 +55,31 @@ export function buildSeed(data) {
       },
     },
     status_display: data.constants?.status_display ?? {},
+    // ----------------------------------------------------------- portfolio exposure (RM §3.2)
+    // The one slice that belongs to nobody's campaign. Seeded from allocation_summary.json's
+    // portfolio block — every figure in sample units, the ceiling held as a share of the
+    // consented base and provisional until it has a basis — and moved by every live delivery.
+    portfolio: (() => {
+      const pf = data.allocationSummary?.portfolio ?? {};
+      return {
+        week: pf.week ?? null,
+        contacted_this_week: pf.contacted_this_week ?? 0,
+        seeded_contacted_this_week: pf.contacted_this_week ?? 0,
+        weekly_ceiling: num(pf.weekly_ceiling),
+        ceiling_share_of_consented_base: pf.weekly_ceiling_share_of_consented_base ?? null,
+        ceiling_provisional: Boolean(pf.ceiling_provisional),
+        ceiling_basis: pf.ceiling_basis ?? null,
+        consented_base: num(pf.consented_base),
+        share_of_consented_base_reached_pct: pf.share_of_consented_base_reached_pct ?? null,
+        concurrent_2plus: num(pf.cardholders_with_2plus_concurrent_offers),
+        concurrent_basis: "allocation_summary.json portfolio.cardholders_with_2plus_concurrent_offers — the pipeline's count for this week. It is the concentration a per-campaign gate cannot see.",
+        campaigns_live: pf.campaigns_live ?? null,
+        note: pf.note ?? null,
+        throttle: null,
+        halted: null,
+        log: [],
+      };
+    })(),
     campaigns: {},
     cardholders: {},
     offers: {},
@@ -129,6 +154,18 @@ export function buildSeed(data) {
         ? lastSame.configuration.per_customer_limit
         : "once_per_customer",
       push_requested: false,
+      // The offer copy the RM edits (RM §5.7). Headline and terms come from the merchant's own
+      // last campaign of this type, exactly as the money and timing defaults above do. The push
+      // body is a template built from those fields rather than a second piece of copy nobody
+      // wrote: it is the artefact that gets written carelessly, so it opens as an obvious draft.
+      offer_headline: lastSame?.configuration?.offer_headline ?? null,
+      offer_terms: lastSame?.configuration?.offer_terms ?? null,
+      push_body: lastSame?.configuration?.offer_headline && gap?.window
+        ? `${lastSame.configuration.offer_headline} at ${nameOf(alloc.merchant_id)}, ${gap.window.toLowerCase()}.`
+        : null,
+      // The pool the recommendation targets. Selecting a pool is choosing one Mobius proposed;
+      // prefilling it is Mobius proposing it, which is the same act with the same audit entry.
+      target_segments: top?.target_pool === "non_customers" ? ["Non-customers"] : null,
     };
     const basisFrom = lastSame ? `prefilled from your last ${top?.label?.toLowerCase() ?? "reward"} campaign (${lastSame.name}, campaign_results.json)` : "no prior campaign of this type; left for the merchant";
     const prefillBasis = {
@@ -141,6 +178,9 @@ export function buildSeed(data) {
       window_start: "the Monday after the demo clock", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
       outlets: `every outlet that clears the ${required(constants, "MIN_SEGMENT_SIZE")} floor on its own (segments.json per_outlet)`,
       push_requested: "push is a request, not a setting — off until the merchant asks",
+      offer_headline: basisFrom, offer_terms: basisFrom,
+      push_body: "a draft built from the headline and the trough window — the push copy is a different artefact from the feed card and is meant to be rewritten",
+      target_segments: "the pool reward_recommendations.json targets for this gap",
     };
     state.campaigns["C-SJ-03"] = campaignShell({
       id: "C-SJ-03", merchant_id: alloc.merchant_id, merchant_name: nameOf(alloc.merchant_id), merchant_category: categoryOf(alloc.merchant_id),
@@ -153,7 +193,8 @@ export function buildSeed(data) {
       reach: num(alloc.final_allocation?.count), reach_cap: num(alloc.final_allocation?.count),
       allocation: { push_eligible: alloc.push.eligible, push_suppressed_expected: alloc.push.suppressed_count, cap_per_week: alloc.push.cap_per_week,
                     cap_provisional: alloc.push.cap_provisional, week: alloc.push.week, note: alloc.push.note,
-                    removed: alloc.removed, frequency_cap: alloc.frequency_cap },
+                    removed: alloc.removed, frequency_cap: alloc.frequency_cap, retention_pools: alloc.retention_pools,
+                    ranking_rule: alloc.ranking_rule },
       counters: counters(),
       cohort_tag: "soujourner_acquisition_cohort",
       prefill: { fields: Object.fromEntries(Object.entries(prefillFields).filter(([, v]) => v != null)), basis: prefillBasis },

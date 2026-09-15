@@ -53,6 +53,15 @@ export const CONSTANTS = {
     basis: "Controlled pilot length. The 26-day figure elsewhere in the source material describes the hackathon-period survey window, not the pilot itself, and is not used here.",
   },
 
+  // The pending queue's failure mode is a row that quietly grows old, so the RM view ages a row
+  // once it passes this. The number is not invented for the interface: it is the promise already
+  // made to the merchant when the application was confirmed.
+  RM_CONTACT_PROMISE_DAYS: {
+    value: 7,
+    display: "within the week",
+    basis: "The application confirmation tells the merchant a relationship manager will be in touch within the week (campaign_results.json applied[].rm_message, merchant prompt \u00a76). A pending row past seven days has outlived the promise the merchant was given, which is why the row ages rather than staying quiet.",
+  },
+
   ANNUAL_LLM_COST_CEILING: {
     value: 1000,
     display: "< S$1,000 / year",
@@ -116,4 +125,24 @@ export const TAB3_ACCOUNTS = [
   { id: PROSPECT_MERCHANT_ID, note: "Not acquired by OCBC — reduced card mix" },
   { id: INELIGIBLE_MERCHANT_ID, note: "Fails the eligibility gate" },
   { id: COLD_START_MERCHANT_ID, note: "Thin history — degrades to benchmarks" },
+];
+
+// The campaign the pitch walks up the ladder: applied on merchant Tab 3, configured and approved
+// in the RM view, redeemed in the customer view. One id, imported by every screen that touches
+// it, because three screens each holding their own string is how the demo ends up showing three
+// different campaigns.
+export const DEMO_CAMPAIGN_ID = "C-SJ-03";
+
+// The completed campaign the RM nav opens by default — the measured one, so screen 4 has its full
+// drill-down (control arm, redeemer profile, verdict) rather than a row of dashes.
+export const RM_DETAIL_DEFAULT_CAMPAIGN = "C-SJ-02";
+
+// The RM view's four screens (RM prompt §3-§6). Screens 2-4 are per-campaign and open from a row;
+// the nav points each at the campaign the pitch uses, so all four are reachable from the keyboard
+// without a mouse and any of them can be opened cold in Q&A.
+export const RM_SCREENS = [
+  { key: "rm-portfolio", num: 1, label: "Portfolio", path: "/rm" },
+  { key: "rm-pending", num: 2, label: "Pending brief", path: `/rm/pending/${DEMO_CAMPAIGN_ID}` },
+  { key: "rm-configure", num: 3, label: "Configure", path: `/rm/configure/${DEMO_CAMPAIGN_ID}` },
+  { key: "rm-campaign", num: 4, label: "Campaign detail", path: `/rm/campaign/${RM_DETAIL_DEFAULT_CAMPAIGN}` },
 ];
