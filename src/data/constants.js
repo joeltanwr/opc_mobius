@@ -149,3 +149,20 @@ export const RM_SCREENS = [
   { key: "rm-configure", num: 3, label: "Configure", path: `/rm/configure/${DEMO_CAMPAIGN_ID}` },
   { key: "rm-campaign", num: 4, label: "Campaign detail", path: `/rm/campaign/${RM_DETAIL_DEFAULT_CAMPAIGN}` },
 ];
+
+// -----------------------------------------------------------------------------
+// The three interfaces of the one platform, named once so the persona switcher,
+// the route reader and the chrome all agree on what they are called.
+//
+// `entry` is where a persona opens cold — the first screen of its own flow, not
+// the landing card. `prefix` is how a pathname is read back to the persona that
+// owns it; the merchant view has none because it owns everything left over.
+// -----------------------------------------------------------------------------
+export const PERSONAS = [
+  { key: "merchant", label: "Merchant view", note: "SME dashboard", entry: SCREENS[0].path, prefix: null },
+  { key: "rm", label: "RM view", note: "OCBC internal", entry: "/rm", prefix: "/rm" },
+  { key: "cardholder", label: "Cardholder view", note: "Consumer app", entry: "/app", prefix: "/app" },
+];
+
+// Merchant first: the pitch opens there, and so does a cold load.
+export const DEFAULT_PERSONA = PERSONAS[0].key;

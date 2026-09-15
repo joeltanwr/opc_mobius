@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2, ShieldAlert } from "lucide-react";
 import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS } from "../data/constants";
 import PrivacyAffordance from "./PrivacyAffordance";
+import PersonaSwitcher from "./PersonaSwitcher";
 import { MockDataBadge, ScaleDisclosure } from "./ui";
 
 // One chrome for both sides of the platform. The merchant variant is the default; the RM variant
@@ -18,14 +19,12 @@ const VARIANTS = {
     screens: SCREENS,
     optional: OPTIONAL_SCREENS,
     activeClass: "bg-[#FDECEC] text-brand",
-    cross: { to: "/rm", label: "RM view →" },
     audience: "merchant",
   },
   rm: {
     screens: RM_SCREENS,
     optional: [],
     activeClass: "bg-navy text-white",
-    cross: { to: "/target-customer", label: "Merchant view →" },
     audience: "rm",
   },
 };
@@ -112,22 +111,12 @@ export default function AppShell({ variant = "merchant" }) {
             ))}
           </nav>
 
+          {/* The one way across to the other two views — the same control in the same corner on
+              all three sides, replacing the per-view cross-links that used to differ depending on
+              where you were standing. It keeps its place at phone width: it is the demo's only
+              route between the interfaces, so it is the last thing in this header that may go. */}
           <div className="ml-auto flex items-center gap-3 shrink-0">
-            {variant === "merchant" && (
-              <NavLink
-                to="/app"
-                className={({ isActive }) =>
-                  `text-[13px] font-medium whitespace-nowrap ${isActive ? "text-brand" : "text-ink-light hover:text-ink-secondary"}`
-                }
-              >
-                Cardholder →
-              </NavLink>
-            )}
-            {/* The cross-link between the two sides is a demo convenience; it is the first thing to
-                go at phone width, where it would otherwise push the header past the viewport. */}
-            <NavLink to={v.cross.to} className="hidden sm:inline text-[13px] font-medium whitespace-nowrap text-ink-light hover:text-ink-secondary">
-              {v.cross.label}
-            </NavLink>
+            <PersonaSwitcher />
           </div>
         </div>
       </header>
