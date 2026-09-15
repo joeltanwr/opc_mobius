@@ -49,7 +49,7 @@ export default function Landing() {
                 <ArrowRight size={16} />
               </Link>
               <Link
-                to="/consumer"
+                to="/app"
                 className="inline-flex items-center gap-2 text-[13px] font-medium text-ink-secondary hover:text-ink"
               >
                 <Eye size={14} />

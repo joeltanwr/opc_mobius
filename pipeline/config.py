@@ -27,6 +27,12 @@ class C:
 
 CONSTANTS = {
     "DEMO_CLOCK": C("2026-09-11T15:12:00+08:00", "Brief §2 — one exported clock for all views and all as-of computation"),
+    # The hero merchant's own application, which the RM queue must not depend on someone having
+    # clicked earlier in the demo. Two days before the demo clock, matching the other applications
+    # the generator plants, so the pending row ages like a real one and is still inside the week
+    # the merchant was promised.
+    "DEMO_APPLICATION_DATE": C("2026-09-09T11:20:00+08:00",
+                               "The hero merchant's application to the programme. Stamped before the demo clock so the RM's pending queue is populated on a cold load rather than depending on the merchant screen having been walked first; the same two-day wait the generator plants for C-APP-02."),
     "PERIOD_START": C("2025-10-01", "Brief §2 — data period start"),
     "PERIOD_END": C("2026-09-30", "Brief §2 — data period end"),
     "CARDHOLDER_BASE": C(800_000, "Brief §2 — pitch-level OCBC cardholder base; the dataset is a 12,000-cardholder sample"),
@@ -227,6 +233,14 @@ REWARD_REASONS = {
 
 STATUS_DISPLAY = {"applied": "Applied", "draft": "In setup", "pending": "Submitted", "active": "Live",
                   "capped": "Fully redeemed", "stopped": "Stopped", "completed": "Completed"}
+
+# `capped` is one ladder state reached two ways, and the display map above was settled before the
+# two were distinguished. A campaign closed because every reward was claimed is fully redeemed; a
+# campaign closed because the whole allocation now holds a card may have no redemptions at all,
+# and calling that "Fully redeemed" is simply false. One state, one refinement keyed by the reason
+# the reducer records — not a second ladder.
+CAPPED_DISPLAY = {"redemption limit reached": "Fully redeemed",
+                  "reach cap reached": "Reach cap reached"}
 
 
 def round_reach(n):

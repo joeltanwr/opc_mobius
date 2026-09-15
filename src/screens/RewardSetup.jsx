@@ -413,10 +413,13 @@ function ViewAs({ value, onChange }) {
   );
 }
 
+// The ladder is four pills and three arrows, which is wider than a phone. It wraps rather than
+// pushing the page into a horizontal scroll: the customer view is a phone interface and this
+// screen gets shown beside it.
 function Ladder({ status, display }) {
   const idx = LADDER.indexOf(status);
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1.5 max-w-full">
       {LADDER.map((s, i) => (
         <React.Fragment key={s}>
           <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${i === idx ? "bg-brand text-white" : i < idx ? "bg-ink text-white/90" : "bg-canvas text-ink-light border border-border"}`}>{display(s)}</span>

@@ -180,6 +180,17 @@ def main(rerun=True):
     tiers = {p["tier"] for p in priority.values()}
     check("one merchant per priority tier (high/medium/low/insufficient_data)", {"high", "medium", "low", "insufficient_data"} <= tiers, str(tiers))
     check("Soujourner priority tier is high", priority["M0001"]["tier"] == "high", str(priority["M0001"]))
+    # The RM pending row shows tier, score and all three components so the RM can answer "why is
+    # this one first" without opening anything (sme-relationship-value-score, output contract).
+    scored = [p for p in priority.values() if p["tier"] != "insufficient_data"]
+    check("every scored merchant ships all three score components for the pending row",
+          all({"size_points", "upside_points", "quality_points"} <= set(p.get("components", {})) and p.get("score") is not None for p in scored))
+    unranked = [p for p in priority.values() if p["tier"] == "insufficient_data"]
+    check("the unranked merchant carries no score and its own RM-facing text, so it renders unranked rather than zero",
+          unranked and all(p.get("score") is None and p.get("rm_text") for p in unranked), str(unranked[:1]))
+    applied_ids = {a["merchant_id"] for a in load_pub("campaign_results.json")["applied"]}
+    check("every merchant with an application has a priority record, so no pending row is unrankable",
+          applied_ids <= set(priority), str(sorted(applied_ids - set(priority))))
 
     dormant_tier = cardholders[cardholders["engagement_tier"] == "dormant"]["card_id"]
     flagged = set(tags[tags["dormant"]]["card_id"])
@@ -348,11 +359,16 @@ def main(rerun=True):
     check("constants.json ships one scale disclosure naming both the sample and the base",
           f"{cfg.SAMPLE_CARDHOLDERS:,}" in const["scale_disclosure"] and f"{cfg.CARDHOLDER_BASE:,}" in const["scale_disclosure"],
           const.get("scale_disclosure"))
-    shell = open(os.path.join(ROOT, "src", "components", "AppShell.jsx"), encoding="utf-8").read()
-    check("the shared chrome renders the shipped scale disclosure", "scale_disclosure" in shell)
+    # Every chrome in the build renders the disclosure, and all of them render the same component,
+    # so the sentence has one source and one rendering however many interfaces there are.
+    chromes = [os.path.join(ROOT, "src", "components", "AppShell.jsx"),
+               os.path.join(ROOT, "src", "screens", "app", "AppFrame.jsx")]
+    check("every chrome renders the shipped scale disclosure",
+          all("<ScaleDisclosure" in open(f, encoding="utf-8").read() for f in chromes),
+          str([os.path.relpath(f, ROOT) for f in chromes if "<ScaleDisclosure" not in open(f, encoding="utf-8").read()]))
     src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
                 and os.path.basename(f) != "DataProvider.jsx"]
-    check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+    check("the scale disclosure is read in one component, not restated per screen", len(src_hits) == 1, str(src_hits))
 
     # -------------------------------------------------------------- no retyped privacy rules
     # The floor (250) and the reach rounding (50) ship once, in constants.json, and every screen
@@ -489,6 +505,46 @@ def main(rerun=True):
     split_hits = {os.path.relpath(f, ROOT): sorted(set(m.group(0) for m in cost_share.finditer(t)))
                   for f, t in src_text.items() if cost_share.search(t)}
     check("no cost-sharing vocabulary anywhere in src/", not split_hits, str(split_hits))
+
+    # ---------------------------------------------------------- the RM view against its own sources
+    # The RM view is the control point (RM §3): the pending list ranks on merchant_priority.json
+    # and the exposure panel is the portfolio block of allocation_summary.json. Both are RM-only —
+    # a merchant screen reading either would be a leak, not a bug.
+    rm_files = {f: t for f, t in src_text.items() if os.sep + "rm" + os.sep in f}
+    check("the RM view exists as its own screens", len(rm_files) >= 4, str(sorted(os.path.basename(f) for f in rm_files)))
+    check("the RM pending list ranks on merchant_priority.json", any("merchantPriority" in t for t in rm_files.values()))
+    check("the RM exposure panel reads the portfolio slice of the shared state, not a screen-local figure",
+          any("state.portfolio" in t or "portfolioView" in t for t in rm_files.values()))
+    check("the push confirmation and the push event are computed by the same helper",
+          any("pushPreview" in t for t in rm_files.values()) and "export function pushPreview" in src_text[os.path.join(ROOT, "src", "state", "store.js")])
+    merchant_screens = {f: t for f, t in src_text.items()
+                        if os.sep + "screens" + os.sep in f and os.sep + "rm" + os.sep not in f and os.sep + "_test" + os.sep not in f}
+    check("no merchant-facing screen reads the RM's caseload score",
+          not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "merchantPriority" in t])
+    check("no merchant-facing screen reads the portfolio exposure panel's figures",
+          not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "contacted_this_week" in t or "concurrent_2plus" in t])
+
+    # ---------------------------------------------------- the cardholder's app against its own rules
+    app_files = {f: t for f, t in src_text.items() if os.sep + "app" + os.sep in f}
+    check("the cardholder app exists as its own screens", len(app_files) >= 5,
+          str(sorted(os.path.basename(f) for f in app_files)))
+    card_component = src_text[os.path.join(ROOT, "src", "components", "RewardCard.jsx")]
+    check("the reward card is one component, rendered by both the cardholder's list and the RM's preview",
+          any("RewardFeedCard" in t for t in app_files.values())
+          and "RewardFeedCard" in src_text[os.path.join(ROOT, "src", "screens", "rm", "RewardConfiguration.jsx")]
+          and "export function RewardFeedCard" in card_component)
+    check("no screen defines a second reward card of its own",
+          len([f for f, t in src_text.items() if "function RewardFeedCard" in t]) == 1)
+    check("the cardholder app reads the demo clock rather than the wall clock",
+          "Date.now()" not in "".join(app_files.values()) and "new Date()" not in "".join(app_files.values()))
+    # The customer view is the one screen a member of the public sees; it must not carry the
+    # bank's internal figures. A cardholder has no business seeing a caseload score or a portfolio
+    # ceiling, and a merchant's own aggregate breakdowns are not hers either.
+    leaked = {os.path.relpath(f, ROOT): [w for w in ("merchantPriority", "contacted_this_week", "weekly_ceiling",
+                                                     "allocationSummary", "merchant_priority") if w in t]
+              for f, t in app_files.items()}
+    check("the cardholder app shows no internal bank figure",
+          not {k: v for k, v in leaked.items() if v}, str({k: v for k, v in leaked.items() if v}))
     pipeline_text = {f: open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read()
                      for f in os.listdir(os.path.join(ROOT, "pipeline")) if f.endswith(".py")}
     check("no cost-sharing vocabulary anywhere in pipeline/",
@@ -516,6 +572,16 @@ def main(rerun=True):
                 FAILURES.append(f"rationale {k}.{kk} exceeds 60 words ({len(s.split())})")
     check("every shipped constant carries a basis string", all(c.get("basis") for c in const["constants"].values()))
     check("status display map ships once", const["status_display"] == cfg.STATUS_DISPLAY)
+    # `capped` is one ladder state reached two ways. Every reason the reducer can record must have
+    # its own label, or a campaign closed by its reach cap gets announced as fully redeemed.
+    store_js = open(os.path.join(ROOT, "src", "state", "store.js"), encoding="utf-8").read()
+    cap_reasons = set(re.findall(r'cap\(next, campaign, event, "([^"]+)"\)', store_js))
+    check("every cap reason the reducer can record has its own display label",
+          cap_reasons and cap_reasons <= set(const.get("capped_display", {})),
+          f"reducer records {sorted(cap_reasons)}; manifest labels {sorted(const.get('capped_display', {}))}")
+    check("the two caps do not share a label — a reach cap is not a full redemption",
+          len(set(const.get("capped_display", {}).values())) == len(const.get("capped_display", {})),
+          str(const.get("capped_display")))
 
     # ------------------------------------------------------------------ reproducibility
     if rerun:

@@ -2,18 +2,25 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { CheckCircle2, XCircle, Lock, ShieldCheck } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
+import { useMobiusState } from "../state/StateProvider";
 import { HERO_MERCHANT_ID, screenNum } from "../data/constants";
 import { sgd, num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
+import { Radio } from "lucide-react";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function CampaignResults() {
   const { data } = useDemoData();
+  const m = useMobiusState();
   const profile = merchantById(data.merchantProfiles, HERO_MERCHANT_ID);
   const measured = data.campaignResults.completed.filter((c) => c.measured && c.merchant_id === HERO_MERCHANT_ID);
   const winner = measured.find((c) => c.cost.net_sign === "positive");
   const loser = measured.find((c) => c.cost.net_sign === "negative");
+  // The campaign running right now, from the shared state rather than the shipped JSON. This is
+  // the merchant's half of the propagation contract: when a cardholder redeems in the customer
+  // app, these counters move here without a reload, in whatever tab this page is open in.
+  const live = m ? Object.values(m.state.campaigns).find((c) => c.merchant_id === HERO_MERCHANT_ID && c.source === "live" && c.counters.feed_delivered > 0) : null;
 
   return (
     <div className="max-w-container mx-auto px-6 py-10">
@@ -23,11 +30,52 @@ export default function CampaignResults() {
         subtitle={`${profile.name}'s completed campaigns, each measured against a held-out group from the same segment, not against its own pre-campaign baseline.`}
       />
 
+      {live && <LiveCampaign campaign={live} display={m.display} reachOf={m.reachOf} />}
+
       {winner && <CampaignDetail campaign={winner} rationale={data.rationales[winner.campaign_id]} merchantName={profile.name} />}
       {loser && <CampaignDetail campaign={loser} rationale={data.rationales[loser.campaign_id]} merchantName={profile.name} />}
 
       <BasisNote>{data.campaignResults.basis}</BasisNote>
     </div>
+  );
+}
+
+// The live campaign, as the merchant sees it while it runs. Deliberately four counters and a
+// sentence: there is no incremental figure here because there cannot be one until the window
+// closes and the control arm has been observed, and a redemption count presented as a result is
+// the exact confusion this whole product exists to avoid.
+function LiveCampaign({ campaign, display, reachOf }) {
+  const c = campaign;
+  const cfg = c.configuration ?? {};
+  const maxValue = cfg.max_reward_value_sgd ?? cfg.cap_per_txn_sgd ?? null;
+  const redemptions = c.counters.redemptions + c.post_freeze.redemptions;
+  return (
+    <Card className="p-6 mb-6 border-brand/30">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div>
+          <Badge tone={c.status === "active" ? "success" : "neutral"}>
+            <Radio size={11} /> {display(c.status, c.capped?.why ?? null)}
+          </Badge>
+          <h3 className="text-[16px] font-bold text-ink mt-2">{c.name}</h3>
+          <p className="text-[12.5px] text-ink-secondary">{cfg.offer_headline ?? "Configured with your relationship manager"}</p>
+        </div>
+        <div className="text-right text-[11px] text-ink-light">
+          {c.window ? `${c.window.start} to ${c.window.end}` : ""}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MiniFigure label="Cardholders reached" value={num(reachOf(c) ?? c.counters.feed_delivered)} />
+        <MiniFigure label="Pushes sent" value={num(c.counters.pushes_sent)} />
+        <MiniFigure label="Redemptions so far" value={num(redemptions)} />
+        <MiniFigure label="Reward cost to date, at most" value={maxValue == null ? "—" : sgd(redemptions * maxValue)} />
+      </div>
+      <BasisNote>
+        Live from the shared state — these move as redemptions happen, with no reload. Cost to date is the ceiling on what you have
+        spent so far (redemptions × the maximum value of one reward) and it is your whole cost. Incremental sales and net contribution
+        appear when the window closes: they need the held-out control group, and a redemption count on its own measures popularity,
+        not trade you would not otherwise have had.
+      </BasisNote>
+    </Card>
   );
 }
 

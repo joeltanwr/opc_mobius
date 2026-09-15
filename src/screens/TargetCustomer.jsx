@@ -52,7 +52,7 @@ export default function TargetCustomer() {
   const [merchantId, setMerchantId] = useState(TAB3_ACCOUNTS[0].id);
   if (!m) return null;
 
-  const { state, dispatch, display, reachOf } = m;
+  const { state, dispatch, display, reachOf, rewind } = m;
   const profile = merchantById(data.merchantProfiles, merchantId);
   const category = categoryFor(data.taxonomy, profile.category);
   const recs = data.rewardRecommendations[merchantId] ?? null;
@@ -120,7 +120,7 @@ export default function TargetCustomer() {
             rounding={rounding}
             data={data}
           />
-          <Apply campaign={campaign} profile={profile} state={state} dispatch={dispatch} display={display} />
+          <Apply campaign={campaign} profile={profile} state={state} dispatch={dispatch} display={display} rewind={rewind} />
         </>
       )}
 
@@ -888,7 +888,7 @@ function IncrementalityBlock({ label, value, detail, tone }) {
 
 // --------------------------------------------------------------------------- §6 the application
 
-function Apply({ campaign, profile, state, dispatch, display }) {
+function Apply({ campaign, profile, state, dispatch, display, rewind }) {
   if (!campaign) {
     return (
       <Card className="p-6 mt-6 border-dashed">
@@ -947,6 +947,14 @@ function Apply({ campaign, profile, state, dispatch, display }) {
               <span className="text-[12px] text-white/55">
                 {display(campaign.status)} · applied {String(campaign.applied_at).slice(0, 10)}
               </span>
+              {/* The application is seeded so the RM's queue is populated on a cold load. This puts
+                  the handoff back in front of the presenter so it can still be performed live. */}
+              <button
+                onClick={rewind}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-white/40 px-3 py-1.5 text-[12px] font-semibold text-white/80 hover:text-white"
+              >
+                Demo · rewind to before the application
+              </button>
             </div>
           </div>
         </div>

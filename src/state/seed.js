@@ -55,6 +55,35 @@ export function buildSeed(data) {
       },
     },
     status_display: data.constants?.status_display ?? {},
+    // One ladder state, two ways to reach it. `capped` reads "Fully redeemed" when the redemption
+    // limit closed it and "Reach cap reached" when the allocation was exhausted — a campaign with
+    // no redemptions must not be labelled fully redeemed. Applied at render time, like the map above.
+    capped_display: data.constants?.capped_display ?? {},
+    // ----------------------------------------------------------- portfolio exposure (RM §3.2)
+    // The one slice that belongs to nobody's campaign. Seeded from allocation_summary.json's
+    // portfolio block — every figure in sample units, the ceiling held as a share of the
+    // consented base and provisional until it has a basis — and moved by every live delivery.
+    portfolio: (() => {
+      const pf = data.allocationSummary?.portfolio ?? {};
+      return {
+        week: pf.week ?? null,
+        contacted_this_week: pf.contacted_this_week ?? 0,
+        seeded_contacted_this_week: pf.contacted_this_week ?? 0,
+        weekly_ceiling: num(pf.weekly_ceiling),
+        ceiling_share_of_consented_base: pf.weekly_ceiling_share_of_consented_base ?? null,
+        ceiling_provisional: Boolean(pf.ceiling_provisional),
+        ceiling_basis: pf.ceiling_basis ?? null,
+        consented_base: num(pf.consented_base),
+        share_of_consented_base_reached_pct: pf.share_of_consented_base_reached_pct ?? null,
+        concurrent_2plus: num(pf.cardholders_with_2plus_concurrent_offers),
+        concurrent_basis: "allocation_summary.json portfolio.cardholders_with_2plus_concurrent_offers — the pipeline's count for this week. It is the concentration a per-campaign gate cannot see.",
+        campaigns_live: pf.campaigns_live ?? null,
+        note: pf.note ?? null,
+        throttle: null,
+        halted: null,
+        log: [],
+      };
+    })(),
     campaigns: {},
     cardholders: {},
     offers: {},
@@ -110,7 +139,10 @@ export function buildSeed(data) {
     const lastSame = (results.completed ?? []).filter((c) => c.merchant_id === alloc.merchant_id && c.measured && c.configuration?.reward_type === top?.type)
       .sort((a, b) => (b.window ?? "").localeCompare(a.window ?? ""))[0] ?? null;
     const clock = new Date(state.clock ?? Date.now());
-    const nextMonday = new Date(Date.UTC(clock.getUTCFullYear(), clock.getUTCMonth(), clock.getUTCDate() + ((8 - clock.getUTCDay()) % 7 || 7)));
+    // The campaign opens the day it is approved, not the following Monday. A campaign approved on
+    // stage whose window has not started yet cannot be redeemed against, and the demo's whole
+    // point is that the cardholder redeems while everyone is watching.
+    const opensOn = new Date(Date.UTC(clock.getUTCFullYear(), clock.getUTCMonth(), clock.getUTCDate()));
     const lastLen = lastSame?.window ? (Date.parse(lastSame.window.slice(-10)) - Date.parse(lastSame.window.slice(0, 10))) : 27 * 86_400_000;
     const iso = (d) => d.toISOString().slice(0, 10);
     const prefillFields = {
@@ -119,7 +151,7 @@ export function buildSeed(data) {
       discount_pct: lastSame?.configuration?.discount_pct ?? null,
       days_of_week: gap?.weekdays ? gap.weekdays.map((d) => weekdayIndex[d]) : null,
       hours: gap?.hours ?? null,
-      window_start: iso(nextMonday), window_end: iso(new Date(nextMonday.getTime() + lastLen)),
+      window_start: iso(opensOn), window_end: iso(new Date(opensOn.getTime() + lastLen)),
       outlets: seg ? seg.per_outlet.filter((o) => o.suppressed === false).map((o) => o.outlet_id) : null,
       redemption_limit: lastSame?.configuration?.redemption_limit ?? null,
       // §7.5 offers two values and the reducer enforces both. The last campaign of this type used
@@ -129,6 +161,18 @@ export function buildSeed(data) {
         ? lastSame.configuration.per_customer_limit
         : "once_per_customer",
       push_requested: false,
+      // The offer copy the RM edits (RM §5.7). Headline and terms come from the merchant's own
+      // last campaign of this type, exactly as the money and timing defaults above do. The push
+      // body is a template built from those fields rather than a second piece of copy nobody
+      // wrote: it is the artefact that gets written carelessly, so it opens as an obvious draft.
+      offer_headline: lastSame?.configuration?.offer_headline ?? null,
+      offer_terms: lastSame?.configuration?.offer_terms ?? null,
+      push_body: lastSame?.configuration?.offer_headline && gap?.window
+        ? `${lastSame.configuration.offer_headline} at ${nameOf(alloc.merchant_id)}. Redeem ${gap.window}.`
+        : null,
+      // The pool the recommendation targets. Selecting a pool is choosing one Mobius proposed;
+      // prefilling it is Mobius proposing it, which is the same act with the same audit entry.
+      target_segments: top?.target_pool === "non_customers" ? ["Non-customers"] : null,
     };
     const basisFrom = lastSame ? `prefilled from your last ${top?.label?.toLowerCase() ?? "reward"} campaign (${lastSame.name}, campaign_results.json)` : "no prior campaign of this type; left for the merchant";
     const prefillBasis = {
@@ -138,9 +182,12 @@ export function buildSeed(data) {
         ? basisFrom
         : "one reward per cardholder for this campaign — the default; the merchant's last campaign used a till-level rule the platform cannot enforce",
       days_of_week: "prefilled from demand_gaps.json — the trough window", hours: "prefilled from demand_gaps.json — the trough window",
-      window_start: "the Monday after the demo clock", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
+      window_start: "the day the campaign is approved — a window that has not opened yet cannot be redeemed against", window_end: `same length as ${lastSame?.name ?? "a four-week campaign"}`,
       outlets: `every outlet that clears the ${required(constants, "MIN_SEGMENT_SIZE")} floor on its own (segments.json per_outlet)`,
       push_requested: "push is a request, not a setting — off until the merchant asks",
+      offer_headline: basisFrom, offer_terms: basisFrom,
+      push_body: "a draft built from the headline and the trough window — the push copy is a different artefact from the feed card and is meant to be rewritten",
+      target_segments: "the pool reward_recommendations.json targets for this gap",
     };
     state.campaigns["C-SJ-03"] = campaignShell({
       id: "C-SJ-03", merchant_id: alloc.merchant_id, merchant_name: nameOf(alloc.merchant_id), merchant_category: categoryOf(alloc.merchant_id),
@@ -153,7 +200,8 @@ export function buildSeed(data) {
       reach: num(alloc.final_allocation?.count), reach_cap: num(alloc.final_allocation?.count),
       allocation: { push_eligible: alloc.push.eligible, push_suppressed_expected: alloc.push.suppressed_count, cap_per_week: alloc.push.cap_per_week,
                     cap_provisional: alloc.push.cap_provisional, week: alloc.push.week, note: alloc.push.note,
-                    removed: alloc.removed, frequency_cap: alloc.frequency_cap },
+                    removed: alloc.removed, frequency_cap: alloc.frequency_cap, retention_pools: alloc.retention_pools,
+                    ranking_rule: alloc.ranking_rule },
       counters: counters(),
       cohort_tag: "soujourner_acquisition_cohort",
       prefill: { fields: Object.fromEntries(Object.entries(prefillFields).filter(([, v]) => v != null)), basis: prefillBasis },
@@ -171,12 +219,16 @@ export function buildSeed(data) {
   for (const p of data.showcasePersonas ?? []) {
     state.cardholders[p.id] = {
       id: p.id, name: p.name, role: p.role, is_illustrative: true,
-      consent: { offers: Boolean(p.consent?.offers), push: Boolean(p.consent?.push), changed_at: null },
+      // Location relevance defaults on, and the preferences screen says why: the catchment filter
+      // is what keeps an offer to somewhere the cardholder can actually walk to, so turning it off
+      // makes the offers worse rather than fewer. Stated as a choice, not buried as a default.
+      consent: { offers: Boolean(p.consent?.offers), push: Boolean(p.consent?.push), location: true, changed_at: null },
       pushes_this_week: p.push_state?.pushes_this_week ?? 0,
       offers_held_30d: p.push_state?.offers_held_30d ?? 0,
       push_state_basis: p.push_state?.basis ?? null,
       profile: { category_weights: { ...(p.profile?.category_weights ?? {}) }, daypart_availability: p.profile?.daypart_availability ?? {},
-                 home_district: p.profile?.home_district ?? p.home_district, last_redemption: null },
+                 home_district: p.profile?.home_district ?? p.home_district, work_district: p.profile?.work_district ?? null,
+                 price_band_pref: p.profile?.price_band_pref ?? null, interests: {}, last_redemption: null },
       feed: [], notifications: [], segments_left_at: null, cohort_membership: p.cohort_membership ?? [],
     };
     // Their real offer history, as the customer view's reward-card contract.

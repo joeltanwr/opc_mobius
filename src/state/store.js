@@ -20,7 +20,21 @@ export const FIELD_OWNERS = {
   days_of_week: ["merchant", "ocbc"], hours: ["merchant", "ocbc"], window_start: ["merchant", "ocbc"], window_end: ["merchant", "ocbc"],
   outlets: ["merchant", "ocbc"], redemption_limit: ["merchant"], per_customer_limit: ["merchant"],
   push_requested: ["merchant"], push_granted: ["ocbc"],
+  // Added for the RM configuration page (RM §5). Per-reward-type detail, the pool selection, the
+  // reach cap, how often the offer resurfaces, and the push copy — which is written separately
+  // from the feed card because it is a different artefact.
+  min_spend_sgd: ["merchant", "ocbc"], bundle_quantity: ["merchant", "ocbc"], type_detail: ["merchant", "ocbc"],
+  target_segments: ["merchant", "ocbc"], reach_cap: ["ocbc"], promotion_frequency: ["ocbc"], push_body: ["merchant", "ocbc"],
 };
+
+// The pools a campaign may target. Selecting one is choosing a pool Mobius proposed; writing
+// anything else would be authoring a segment, which neither party can do on any screen. The
+// reducer checks the value against the pools the pipeline shipped with this campaign rather than
+// trusting the form to only offer good ones — a rule, not a label.
+export function allowedPools(campaign) {
+  const retention = Object.keys(campaign?.allocation?.retention_pools ?? {}).filter((k) => !k.startsWith("_"));
+  return [...retention, "Non-customers"];
+}
 export const REQUIRED_TO_SUBMIT = ["reward_type", "max_reward_value_sgd", "days_of_week", "hours", "window_start", "window_end", "outlets", "redemption_limit"];
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -117,6 +131,130 @@ function cap(next, campaign, event, why) {
   log(next, { ...event, type: "CAPPED" }, { campaign_id: campaign.id, why });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Portfolio exposure and its two controls — RM prompt §3.2.
+//
+// This is the layer no single campaign's approval can see: an approver looking at one campaign
+// cannot see the other campaigns contacting the same cardholders this week. The counters live on
+// the state, not on a campaign, and every delivery anywhere in the portfolio moves them.
+//
+// Two controls, and they are deliberately not the same kind of thing:
+//
+//   the weekly ceiling   a stated policy line, PROVISIONAL and not yet calibrated. It measures
+//                        and it warns; it does not block. An uncalibrated round number that
+//                        silently refuses a send would be a policy nobody agreed to — so a send
+//                        that crosses it is recorded as crossing it (`over_ceiling` on the push,
+//                        and in the ledger) and the interface makes the RM acknowledge the breach
+//                        before it goes. Visible and deliberate, never silent.
+//   the throttle         the RM's own control, and the one that binds. It only ever tightens: it
+//                        cannot be set above the ceiling, for the same reason a segment can only
+//                        be narrowed. A send that does not fit inside it is refused in full, with
+//                        the headroom named.
+//
+// A send is refused in full rather than trimmed to fit because the app holds aggregate figures
+// only. The allocator ranks by propensity in the pipeline; this layer cannot honestly choose
+// which cardholders to drop, and an RM asked "who got left out" must be able to answer.
+//
+// The kill switch halts every send in the portfolio until it is released — not one campaign's.
+
+export function effectiveCap(portfolio) {
+  // What actually binds a send. null = nothing binds; the ceiling warns (see above).
+  return portfolio?.throttle?.limit ?? null;
+}
+
+export function portfolioView(portfolio) {
+  const contacted = portfolio?.contacted_this_week ?? 0;
+  const ceiling = portfolio?.weekly_ceiling ?? null;
+  const cap = effectiveCap(portfolio);
+  return {
+    contacted,
+    ceiling,
+    ceiling_headroom: ceiling == null ? null : ceiling - contacted,
+    ceiling_used_pct: ceiling ? Math.round((contacted / ceiling) * 1000) / 10 : null,
+    throttle: portfolio?.throttle ?? null,
+    throttle_headroom: cap == null ? null : Math.max(0, cap - contacted),
+    halted: portfolio?.halted ?? null,
+  };
+}
+
+// Does a send of `delivered` feed cards clear the portfolio controls? Pure, so the confirmation
+// dialog can ask the same question the reducer will ask.
+export function portfolioGate(portfolio, delivered) {
+  const v = portfolioView(portfolio);
+  if (v.halted) {
+    return { ok: false, reason: `sending is halted across the portfolio (kill switch engaged by ${v.halted.by} at ${String(v.halted.at).slice(0, 16).replace("T", " ")}${v.halted.reason ? `: ${v.halted.reason}` : ""})`, ...v, delivered };
+  }
+  if (v.throttle && delivered > v.throttle_headroom) {
+    return { ok: false, reason: `the throttle allows ${v.throttle.limit.toLocaleString()} contacts this week and ${v.contacted.toLocaleString()} have been made, so ${v.throttle_headroom.toLocaleString()} remain — this send is ${delivered.toLocaleString()}. Raise the throttle or wait for the week to roll; the send is refused whole rather than trimmed, because this layer holds aggregate figures and cannot say which cardholders it would drop`, ...v, delivered };
+  }
+  const projected = v.contacted + delivered;
+  return { ok: true, ...v, delivered, projected, over_ceiling: v.ceiling != null && projected > v.ceiling, over_by: v.ceiling == null ? null : Math.max(0, projected - v.ceiling) };
+}
+
+// ---------------------------------------------------------------------------------------------
+// What a push would do, computed from the state before it happens — RM §3.4.
+//
+// The confirmation dialog has to show exactly what will be sent, to how many, and how many will
+// be suppressed. It computes that here, with the same rules the reducer applies a moment later,
+// so the confirmation cannot promise one thing and the event do another. selftest.mjs checks the
+// two agree.
+// ---------------------------------------------------------------------------------------------
+
+// The named cardholders in a campaign's cohort. Six showcase personas out of an allocation of
+// several hundred: they are the ones whose own feeds move on screen.
+export function cohortNamed(state, campaign) {
+  return Object.values(state.cardholders)
+    .filter((ch) => (ch.cohort_membership ?? []).some((m) => m === campaign.cohort_tag))
+    .map((ch) => ch.id);
+}
+
+export function pushPreview(state, campaignId, { cohort = false, recipients = [] } = {}) {
+  const campaign = state.campaigns[campaignId];
+  if (!campaign) return null;
+  const capPerWeek = state.caps.push_per_week;
+  const ids = cohort ? cohortNamed(state, campaign) : recipients;
+  const named = [];
+  let deliverable = 0;
+  for (const id of ids) {
+    const ch = state.cardholders[id];
+    if (!ch) { named.push({ id, outcome: "unknown", why: "not a cardholder in this dataset" }); continue; }
+    if (!ch.consent.offers) { named.push({ id, name: ch.name, outcome: "excluded", why: "this cardholder has offers turned off" }); continue; }
+    if (state.offers[offerId(campaignId, id)]) { named.push({ id, name: ch.name, outcome: "already_holding", why: "already holds this campaign's card" }); continue; }
+    deliverable += 1;
+    if (!ch.consent.push) named.push({ id, name: ch.name, outcome: "suppressed", why: "push turned off — feed card only", pushes_this_week: ch.pushes_this_week });
+    else if (ch.pushes_this_week >= capPerWeek) named.push({ id, name: ch.name, outcome: "suppressed", why: `already had ${ch.pushes_this_week} of ${capPerWeek} pushes this week — feed card only`, pushes_this_week: ch.pushes_this_week });
+    else named.push({ id, name: ch.name, outcome: "push", why: "under the weekly cap", pushes_this_week: ch.pushes_this_week });
+  }
+  const namedSuppressed = named.filter((n) => n.outcome === "suppressed").length;
+
+  // Everyone else in the allocation: counted in aggregate from the pipeline's own figures, never
+  // listed and never named. Mirrors exactly what PUSH_COHORT will do.
+  let rest = 0, restSuppressed = 0;
+  if (cohort) {
+    const cap = campaign.reach_cap ?? campaign.reach;
+    const already = campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered;
+    rest = cap == null ? 0 : Math.max(0, cap - already - deliverable);
+    const expected = Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed - namedSuppressed);
+    restSuppressed = Math.min(rest, expected);
+  }
+  const delivered = deliverable + rest;
+  const suppressed = namedSuppressed + restSuppressed;
+  return {
+    campaign_id: campaignId, cohort, named, rest, rest_suppressed: restSuppressed,
+    delivered, sent: delivered - suppressed, suppressed,
+    excluded: named.filter((n) => n.outcome === "excluded").length,
+    already_holding: named.filter((n) => n.outcome === "already_holding").length,
+    unknown: named.filter((n) => n.outcome === "unknown").length,
+    cap_per_week: capPerWeek, cap_provisional: Boolean(state.caps.provisional.push_per_week),
+    // "how many of those recipients have already had an offer this week" (RM §3.4) — the named
+    // ones we can count exactly; the rest is the pipeline's own expectation for the allocation.
+    named_already_pushed_this_week: named.filter((n) => (n.pushes_this_week ?? 0) > 0).length,
+    allocation_suppressed_expected: campaign.allocation?.push_suppressed_expected ?? null,
+    allocation_week: campaign.allocation?.week ?? null,
+    gate: portfolioGate(state.portfolio, delivered),
+  };
+}
+
 export function reduce(state, event) {
   switch (event.type) {
     // ---------------------------------------------------------------- the ladder
@@ -147,6 +285,10 @@ export function reduce(state, event) {
       if (event.to === "active") {
         campaign.live_since = event.at;
         const cfg = campaign.configuration ?? {};
+        // The reach cap the RM set on the configuration page is the cap the reducer enforces. It
+        // only ever tightens the allocation: a cap above it would be reaching people the allocator
+        // did not allocate, which is widening a segment by the back door.
+        if (cfg.reach_cap != null) campaign.reach_cap = Math.min(Number(cfg.reach_cap), campaign.reach ?? Number(cfg.reach_cap));
         campaign.window = event.window ?? (cfg.window_start && cfg.window_end ? { start: cfg.window_start, end: cfg.window_end } : campaign.window);
         campaign.configuration = { ...cfg, push_granted: event.push_granted ?? cfg.push_granted ?? false,
                                    channel: { feed: true, push_requested: Boolean(cfg.push_requested), push_granted: Boolean(event.push_granted ?? cfg.push_granted) } };
@@ -201,6 +343,13 @@ export function reduce(state, event) {
       const c = state.campaigns[event.campaign_id];
       if (!c) return reject(state, event, "unknown campaign");
       if (c.status !== "active") return reject(state, event, `campaign is ${c.status}, not active`);
+      // The portfolio controls sit above the campaign gate and are checked before anything moves.
+      // `_gated` is set when PUSH_COHORT has already gated the whole send, named and aggregate
+      // together — re-gating the named subset here would be checking the same send twice.
+      if (!event._gated) {
+        const plan = pushPreview(state, event.campaign_id, { recipients: event.recipients ?? [] });
+        if (!plan.gate.ok) return reject(state, event, plan.gate.reason);
+      }
       const next = clone(state);
       const campaign = next.campaigns[event.campaign_id];
       const capPerWeek = next.caps.push_per_week;
@@ -240,9 +389,18 @@ export function reduce(state, event) {
       campaign.counters.pushes_sent += sent.length;
       campaign.counters.pushes_suppressed += suppressed.length;
       campaign.counters.excluded_consent += excluded.length;
+      // Every feed card delivered is a cardholder contacted, and the portfolio counter is the only
+      // place that sees them all. A push suppressed by the weekly cap still delivered a card, so it
+      // still counts as a contact.
+      const gate = event._gate ?? portfolioGate(state.portfolio, delivered);
+      next.portfolio.contacted_this_week += delivered;
       campaign.pushes.push({ at: event.at, by: event.by ?? "rm", recipients: (event.recipients ?? []).length, delivered, sent: sent.length,
                              suppressed: suppressed.length, suppressed_detail: suppressed, excluded: excluded.length, excluded_detail: excluded,
-                             already_holding: already.length, unknown: unknown.length, reconciles: delivered === sent.length + suppressed.length });
+                             already_holding: already.length, unknown: unknown.length, reconciles: delivered === sent.length + suppressed.length,
+                             portfolio: { contacted_before: state.portfolio.contacted_this_week, contacted_after: next.portfolio.contacted_this_week,
+                                          ceiling: next.portfolio.weekly_ceiling, throttle: next.portfolio.throttle?.limit ?? null,
+                                          over_ceiling: Boolean(gate.over_ceiling), over_by: gate.over_by ?? null,
+                                          acknowledged_over_ceiling: Boolean(event.acknowledge_over_ceiling) } });
       log(next, event, { campaign_id: campaign.id, delivered, sent: sent.length, suppressed: suppressed.length, suppressed_detail: suppressed,
                          excluded: excluded.length, already_holding: already.length, unknown: unknown.length });
       if (campaign.reach_cap != null && campaign.counters.feed_delivered >= campaign.reach_cap) cap(next, campaign, event, "reach cap reached");
@@ -349,12 +507,33 @@ export function reduce(state, event) {
       return next;
     }
 
+    case "LOCATION_PREF": {
+      const ch = state.cardholders[event.cardholder_id];
+      if (!ch) return reject(state, event, "unknown cardholder");
+      const next = clone(state);
+      next.cardholders[event.cardholder_id].consent.location = Boolean(event.location);
+      next.cardholders[event.cardholder_id].consent.changed_at = event.at;
+      log(next, event, { cardholder_id: event.cardholder_id, location: Boolean(event.location),
+                         note: "applies to future segments — the catchment filter runs before allocation, so it cannot change a card already held" });
+      return next;
+    }
+
     case "INTEREST": {
       const ch = state.cardholders[event.cardholder_id];
       if (!ch) return reject(state, event, "unknown cardholder");
       if (!(event.category in ch.profile.category_weights)) return reject(state, event, `unknown category ${event.category}`);
       const next = clone(state);
       const holder = next.cardholders[event.cardholder_id];
+      // The standing preference, kept alongside the weights. The weights decide what Mobius
+      // proposes next; this decides what the customer sees in their list now. A preference control
+      // whose effect is invisible until the next campaign is indistinguishable from a placebo.
+      holder.profile.interests = { ...(holder.profile.interests ?? {}) };
+      if (event.direction === "clear") delete holder.profile.interests[event.category];
+      else holder.profile.interests[event.category] = event.direction === "less" ? "less" : "more";
+      if (event.direction === "clear") {
+        log(next, event, { cardholder_id: holder.id, category: event.category, direction: "clear" });
+        return next;
+      }
       const step = next.caps.profile_weight_step * (event.direction === "less" ? -1 : 1);
       const bumped = { ...holder.profile.category_weights };
       bumped[event.category] = Math.max(0, (bumped[event.category] ?? 0) + step);
@@ -375,6 +554,12 @@ export function reduce(state, event) {
       if (c.status === "draft") { /* both parties configure */ }
       else if (c.status === "pending" && event.by === "ocbc") { /* staff edits after submission, visible to the merchant */ }
       else return reject(state, event, `${event.field} cannot change while the campaign is ${c.status}${c.status === "pending" ? " (only OCBC staff edit a submitted campaign)" : ""}`);
+      if (event.field === "target_segments") {
+        const allowed = allowedPools(c);
+        const bad = (event.value ?? []).filter((v) => !allowed.includes(v));
+        // An empty allowed list means this campaign ships no pool table; nothing to check against.
+        if (allowed.length && bad.length) return reject(state, event, `${bad.join(", ")} is not a pool Mobius proposed for this campaign — a segment can be selected and narrowed, never authored`);
+      }
       const next = clone(state);
       const campaign = next.campaigns[event.campaign_id];
       campaign.configuration = { ...(campaign.configuration ?? {}) };
@@ -435,8 +620,12 @@ export function reduce(state, event) {
       if (!c) return reject(state, event, "unknown campaign");
       if (c.status !== "active") return reject(state, event, `campaign is ${c.status}, not active`);
       if (c.reach == null) return reject(state, event, "campaign has no allocation to push to");
-      const named = Object.values(state.cardholders).filter((ch) => (ch.cohort_membership ?? []).some((m) => m === c.cohort_tag)).map((ch) => ch.id);
-      const individual = reduce(state, { ...event, type: "PUSH_FIRED", recipients: named });
+      // Gate the whole send — named cardholders and the aggregate rest together — before anything
+      // moves, so the throttle and the kill switch see the real size of it.
+      const plan = pushPreview(state, event.campaign_id, { cohort: true });
+      if (!plan.gate.ok) return reject(state, event, plan.gate.reason);
+      const named = cohortNamed(state, c);
+      const individual = reduce(state, { ...event, type: "PUSH_FIRED", recipients: named, _gated: true, _gate: plan.gate });
       if (individual.ledger.at(-1).type === "REJECTED") return individual;
       const next = individual;
       const campaign = next.campaigns[event.campaign_id];
@@ -450,6 +639,8 @@ export function reduce(state, event) {
       campaign.counters.feed_delivered += restDelivered;
       campaign.counters.pushes_sent += restSent;
       campaign.counters.pushes_suppressed += restSuppressed;
+      next.portfolio.contacted_this_week += restDelivered;
+      last.portfolio.contacted_after = next.portfolio.contacted_this_week;
       Object.assign(last, { cohort: true, recipients: last.recipients + restDelivered, delivered: last.delivered + restDelivered, sent: last.sent + restSent,
                             suppressed: last.suppressed + restSuppressed, aggregate: { delivered: restDelivered, sent: restSent, suppressed: restSuppressed,
                             basis: "allocation_summary.json final_allocation and push.suppressed_count, less the named personas delivered individually" },
@@ -459,6 +650,55 @@ export function reduce(state, event) {
       if (campaign.reach_cap != null && campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered >= campaign.reach_cap && campaign.status === "active") {
         cap(next, campaign, event, "reach cap reached");
       }
+      return next;
+    }
+
+    // ---------------------------------------------------------------- RM §3.2: the two portfolio controls
+    // Both write to the same portfolio slice the exposure panel reads, and both are logged with
+    // who moved them. Neither is a per-campaign setting: they bind every send in the book.
+    case "THROTTLE_SET": {
+      const limit = Number(event.limit);
+      if (!Number.isFinite(limit) || limit < 0) return reject(state, event, "the throttle must be a number of cardholders, zero or above");
+      const ceiling = state.portfolio.weekly_ceiling;
+      // Tightens only, for the same reason a segment narrows only: a control that can raise the
+      // stated policy line is not a control, it is an override.
+      if (ceiling != null && limit > ceiling) return reject(state, event, `the throttle tightens the weekly ceiling of ${ceiling.toLocaleString()}; it cannot raise it`);
+      const next = clone(state);
+      const from = next.portfolio.throttle?.limit ?? null;
+      next.portfolio.throttle = { limit: Math.round(limit), by: event.by ?? "rm", at: event.at, note: event.note ?? null };
+      next.portfolio.log.push({ at: event.at, by: event.by ?? "rm", action: "throttle set", from, to: Math.round(limit), note: event.note ?? null });
+      log(next, event, { from, to: Math.round(limit), contacted_this_week: next.portfolio.contacted_this_week,
+                         headroom: Math.max(0, Math.round(limit) - next.portfolio.contacted_this_week) });
+      return next;
+    }
+
+    case "THROTTLE_CLEAR": {
+      if (!state.portfolio.throttle) return reject(state, event, "no throttle is set");
+      const next = clone(state);
+      const from = next.portfolio.throttle.limit;
+      next.portfolio.throttle = null;
+      next.portfolio.log.push({ at: event.at, by: event.by ?? "rm", action: "throttle cleared", from, to: null, note: event.note ?? null });
+      log(next, event, { from, to: null, note: "back to the weekly ceiling, which warns rather than blocks" });
+      return next;
+    }
+
+    case "HALT_SENDING": {
+      if (state.portfolio.halted) return reject(state, event, "sending is already halted");
+      const next = clone(state);
+      next.portfolio.halted = { at: event.at, by: event.by ?? "rm", reason: event.reason ?? null };
+      next.portfolio.log.push({ at: event.at, by: event.by ?? "rm", action: "sending halted", from: null, to: null, note: event.reason ?? null });
+      log(next, event, { by: event.by ?? "rm", reason: event.reason ?? null,
+                         note: "every send in the portfolio is refused until this is released; cards already delivered are untouched" });
+      return next;
+    }
+
+    case "RESUME_SENDING": {
+      if (!state.portfolio.halted) return reject(state, event, "sending is not halted");
+      const next = clone(state);
+      const was = next.portfolio.halted;
+      next.portfolio.halted = null;
+      next.portfolio.log.push({ at: event.at, by: event.by ?? "rm", action: "sending resumed", from: null, to: null, note: `halted by ${was.by} at ${was.at}` });
+      log(next, event, { by: event.by ?? "rm", halted_by: was.by, halted_at: was.at });
       return next;
     }
 
@@ -497,6 +737,14 @@ export function audit(state) {
     if (seg.refinements_used > seg.max_refinements) problems.push(`${c.id}: refinements over the cap`);
     for (const e of seg.log) if (e.outcome === "refused" && e.code === "floor" && e.reach_after != null) problems.push(`${c.id}: a floor refusal reported a count`);
     if (seg.log.filter((e) => e.consumed_refinement).length !== seg.refinements_used) problems.push(`${c.id}: refinements_used != consumed log entries`);
+  }
+  // The portfolio counter is the sum of every campaign's live deliveries plus what the pipeline
+  // had already counted for the week. If those two ever disagree the exposure panel is fiction.
+  const p = state.portfolio;
+  if (p) {
+    const liveDelivered = Object.values(state.campaigns).reduce((a, c) => a + (c.counters.feed_delivered - (c.counters.seeded?.feed_delivered ?? 0)), 0);
+    if (p.contacted_this_week !== p.seeded_contacted_this_week + liveDelivered) problems.push(`portfolio: contacted_this_week ${p.contacted_this_week} != seeded ${p.seeded_contacted_this_week} + live ${liveDelivered}`);
+    if (p.throttle && p.weekly_ceiling != null && p.throttle.limit > p.weekly_ceiling) problems.push(`portfolio: throttle ${p.throttle.limit} is above the ceiling ${p.weekly_ceiling}`);
   }
   for (const ch of Object.values(state.cardholders)) {
     const total = Object.values(ch.profile.category_weights).reduce((a, b) => a + b, 0);
