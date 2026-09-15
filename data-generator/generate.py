@@ -1146,6 +1146,44 @@ WINNER_RETURN_SHARE = 0.35
 LOSER_UPLIFT_SHARE = 0.03
 
 
+_DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def _window_phrase(dows, hours):
+    """The redemption window in the words a cardholder reads on the card."""
+    if set(dows) == {0, 1, 2, 3, 4, 5, 6}:
+        days = "any day"
+    elif set(dows) == {5, 6}:
+        days = "weekends"
+    elif set(dows) == {0, 1, 2, 3, 4}:
+        days = "weekdays"
+    else:
+        days = "/".join(_DAY_NAMES[d] for d in sorted(dows))
+    return f"{days} {hours[0]:02d}:00\u2013{hours[1]:02d}:00"
+
+
+def _feed_headline(rtype, name):
+    """Offer copy per reward type. Written once here so the six types read as six mechanics."""
+    return {
+        "discount": f"15% off your bill at {name}",
+        "cashback": f"8% cashback at {name}",
+        "voucher": f"S$5 off S$25 at {name}",
+        "spend_and_save": f"Save S$12 when you spend S$60 at {name}",
+        "bundle_1for1": f"1-for-1 at {name}",
+    }.get(rtype, f"An offer from {name}")
+
+
+def _feed_terms(rtype, dows, hours):
+    mechanic = {
+        "discount": "15% off, capped at S$8 per transaction.",
+        "cashback": "8% back to your card, capped at S$10 per transaction.",
+        "voucher": "S$5 off a minimum spend of S$25.",
+        "spend_and_save": "Save S$12 across a total spend of S$60 within the campaign.",
+        "bundle_1for1": "Buy one, get one of equal or lower value free.",
+    }.get(rtype, "See campaign configuration.")
+    return f"{mechanic} Redeem {_window_phrase(dows, hours)}. One redemption per customer."
+
+
 def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descriptor_lookup, txn_id_start):
     """Returns (campaigns_df, allocations_df, extra_txns_df, card_txns_df_with_tags, next_txn)."""
     r = np.random.default_rng(SEED + 13)
@@ -1269,19 +1307,67 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     for i, (mid, applied_at) in enumerate(applied_specs):
         campaigns.append(mk(f"C-APP-{i + 1:02d}", mid, "applied", "discount", None, None, applied_at, None, push=False))
 
+    # ---- Bernice's rewards feed (customer prompt §4, §8) -----------------------------------
+    # The customer view is a rewards list with four filter groups, and a list of one card makes
+    # every one of them decoration. These are ordinary campaigns from ordinary merchants; what is
+    # planted here is the SPREAD — business nature, reward type, when the offer may be redeemed,
+    # and how close it is to expiry — so that each filter has something to bite on, one card is
+    # expired, one has already been redeemed, and one is live but not redeemable at the demo clock
+    # (Friday 15:12), which is what makes "Available now" a real filter rather than a label.
+    #
+    # Two rules constrain the dates and neither may be broken, because the push-cap story depends
+    # on both: no allocation of Bernice's is pushed inside the demo week (so she is at zero of two
+    # pushes and the RM's push reaches her), and at most one is an ACTIVE campaign allocated
+    # within the trailing 30 days (so the portfolio frequency cap of three concurrent offers does
+    # not remove her from the Soujourner allocation).
+    #
+    # (suffix, category, reward_type, days_of_week, hours, window_start, window_end, status, bernice_status)
+    FEED_SPECS = [
+        ("01", "apparel",          "voucher",        [0, 1, 2, 3, 4, 5, 6], [10, 21], "2026-08-01", "2026-12-20", "active",    "delivered"),
+        ("02", "hair_nail_salon",  "discount",       [0, 1, 2, 3, 4],       [11, 19], "2026-07-20", "2026-09-16", "active",    "delivered"),
+        ("03", "bubble_tea",       "bundle_1for1",   [5, 6],                [12, 20], "2026-07-15", "2026-10-31", "active",    "delivered"),
+        ("04", "bakery_dessert",   "cashback",       [0, 1, 2, 3, 4, 5, 6], [8, 20],  "2026-08-05", "2026-09-30", "active",    "delivered"),
+        ("05", "books_gifts",      "spend_and_save", [0, 1, 2, 3, 4],       [10, 21], "2026-06-01", "2026-08-31", "completed", "expired"),
+        ("06", "cinema_arcade",    "voucher",        [5, 6],                [12, 23], "2026-05-01", "2026-07-31", "completed", "redeemed"),
+        ("07", "japanese",         "discount",       [0, 1, 2, 3, 4],       [17, 22], "2026-07-25", "2026-10-20", "active",    "delivered"),
+        ("08", "fast_food",        "voucher",        [0, 1, 2, 3, 4, 5, 6], [7, 22],  "2026-09-01", "2026-09-14", "active",    "delivered"),
+        ("09", "beauty_cosmetics", "cashback",       [0, 1, 2, 3, 4, 5, 6], [10, 21], "2026-04-01", "2026-06-30", "completed", "expired"),
+        ("10", "gym_fitness",      "spend_and_save", [0, 1, 2, 3, 4],       [6, 22],  "2026-08-02", "2026-11-30", "active",    "delivered"),
+    ]
+    used = set(HERO_MERCHANT_IDS) | {PLANT_BALANCE_FAIL, PLANT_BANDS_FAIL, PLANT_NO_SCORES} | set(completed_m) | set(active_m) | set(applied_m)
+    feed_campaigns = []
+    for suffix, category, rtype, dows, hours, ws, we, status, _ in FEED_SPECS:
+        pick = next((m for m in merchants_df[merchants_df["is_ocbc_acquired"] & (merchants_df["category"] == category)]["merchant_id"]
+                     if m not in used), None)
+        if pick is None:
+            continue
+        used.add(pick)
+        camp = mk(f"C-FEED-{suffix}", pick, status, rtype, ws, we, (date.fromisoformat(ws) - timedelta(days=14)).isoformat(), ws)
+        camp.update(days_of_week=dows, hours=hours,
+                    offer_headline=_feed_headline(rtype, m_by_id.loc[pick, "canonical_name"]),
+                    offer_terms=_feed_terms(rtype, dows, hours))
+        feed_campaigns.append((camp, suffix))
+        campaigns.append(camp)
+
     # Allocations for the six other-merchant campaigns, concentrated on a subset that includes Edwin.
     generic_ids = cardholders_df[cardholders_df["marketing_consent"] & ~cardholders_df["card_id"].isin(set(cohorts["h1_a_only"]) | set(cohorts["h1_overlap"]) | set(cohorts["h1_b_only"]) | set(cohorts["showcase"].values()))]["card_id"].tolist()
     edwin = cohorts["showcase"]["edwin"]
     freq_cap_plants = [c for c in b_only_sorted if c != bernice and c not in conv_set][-40:]   # 40 cohort members already holding 3 offers
     heavy = list(r.choice(generic_ids, size=800, replace=False)) + [edwin]
     light = [c for c in generic_ids if c not in set(heavy)]
+    feed_ids = {c["campaign_id"] for c, _ in feed_campaigns}
     for camp in campaigns:
         if camp["merchant_id"] == "M0001" or camp["status"] == "applied":
             continue
         n = int(r.integers(300, 600))
         picks = list(r.choice(heavy, size=int(n * 0.7), replace=False)) + list(r.choice(light, size=n - int(n * 0.7), replace=False))
-        if camp["status"] == "active":
+        if camp["status"] == "active" and camp["campaign_id"] not in feed_ids:
             picks = picks + freq_cap_plants
+        # Edwin holds exactly two live offers and is at the weekly push cap; a feed campaign
+        # allocated inside the 30-day window would make it three and the frequency cap would
+        # remove him from the Soujourner cohort, taking the suppressed push with him.
+        if camp["campaign_id"] in feed_ids:
+            picks = [c for c in picks if c != edwin]
         ws = date.fromisoformat(camp["window_start"])
         for c in picks:
             pushed = camp["channel_push"] and r.random() < 0.6
@@ -1289,10 +1375,21 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
             alloc_rows.append(dict(card_id=c, campaign_id=camp["campaign_id"], merchant_id=camp["merchant_id"],
                                    allocated_date=(ws - timedelta(days=3)).isoformat(), arm="treated", status=status,
                                    pushed_at=datetime(ws.year, ws.month, ws.day, 10, 0, 0) if pushed else None, push_suppressed=False))
+    # Bernice's own card on each feed campaign, with the status the customer view needs to show.
+    # Pushed on the allocation date where the campaign had push, which is always outside the demo
+    # week — she must still be at zero pushes when the RM fires the Soujourner one.
+    for camp, suffix in feed_campaigns:
+        b_status = next(x[-1] for x in FEED_SPECS if x[0] == suffix)
+        allocated = date.fromisoformat(camp["window_start"]) - timedelta(days=3)
+        alloc_rows.append(dict(card_id=bernice, campaign_id=camp["campaign_id"], merchant_id=camp["merchant_id"],
+                               allocated_date=allocated.isoformat(), arm="treated", status=b_status,
+                               pushed_at=datetime(allocated.year, allocated.month, allocated.day, 10, 0, 0), push_suppressed=False))
+
     # Edwin: pushed twice in the demo week (Mon 7 Sep – Sun 13 Sep) → at the weekly push cap.
     alloc_df = pd.DataFrame(alloc_rows)
-    edwin_active = alloc_df[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"].isin([c["campaign_id"] for c in campaigns if c["status"] == "active"]))]
-    for cid in [c["campaign_id"] for c in campaigns if c["status"] == "active"]:
+    core_active = [c["campaign_id"] for c in campaigns if c["status"] == "active" and c["campaign_id"] not in feed_ids]
+    edwin_active = alloc_df[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"].isin(core_active))]
+    for cid in core_active:
         if cid not in set(edwin_active["campaign_id"]):
             camp = next(c for c in campaigns if c["campaign_id"] == cid)
             alloc_df = pd.concat([alloc_df, pd.DataFrame([dict(card_id=edwin, campaign_id=cid, merchant_id=camp["merchant_id"],
@@ -1300,12 +1397,15 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
                                                                pushed_at=None, push_suppressed=False)])], ignore_index=True)
     active_ids = [c["campaign_id"] for c in campaigns if c["status"] == "active"]
     # Edwin holds exactly two live offers, both pushed this week: under the 30-day offer cap, at the weekly push cap.
-    alloc_df = alloc_df[~((alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"] == active_ids[2]))].reset_index(drop=True)
+    alloc_df = alloc_df[~((alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"] == core_active[2]))].reset_index(drop=True)
     push_days = [datetime(2026, 9, 8, 9, 30, 0), datetime(2026, 9, 10, 12, 15, 0)]
-    for cid, pd_at in zip(active_ids[:2], push_days):
+    for cid, pd_at in zip(core_active[:2], push_days):
         alloc_df.loc[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"] == cid), "pushed_at"] = pd_at
-    # Bernice holds no live offer this week: nothing but the cap could stop her push, and it doesn't.
-    alloc_df = alloc_df[~((alloc_df["card_id"] == bernice) & (alloc_df["campaign_id"].isin(active_ids)))].reset_index(drop=True)
+    # Bernice holds no live offer from the generic campaign draw: nothing but the cap could stop
+    # her push, and it doesn't. Her planted feed cards are deliberate and are kept — they are
+    # allocated outside the 30-day cap window bar one, so she stays under the concurrent-offer cap.
+    alloc_df = alloc_df[~((alloc_df["card_id"] == bernice)
+                          & (alloc_df["campaign_id"].isin(set(active_ids) - feed_ids)))].reset_index(drop=True)
     campaigns_df = pd.DataFrame(campaigns)
     extra_df = pd.DataFrame(extra_rows, columns=TXN_COLS)
     return campaigns_df, alloc_df, extra_df, card_txns_df, txn_counter

@@ -3,20 +3,23 @@ import { Routes, Route } from "react-router-dom";
 import { DataProvider, useDemoData } from "./data/DataProvider";
 import { StateProvider } from "./state/StateProvider";
 import AppShell from "./components/AppShell";
-import TestRM from "./screens/_test/TestRM";
-import TestCustomer from "./screens/_test/TestCustomer";
 import Landing from "./screens/Landing";
 import TargetCustomer from "./screens/TargetCustomer";
 import DemandGap from "./screens/DemandGap";
 import OpportunityPanel from "./screens/OpportunityPanel";
 import CampaignResults from "./screens/CampaignResults";
 import PreviewMode from "./screens/PreviewMode";
-import ConsumerView from "./screens/ConsumerView";
 import RewardSetup from "./screens/RewardSetup";
 import PortfolioDashboard from "./screens/rm/PortfolioDashboard";
 import PendingProgramme from "./screens/rm/PendingProgramme";
 import RewardConfiguration from "./screens/rm/RewardConfiguration";
 import RMCampaignDetail from "./screens/rm/CampaignDetail";
+import AppFrame from "./screens/app/AppFrame";
+import BankingHome from "./screens/app/BankingHome";
+import Rewards from "./screens/app/Rewards";
+import RewardDetail from "./screens/app/RewardDetail";
+import Redeem from "./screens/app/Redeem";
+import Preferences from "./screens/app/Preferences";
 
 function LoadGate({ children }) {
   const { status, error } = useDemoData();
@@ -49,9 +52,6 @@ export default function App() {
       <StateProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
-        {/* Throwaway propagation test pages — no chrome, no styling. Delete with src/screens/_test/. */}
-        <Route path="/_test/rm" element={<LoadGate><TestRM /></LoadGate>} />
-        <Route path="/_test/customer" element={<LoadGate><TestCustomer /></LoadGate>} />
         <Route
           element={
             <LoadGate>
@@ -65,7 +65,6 @@ export default function App() {
           <Route path="/results" element={<CampaignResults />} />
           <Route path="/preview" element={<PreviewMode />} />
           <Route path="/reward-setup" element={<RewardSetup />} />
-          <Route path="/consumer" element={<ConsumerView />} />
         </Route>
 
         {/* The OCBC relationship manager's four screens. Same shell, slate "OCBC internal" chrome,
@@ -81,6 +80,23 @@ export default function App() {
           <Route path="/rm/pending/:campaignId" element={<PendingProgramme />} />
           <Route path="/rm/configure/:campaignId" element={<RewardConfiguration />} />
           <Route path="/rm/campaign/:campaignId" element={<RMCampaignDetail />} />
+        </Route>
+
+        {/* The cardholder's own app. Its own frame and its own chrome — this is the only screen in
+            the system a member of the public would ever see, and it must not look like the bank's
+            internal tooling with a phone drawn around it. */}
+        <Route
+          element={
+            <LoadGate>
+              <AppFrame />
+            </LoadGate>
+          }
+        >
+          <Route path="/app" element={<BankingHome />} />
+          <Route path="/app/rewards" element={<Rewards />} />
+          <Route path="/app/rewards/:offerId" element={<RewardDetail />} />
+          <Route path="/app/redeem/:offerId" element={<Redeem />} />
+          <Route path="/app/profile" element={<Preferences />} />
         </Route>
       </Routes>
       </StateProvider>

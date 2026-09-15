@@ -100,8 +100,11 @@ export const SCREENS = [
   { key: "preview", num: 6, label: "Preview", path: "/preview" },
 ];
 
+// The cardholder's app is a build of its own, not a seventh merchant screen — it has its own
+// chrome, its own nav and its own audience. The merchant nav keeps a link across to it, which is
+// what this entry is: a way out of the merchant view, numbered so the keyboard can reach it.
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 7, label: "Cardholder", path: "/consumer" },
+  { key: "consumer", num: 7, label: "Cardholder", path: "/app" },
 ];
 
 // The screen number a view prints in its eyebrow. Derived from SCREENS so reordering the nav can

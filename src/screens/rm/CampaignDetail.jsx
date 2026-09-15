@@ -63,7 +63,7 @@ export default function RMCampaignDetail() {
         subtitle={`${c.merchant_name}${c.window ? ` · ${c.window.start} to ${c.window.end}` : ""}`}
         right={
           <div className="flex items-center gap-2">
-            <StatusPill statusKey={c.status} display={display} note={c.capped?.why} />
+            <StatusPill campaign={c} display={display} />
             {live && <PushTrigger campaign={c} compact />}
           </div>
         }

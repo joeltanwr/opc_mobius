@@ -407,6 +407,54 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("portfolio: audit clean after the controls have been moved", audit(resumed).length === 0 && audit(cleared).length === 0);
 }
 
+// ---------------------------------------------------------------- customer §5: the preference controls
+{
+  let c = seed;
+  const cat = Object.keys(seed.cardholders.bernice.profile.category_weights)[0];
+  check("preferences: a cardholder starts with no standing interest, and location relevance on",
+        Object.keys(seed.cardholders.bernice.profile.interests ?? {}).length === 0 && seed.cardholders.bernice.consent.location === true);
+
+  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: cat, direction: "less", at: at(1), seq: 1 });
+  check("preferences: 'less of this' is recorded as a standing preference, not only as a nudge to the weights",
+        c.cardholders.bernice.profile.interests[cat] === "less"
+        && c.cardholders.bernice.profile.category_weights[cat] < seed.cardholders.bernice.profile.category_weights[cat],
+        c.cardholders.bernice.profile.interests);
+  check("preferences: the weights still sum to 1 after a preference change",
+        Math.abs(Object.values(c.cardholders.bernice.profile.category_weights).reduce((a, b) => a + b, 0) - 1) < 0.001);
+
+  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: cat, direction: "clear", at: at(2), seq: 2 });
+  check("preferences: clearing removes the preference and leaves the weights where they are — undo is not a rewind",
+        !(cat in c.cardholders.bernice.profile.interests)
+        && c.cardholders.bernice.profile.category_weights[cat] < seed.cardholders.bernice.profile.category_weights[cat]);
+
+  c = reduce(c, { type: "LOCATION_PREF", cardholder_id: "bernice", location: false, at: at(3), seq: 3 });
+  check("preferences: location relevance is a real control that moves state and is logged",
+        c.cardholders.bernice.consent.location === false && c.ledger.at(-1).type === "LOCATION_PREF" && /future segments/.test(c.ledger.at(-1).note));
+  check("preferences: turning location off does not touch a card already held",
+        Object.values(c.offers).filter((o) => o.cardholder_id === "bernice" && o.status === "delivered").length
+        === Object.values(seed.offers).filter((o) => o.cardholder_id === "bernice" && o.status === "delivered").length);
+
+  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: "not_a_category", direction: "more", at: at(4), seq: 4 });
+  check("preferences: an unknown category is refused, not silently created", c.ledger.at(-1).type === "REJECTED");
+  check("preferences: audit clean", audit(c).length === 0, audit(c));
+}
+
+// ---------------------------------------------------------------- customer §4: the feed has something to filter
+{
+  const mine = Object.values(seed.offers).filter((o) => o.cardholder_id === "bernice");
+  check("feed: Bernice holds about a dozen cards, so the filters have something to bite on", mine.length >= 10, mine.length);
+  check("feed: at least one is expired and at least one is still redeemable",
+        mine.some((o) => o.status === "expired") && mine.some((o) => o.status === "delivered"),
+        mine.map((o) => o.status));
+  check("feed: the cards span at least four reward types and several merchants",
+        new Set(mine.map((o) => o.reward_type)).size >= 4 && new Set(mine.map((o) => o.merchant_id)).size >= 8,
+        { types: [...new Set(mine.map((o) => o.reward_type))], merchants: new Set(mine.map((o) => o.merchant_id)).size });
+  check("feed: every card carries the window and expiry the list and the filters read",
+        mine.every((o) => Array.isArray(o.days_of_week) && Array.isArray(o.hours) && o.expires_at));
+  check("feed: Bernice is still at zero pushes this week, so the RM's push reaches her",
+        seed.cardholders.bernice.pushes_this_week === 0);
+}
+
 // ---------------------------------------------------------------- the bus: log replay converges
 {
   const storage = memoryStorage();

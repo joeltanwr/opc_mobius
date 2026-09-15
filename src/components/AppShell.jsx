@@ -2,9 +2,8 @@ import React, { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2, ShieldAlert } from "lucide-react";
 import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS } from "../data/constants";
-import { useDemoData } from "../data/DataProvider";
 import PrivacyAffordance from "./PrivacyAffordance";
-import { MockDataBadge } from "./ui";
+import { MockDataBadge, ScaleDisclosure } from "./ui";
 
 // One chrome for both sides of the platform. The merchant variant is the default; the RM variant
 // carries a persistent slate "OCBC internal" bar (RM §7) so a judge can tell at a glance which
@@ -37,11 +36,6 @@ export default function AppShell({ variant = "merchant" }) {
   const v = VARIANTS[variant] ?? VARIANTS.merchant;
   const nav = v.screens;
   const allNav = [...v.screens, ...v.optional];
-  // One scale disclosure for all three views, shipped by the pipeline in constants.json so the
-  // sentence and the figures in it have a single source. Counts on screen are sample units.
-  const { data } = useDemoData();
-  const scaleDisclosure = data?.constants?.scale_disclosure;
-
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target instanceof HTMLElement) {
@@ -121,7 +115,7 @@ export default function AppShell({ variant = "merchant" }) {
           <div className="ml-auto flex items-center gap-3 shrink-0">
             {variant === "merchant" && (
               <NavLink
-                to="/consumer"
+                to="/app"
                 className={({ isActive }) =>
                   `text-[13px] font-medium whitespace-nowrap ${isActive ? "text-brand" : "text-ink-light hover:text-ink-secondary"}`
                 }
@@ -147,7 +141,7 @@ export default function AppShell({ variant = "merchant" }) {
       <footer className="border-t border-border bg-white">
         <div className="max-w-container mx-auto px-6 min-h-12 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between text-ink-light">
           <PrivacyAffordance audience={v.audience} />
-          {scaleDisclosure && <p className="text-[12px] text-ink-light max-w-xl leading-snug">{scaleDisclosure}</p>}
+          <ScaleDisclosure />
           <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
             <span className="kbd">←</span>
             <span className="kbd">→</span>

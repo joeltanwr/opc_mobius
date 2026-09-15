@@ -42,14 +42,16 @@ export const CONTACT_PROMISE_DAYS = CONSTANTS.RM_CONTACT_PROMISE_DAYS.value;
 export const CONTACT_PROMISE_BASIS = CONSTANTS.RM_CONTACT_PROMISE_DAYS.basis;
 export const isOverdue = (days) => days !== null && days > CONTACT_PROMISE_DAYS;
 
-// The display map is settled once, in the pipeline manifest, and `capped` reads "Fully redeemed"
-// there. A campaign can also be capped by reach rather than by redemptions, so wherever a capped
-// campaign is shown the reason travels with the label — otherwise the screen says a campaign with
-// no redemptions was fully redeemed, which is the kind of small untruth a reviewer catches.
-export function StatusPill({ statusKey, display, note }) {
+// The label comes from the pipeline's display map, refined for `capped` by the reason the reducer
+// recorded — "Fully redeemed" when the redemption limit closed it, "Reach cap reached" when the
+// allocation ran out. Pass the campaign and the refinement is applied; pass a bare status key and
+// you get the plain label.
+export function StatusPill({ campaign, statusKey, display, note }) {
+  const key = campaign?.status ?? statusKey;
+  const label = display(key, campaign?.capped?.why ?? null);
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      <Badge tone={STATUS_TONE[statusKey] ?? "neutral"}>{display(statusKey)}</Badge>
+      <Badge tone={STATUS_TONE[key] ?? "neutral"}>{label}</Badge>
       {note && <span className="text-[11px] text-ink-light">{note}</span>}
     </span>
   );

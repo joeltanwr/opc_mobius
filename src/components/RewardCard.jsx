@@ -1,5 +1,5 @@
 import React from "react";
-import { Coffee, Bell, ChevronLeft, Clock, MapPin, ShieldCheck } from "lucide-react";
+import { Coffee, ShoppingBag, Sparkles, Tag, Bell, ChevronLeft, Clock, MapPin, ShieldCheck } from "lucide-react";
 import { num } from "../data/format";
 
 // ---------------------------------------------------------------------------------------------
@@ -50,6 +50,26 @@ export function daysRemaining(expiryIso, clockIso) {
   return Math.ceil((Date.parse(expiryIso) - Date.parse(clockIso)) / 86_400_000);
 }
 
+// Is this card redeemable at this instant? The window is the campaign's own days and hours, and
+// "now" is the demo clock — never the wall clock, or the Available-now filter quietly changes
+// meaning depending on when the pitch is given.
+export function isRedeemableNow(offer, clockIso) {
+  if (!offer || offer.status !== "delivered" || !clockIso) return false;
+  const now = new Date(Date.parse(clockIso));
+  // The clock is stamped +08:00 and every window is Singapore local, so read the parts in SGT.
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Singapore", weekday: "short", hour: "2-digit", hour12: false }).formatToParts(now);
+  const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(parts.find((p) => p.type === "weekday").value);
+  const hour = Number(parts.find((p) => p.type === "hour").value);
+  const days = offer.days_of_week, hours = offer.hours;
+  if (days && days.length && !days.includes(weekday)) return false;
+  if (hours && hours.length === 2 && !(hour >= hours[0] && hour < hours[1])) return false;
+  if (offer.expires_at && Date.parse(offer.expires_at) < now.getTime()) return false;
+  return true;
+}
+
+// One icon per taxonomy group, so a hair studio does not arrive wearing a coffee cup.
+const NATURE_ICON = { "F&B": Coffee, Retail: ShoppingBag, "Services & Lifestyle": Sparkles };
+
 const STATUS_TONE = {
   delivered: { label: "Available", cls: "bg-success-bg text-success border-[#A7F3D0]" },
   redeemed: { label: "Redeemed", cls: "bg-canvas text-ink-secondary border-border" },
@@ -61,20 +81,29 @@ const STATUS_TONE = {
 /**
  * The feed card, exactly as the cardholder sees it in the OCBC app's Rewards list.
  *
- * @param offer  {company, nature, reward_type, offer_headline, offer_terms, days_of_week, hours,
- *                expires_at, status}
- * @param clock  the demo clock, for days remaining
+ * @param offer     {company, nature, reward_type, offer_headline, offer_terms, days_of_week, hours,
+ *                   expires_at, status}
+ * @param clock     the demo clock, for days remaining
+ * @param onRedeem  fired by the Redeem button. Omitted in the RM's preview, where the card is a
+ *                  rendering of what will be sent and nothing on it should be operable.
+ * @param onDetails fired by View details.
  */
-export function RewardFeedCard({ offer, clock, highlight = false }) {
+export function RewardFeedCard({ offer, clock, highlight = false, onRedeem, onDetails, availableNow = null }) {
   const days = daysRemaining(offer.expires_at, clock);
-  const status = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
+  const base = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
+  // "Available" is reserved for a card that can be used at this moment. One the cardholder holds
+  // but cannot use right now is Saved — otherwise the pill and the line underneath it disagree.
+  const status = offer.status === "delivered" && availableNow === false
+    ? { label: "Saved", cls: "bg-canvas text-ink-secondary border-border" }
+    : base;
+  const Icon = NATURE_ICON[offer.nature] ?? Tag;
   const window = [formatDays(offer.days_of_week), formatHours(offer.hours)].filter(Boolean).join(" ");
 
   return (
     <div className={`rounded-2xl border bg-white p-4 shadow-card ${highlight ? "border-brand/50" : "border-border"}`}>
       <div className="flex items-start gap-2.5 mb-2.5">
         <div className="h-9 w-9 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
-          <Coffee size={16} className="text-brand" />
+          <Icon size={16} className="text-brand" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-bold text-ink leading-tight truncate">{offer.company ?? offer.merchant_name}</div>
@@ -102,19 +131,41 @@ export function RewardFeedCard({ offer, clock, highlight = false }) {
         )}
         {offer.expires_at && (
           <div className="flex items-center gap-1.5 font-num">
-            <span className="text-ink-light">Expires {String(offer.expires_at).slice(0, 10)}</span>
-            {days !== null && <span className={days <= 7 ? "text-warning font-semibold" : "text-ink-secondary"}>· {num(days)} days left</span>}
+            {days !== null && days < 0 ? (
+              <span className="text-ink-light">Expired {String(offer.expires_at).slice(0, 10)}</span>
+            ) : (
+              <>
+                <span className="text-ink-light">Expires {String(offer.expires_at).slice(0, 10)}</span>
+                {days !== null && <span className={days <= 7 ? "text-warning font-semibold" : "text-ink-secondary"}>· {num(days)} days left</span>}
+              </>
+            )}
           </div>
         )}
       </div>
 
-      <button
-        type="button"
-        disabled={offer.status !== "delivered"}
-        className="mt-3 w-full rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border"
-      >
-        {offer.status === "delivered" ? "Redeem" : status.label}
-      </button>
+      {availableNow === false && offer.status === "delivered" && (
+        <p className="mt-2 text-[11.5px] text-ink-light">Not redeemable right now — comes back inside the window above.</p>
+      )}
+
+      <div className="mt-3 flex gap-2">
+        {onDetails && (
+          <button
+            type="button"
+            onClick={onDetails}
+            className="flex-1 rounded-lg border border-border bg-white text-[12.5px] font-semibold text-ink-secondary py-2 hover:text-ink"
+          >
+            View details
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onRedeem}
+          disabled={offer.status !== "delivered" || !onRedeem}
+          className="flex-1 rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border"
+        >
+          {offer.status === "delivered" ? "Redeem" : status.label}
+        </button>
+      </div>
     </div>
   );
 }

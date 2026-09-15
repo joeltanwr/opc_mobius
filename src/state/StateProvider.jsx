@@ -9,10 +9,39 @@ import { liveReach } from "./store.js";
 
 const StateContext = createContext(null);
 
+// ----------------------------------------------------------------------------------------------
+// The hero merchant's application is seeded, not clicked.
+//
+// The RM's pending queue is the RM view's first screen, and it must not be empty because nobody
+// walked the merchant screen first — a demo that depends on being driven in one order breaks the
+// first time a judge asks to see something out of sequence. So on a cold load the application is
+// replayed into the log as a real, attributed APPLY event stamped with the date the pipeline ships
+// (DEMO_APPLICATION_DATE), which is exactly what the merchant's click would have written. It is a
+// logged event with provenance, not a field quietly set behind the reducer's back.
+//
+// The click itself stays demonstrable: `rewind()` clears the log and suppresses the bootstrap for
+// the life of the page, so the merchant screen goes back to offering the button and the handoff
+// can be performed live. A reload starts from the seeded application again.
+// ----------------------------------------------------------------------------------------------
+const DEMO_CAMPAIGN = "C-SJ-03";
+let skipBootstrap = false;
+
+function bootstrapApplication(bus, data) {
+  if (skipBootstrap || bus.getLog().length > 0) return;
+  const at = data?.constants?.constants?.DEMO_APPLICATION_DATE?.value;
+  const campaign = bus.getState().campaigns[DEMO_CAMPAIGN];
+  if (!at || !campaign || campaign.status !== "applied" || campaign.applied_at) return;
+  bus.dispatch({ type: "APPLY", campaign_id: DEMO_CAMPAIGN, by: "merchant", at,
+                 rm_message: "A relationship manager will be in touch within the week." });
+}
+
 export function StateProvider({ children }) {
   const { status, data } = useDemoData();
   const busRef = useRef(null);
-  if (status === "ready" && !busRef.current) busRef.current = createBus({ seed: buildSeed(data) });
+  if (status === "ready" && !busRef.current) {
+    busRef.current = createBus({ seed: buildSeed(data) });
+    bootstrapApplication(busRef.current, data);
+  }
   const bus = busRef.current;
 
   const state = useSyncExternalStore(
@@ -28,11 +57,25 @@ export function StateProvider({ children }) {
       state,
       dispatch: bus.dispatch,
       reset: bus.reset,
+      // Demo control: back to before the merchant applied, so the handoff can be clicked live.
+      rewind: () => { skipBootstrap = true; bus.reset(); },
       log: bus.getLog,
-      // The display map from constants.json, applied here and nowhere else.
-      display: (statusKey) => state.status_display[statusKey] ?? statusKey,
+      // The display map from constants.json, applied here and nowhere else. `capped` takes the
+      // refinement keyed by the reason the reducer recorded, so a campaign closed by its reach cap
+      // is not labelled as one that was fully redeemed.
+      display: (statusKey, capReason = null) =>
+        (statusKey === "capped" && capReason && state.capped_display?.[capReason]) ||
+        state.status_display[statusKey] ||
+        statusKey,
+      displayOf: (campaign) => {
+        const key = campaign?.status;
+        return (key === "capped" && state.capped_display?.[campaign?.capped?.why]) || state.status_display[key] || key;
+      },
       reachOf: (campaign) => liveReach(campaign, rounding),
       offersFor: (cardholderId) => (state.cardholders[cardholderId]?.feed ?? []).map((id) => state.offers[id]).filter(Boolean),
+      // Every card this cardholder has ever held, feed or not. The rewards list needs the expired
+      // and redeemed ones too: a status that never has a negative case is decoration.
+      allOffersFor: (cardholderId) => Object.values(state.offers).filter((o) => o.cardholder_id === cardholderId),
       offersOf: (campaignId) => Object.values(state.offers).filter((o) => o.campaign_id === campaignId),
     };
   }, [bus, state]);

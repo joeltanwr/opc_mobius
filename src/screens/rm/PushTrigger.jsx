@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { FlaskConical, Send, X, AlertTriangle, CheckCircle2, Ban } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
+import { useDemoData, natureOf } from "../../data/DataProvider";
 import { pushPreview } from "../../state/store.js";
 import { num } from "../../data/format";
 import { Badge, BasisNote } from "../../components/ui";
@@ -76,6 +77,7 @@ export default function PushTrigger({ campaign, compact = false }) {
 
 function Confirmation({ campaignId, onClose }) {
   const { state, dispatch } = useMobiusState();
+  const { data } = useDemoData();
   const [acknowledged, setAcknowledged] = useState(false);
   const [result, setResult] = useState(null);
   const campaign = state.campaigns[campaignId];
@@ -88,7 +90,7 @@ function Confirmation({ campaignId, onClose }) {
 
   const offer = {
     company: campaign.merchant_name,
-    nature: campaign.merchant_category,
+    nature: natureOf(data, campaign.merchant_id),
     reward_type: cfg.reward_type ?? campaign.recommended?.reward_type,
     offer_headline: cfg.offer_headline,
     offer_terms: cfg.offer_terms,

@@ -90,6 +90,16 @@ export function merchantName(data, merchantId) {
   return merchantId;
 }
 
+// The business nature shown on a reward card — the merchant's taxonomy group, not its sector.
+// Both the cardholder's list and the RM's preview of that list read it here: the card is one
+// component, and feeding it two different notions of "nature" is the same drift as having two
+// components. The taxonomy's own groups are the source; the customer prompt's F&B / Hospitality /
+// Travel list does not survive contact with a dataset that has no hotels or airlines in it.
+export function natureOf(data, merchantId) {
+  const category = data?.merchantProfiles?.[merchantId]?.category;
+  return data?.taxonomy?.categories?.find((c) => c.id === category)?.group ?? "Other";
+}
+
 // The privacy floor and the reach rounding, from the pipeline manifest, which is their only
 // source. Every screen that states either number reads it here rather than typing it, because a
 // floor that moves in the pipeline while the copy still says 250 is a promise the build no longer

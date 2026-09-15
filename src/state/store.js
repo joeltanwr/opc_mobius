@@ -507,12 +507,33 @@ export function reduce(state, event) {
       return next;
     }
 
+    case "LOCATION_PREF": {
+      const ch = state.cardholders[event.cardholder_id];
+      if (!ch) return reject(state, event, "unknown cardholder");
+      const next = clone(state);
+      next.cardholders[event.cardholder_id].consent.location = Boolean(event.location);
+      next.cardholders[event.cardholder_id].consent.changed_at = event.at;
+      log(next, event, { cardholder_id: event.cardholder_id, location: Boolean(event.location),
+                         note: "applies to future segments — the catchment filter runs before allocation, so it cannot change a card already held" });
+      return next;
+    }
+
     case "INTEREST": {
       const ch = state.cardholders[event.cardholder_id];
       if (!ch) return reject(state, event, "unknown cardholder");
       if (!(event.category in ch.profile.category_weights)) return reject(state, event, `unknown category ${event.category}`);
       const next = clone(state);
       const holder = next.cardholders[event.cardholder_id];
+      // The standing preference, kept alongside the weights. The weights decide what Mobius
+      // proposes next; this decides what the customer sees in their list now. A preference control
+      // whose effect is invisible until the next campaign is indistinguishable from a placebo.
+      holder.profile.interests = { ...(holder.profile.interests ?? {}) };
+      if (event.direction === "clear") delete holder.profile.interests[event.category];
+      else holder.profile.interests[event.category] = event.direction === "less" ? "less" : "more";
+      if (event.direction === "clear") {
+        log(next, event, { cardholder_id: holder.id, category: event.category, direction: "clear" });
+        return next;
+      }
       const step = next.caps.profile_weight_step * (event.direction === "less" ? -1 : 1);
       const bumped = { ...holder.profile.category_weights };
       bumped[event.category] = Math.max(0, (bumped[event.category] ?? 0) + step);

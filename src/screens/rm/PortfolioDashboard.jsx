@@ -146,7 +146,7 @@ export default function PortfolioDashboard() {
                   <tr key={c.id} className="border-b border-border/60">
                     <Td className="font-semibold text-ink">{c.merchant_name}</Td>
                     <Td className="text-ink-secondary">{c.name}</Td>
-                    <Td><StatusPill statusKey={c.status} display={display} /></Td>
+                    <Td><StatusPill campaign={c} display={display} /></Td>
                     <Td align="right">{c.segment ? num(c.segment.reach) : num(m.reachOf(c))}</Td>
                     <Td align="right">
                       <Link to={`/rm/configure/${c.id}`} className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:underline">
@@ -314,7 +314,7 @@ function CompletedRow({ campaign, display }) {
     <tr className="border-b border-border/60">
       <Td className="font-semibold text-ink whitespace-nowrap">{campaign.merchant_name}</Td>
       <Td className="text-ink-secondary">{campaign.name}</Td>
-      <Td><StatusPill statusKey={campaign.status} display={display} note={campaign.capped?.why ?? campaign.stopped?.reason} /></Td>
+      <Td><StatusPill campaign={campaign} display={display} note={campaign.stopped?.reason} /></Td>
       <Td align="right">{num(r.redemption?.redeemers ?? r.redemptions ?? campaign.counters.redemptions)}</Td>
       <Td align="right">{r.incremental ? sgd(r.incremental.incremental_sales_sgd) : <span className="text-ink-light">—</span>}</Td>
       <Td align="right">{cost ? sgd(cost.reward_cost_sgd) : <span className="text-ink-light">—</span>}</Td>

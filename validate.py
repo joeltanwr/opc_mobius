@@ -359,11 +359,16 @@ def main(rerun=True):
     check("constants.json ships one scale disclosure naming both the sample and the base",
           f"{cfg.SAMPLE_CARDHOLDERS:,}" in const["scale_disclosure"] and f"{cfg.CARDHOLDER_BASE:,}" in const["scale_disclosure"],
           const.get("scale_disclosure"))
-    shell = open(os.path.join(ROOT, "src", "components", "AppShell.jsx"), encoding="utf-8").read()
-    check("the shared chrome renders the shipped scale disclosure", "scale_disclosure" in shell)
+    # Every chrome in the build renders the disclosure, and all of them render the same component,
+    # so the sentence has one source and one rendering however many interfaces there are.
+    chromes = [os.path.join(ROOT, "src", "components", "AppShell.jsx"),
+               os.path.join(ROOT, "src", "screens", "app", "AppFrame.jsx")]
+    check("every chrome renders the shipped scale disclosure",
+          all("<ScaleDisclosure" in open(f, encoding="utf-8").read() for f in chromes),
+          str([os.path.relpath(f, ROOT) for f in chromes if "<ScaleDisclosure" not in open(f, encoding="utf-8").read()]))
     src_hits = [f for f in _src_files() if "scale_disclosure" in open(f, encoding="utf-8").read()
                 and os.path.basename(f) != "DataProvider.jsx"]
-    check("the scale disclosure is rendered once, not restated per screen", len(src_hits) == 1, str(src_hits))
+    check("the scale disclosure is read in one component, not restated per screen", len(src_hits) == 1, str(src_hits))
 
     # -------------------------------------------------------------- no retyped privacy rules
     # The floor (250) and the reach rounding (50) ship once, in constants.json, and every screen
@@ -518,6 +523,28 @@ def main(rerun=True):
           not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "merchantPriority" in t])
     check("no merchant-facing screen reads the portfolio exposure panel's figures",
           not [os.path.relpath(f, ROOT) for f, t in merchant_screens.items() if "contacted_this_week" in t or "concurrent_2plus" in t])
+
+    # ---------------------------------------------------- the cardholder's app against its own rules
+    app_files = {f: t for f, t in src_text.items() if os.sep + "app" + os.sep in f}
+    check("the cardholder app exists as its own screens", len(app_files) >= 5,
+          str(sorted(os.path.basename(f) for f in app_files)))
+    card_component = src_text[os.path.join(ROOT, "src", "components", "RewardCard.jsx")]
+    check("the reward card is one component, rendered by both the cardholder's list and the RM's preview",
+          any("RewardFeedCard" in t for t in app_files.values())
+          and "RewardFeedCard" in src_text[os.path.join(ROOT, "src", "screens", "rm", "RewardConfiguration.jsx")]
+          and "export function RewardFeedCard" in card_component)
+    check("no screen defines a second reward card of its own",
+          len([f for f, t in src_text.items() if "function RewardFeedCard" in t]) == 1)
+    check("the cardholder app reads the demo clock rather than the wall clock",
+          "Date.now()" not in "".join(app_files.values()) and "new Date()" not in "".join(app_files.values()))
+    # The customer view is the one screen a member of the public sees; it must not carry the
+    # bank's internal figures. A cardholder has no business seeing a caseload score or a portfolio
+    # ceiling, and a merchant's own aggregate breakdowns are not hers either.
+    leaked = {os.path.relpath(f, ROOT): [w for w in ("merchantPriority", "contacted_this_week", "weekly_ceiling",
+                                                     "allocationSummary", "merchant_priority") if w in t]
+              for f, t in app_files.items()}
+    check("the cardholder app shows no internal bank figure",
+          not {k: v for k, v in leaked.items() if v}, str({k: v for k, v in leaked.items() if v}))
     pipeline_text = {f: open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read()
                      for f in os.listdir(os.path.join(ROOT, "pipeline")) if f.endswith(".py")}
     check("no cost-sharing vocabulary anywhere in pipeline/",
@@ -545,6 +572,16 @@ def main(rerun=True):
                 FAILURES.append(f"rationale {k}.{kk} exceeds 60 words ({len(s.split())})")
     check("every shipped constant carries a basis string", all(c.get("basis") for c in const["constants"].values()))
     check("status display map ships once", const["status_display"] == cfg.STATUS_DISPLAY)
+    # `capped` is one ladder state reached two ways. Every reason the reducer can record must have
+    # its own label, or a campaign closed by its reach cap gets announced as fully redeemed.
+    store_js = open(os.path.join(ROOT, "src", "state", "store.js"), encoding="utf-8").read()
+    cap_reasons = set(re.findall(r'cap\(next, campaign, event, "([^"]+)"\)', store_js))
+    check("every cap reason the reducer can record has its own display label",
+          cap_reasons and cap_reasons <= set(const.get("capped_display", {})),
+          f"reducer records {sorted(cap_reasons)}; manifest labels {sorted(const.get('capped_display', {}))}")
+    check("the two caps do not share a label — a reach cap is not a full redemption",
+          len(set(const.get("capped_display", {}).values())) == len(const.get("capped_display", {})),
+          str(const.get("capped_display")))
 
     # ------------------------------------------------------------------ reproducibility
     if rerun:

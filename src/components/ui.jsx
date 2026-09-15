@@ -1,7 +1,7 @@
 import React from "react";
 import { Lock, AlertTriangle } from "lucide-react";
 import { CONSTANTS } from "../data/constants";
-import { usePrivacyRules } from "../data/DataProvider";
+import { usePrivacyRules, useDemoData } from "../data/DataProvider";
 
 export function Card({ children, className = "", interactive = false, ...props }) {
   return (
@@ -18,15 +18,17 @@ export function Card({ children, className = "", interactive = false, ...props }
 
 export function SectionTitle({ eyebrow, title, subtitle, right }) {
   return (
-    <div className="flex items-end justify-between gap-4 mb-4">
-      <div>
+    // Wraps at phone width: `right` holds a status ladder on some screens, which is wider than a
+    // narrow viewport and would otherwise push the whole page into a horizontal scroll.
+    <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
+      <div className="min-w-0">
         {eyebrow && (
           <div className="text-[12px] font-semibold uppercase tracking-wide text-brand mb-1">{eyebrow}</div>
         )}
         <h2 className="text-[22px] font-bold text-ink leading-tight">{title}</h2>
         {subtitle && <p className="text-[13px] text-ink-secondary mt-1 max-w-2xl">{subtitle}</p>}
       </div>
-      {right && <div className="shrink-0">{right}</div>}
+      {right && <div className="shrink-0 max-w-full">{right}</div>}
     </div>
   );
 }
@@ -95,6 +97,16 @@ export function SuppressedCard({ reason, label }) {
       <p className="text-[13px] text-ink-light">{text}</p>
     </Card>
   );
+}
+
+// The one sentence about the whole dataset's scale, read from the pipeline manifest. Both chromes
+// — the merchant/RM shell and the cardholder app's prototype bar — render this component, so the
+// sentence has one source and one rendering however many interfaces the build grows.
+export function ScaleDisclosure({ className = "" }) {
+  const { data } = useDemoData();
+  const line = data?.constants?.scale_disclosure;
+  if (!line) return null;
+  return <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>{line}</p>;
 }
 
 export function BasisNote({ children }) {

@@ -10,7 +10,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from config import (PUB_DIR, constants_manifest, CONSTANTS, LOGIN_MERCHANTS, STATUS_DISPLAY, SCALE_DISCLOSURE,
+from config import (PUB_DIR, constants_manifest, CONSTANTS, LOGIN_MERCHANTS, STATUS_DISPLAY, CAPPED_DISPLAY, SCALE_DISCLOSURE,
                     SCALE_POLICY, SAMPLE_CARDHOLDERS, CARDHOLDER_BASE, MIN_SEGMENT_SIZE, REACH_ROUNDING)
 from common import load_raw, dump_json
 from tags import build_tags
@@ -78,7 +78,7 @@ def main():
     sizes["showcase_personas.json"] = dump_json(personas, "showcase_personas.json")
     sizes["benchmarks.json"] = dump_json(benchmarks, "benchmarks.json")
     sizes["deposit_flows.json"] = dump_json(deposits, "deposit_flows.json")
-    sizes["constants.json"] = dump_json(dict(constants=constants_manifest(), status_display=STATUS_DISPLAY, tags=tag_summary,
+    sizes["constants.json"] = dump_json(dict(constants=constants_manifest(), status_display=STATUS_DISPLAY, capped_display=CAPPED_DISPLAY, tags=tag_summary,
                                              scale_disclosure=SCALE_DISCLOSURE,
                                              scale=dict(sample_cardholders=SAMPLE_CARDHOLDERS, cardholder_base=CARDHOLDER_BASE,
                                                         floor=MIN_SEGMENT_SIZE, rounding=REACH_ROUNDING, policy=SCALE_POLICY)),

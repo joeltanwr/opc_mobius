@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Lock, RotateCcw, AlertTriangle, Send, Ban, Sparkles, CheckCircle2, Users, Radio, Ticket } from "lucide-react";
-import { useDemoData, merchantById, usePrivacyRules } from "../../data/DataProvider";
+import { useDemoData, merchantById, usePrivacyRules, natureOf } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
@@ -104,13 +104,21 @@ export default function RewardConfiguration() {
   const reward = ranked.find((r) => r.type === cfg.reward_type) ?? null;
   const durationDays = cfg.window_start && cfg.window_end
     ? Math.round((Date.parse(cfg.window_end) - Date.parse(cfg.window_start)) / 86_400_000) : null;
+  // Does the configured window include the demo clock's own day and hour? The same question the
+  // customer view asks before enabling Redeem, asked here where the window is chosen.
+  const clockParts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Singapore", weekday: "short", hour: "2-digit", hour12: false }).formatToParts(new Date(state.clock));
+  const clockDay = WEEKDAYS.indexOf(clockParts.find((p) => p.type === "weekday").value);
+  const clockHour = Number(clockParts.find((p) => p.type === "hour").value);
+  const windowIncludesToday =
+    (cfg.days_of_week ?? []).includes(clockDay) &&
+    (!cfg.hours || cfg.hours.length !== 2 || (clockHour >= cfg.hours[0] && clockHour < cfg.hours[1]));
   const reachCap = cfg.reach_cap ?? null;
   const contacted = reachCap ?? seg?.reach ?? null;
 
   if (c.status === "applied") {
     return (
       <div className="max-w-container mx-auto px-6 py-16 text-center">
-        <p className="text-[14px] font-semibold text-ink">Nothing is configured yet.</p>
+        <h2 className="text-[16px] font-bold text-ink">Nothing is configured yet</h2>
         <p className="text-[13px] text-ink-secondary mt-1 max-w-lg mx-auto">
           Configuration starts from the pending brief, with the owner on the phone. Opening it there is what moves this to{" "}
           {display("draft")} — that order is the product, not a formality.
@@ -122,7 +130,8 @@ export default function RewardConfiguration() {
 
   const previewOffer = {
     company: c.merchant_name,
-    nature: profile?.sector,
+    // The same reading of "nature" the cardholder's own list uses — see natureOf().
+    nature: natureOf(data, c.merchant_id),
     reward_type: cfg.reward_type,
     offer_headline: cfg.offer_headline,
     offer_terms: cfg.offer_terms,
@@ -142,7 +151,7 @@ export default function RewardConfiguration() {
         eyebrow="Screen 3 · Reward configuration"
         title={`${c.merchant_name} — configure with the owner`}
         subtitle="Prefilled from the Mobius recommendation and editable except the segment definition, which neither you nor the merchant can author. Every change is recorded, attributed and timestamped."
-        right={<StatusPill statusKey={c.status} display={display} />}
+        right={<StatusPill campaign={c} display={display} />}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -259,6 +268,21 @@ export default function RewardConfiguration() {
                 </select>
               </Field>
             </div>
+            {/* The window the RM sets is the window the till applies. A window that excludes today
+                means the cardholders reached today hold a card they cannot use yet — worth saying
+                out loud on the page that sets it, rather than leaving it to be discovered. */}
+            {!windowIncludesToday && (cfg.days_of_week ?? []).length > 0 && (
+              <div className="mt-3 rounded-lg border border-info/50 bg-info-bg/50 px-3 py-2.5 flex items-start gap-2">
+                <AlertTriangle size={15} className="text-info shrink-0 mt-0.5" />
+                <p className="text-[12.5px] text-ink-secondary">
+                  <span className="font-semibold text-ink">This window does not include today.</span> The demo clock is{" "}
+                  {new Date(state.clock).toLocaleString("en-SG", { timeZone: "Asia/Singapore", weekday: "long", hour: "2-digit", minute: "2-digit" })}, and the
+                  window is {(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/")} {fmtHours(cfg.hours)}. Cardholders reached today will hold a card
+                  they cannot use until the window opens. That is correct for a trough campaign — the trough is when the merchant wants them — but if you
+                  need a redemption today, add today to the days above.
+                </p>
+              </div>
+            )}
             {load.is_peak && (
               <div className="mt-3 rounded-lg border border-warning/50 bg-warning-bg/50 px-3 py-2.5 flex items-start gap-2">
                 <AlertTriangle size={15} className="text-warning shrink-0 mt-0.5" />
@@ -450,6 +474,11 @@ export default function RewardConfiguration() {
                 className={`${selectCls} leading-snug`}
               />
             </Field>
+            <p className="text-[11.5px] text-ink-light mt-1">
+              The window you have set is{" "}
+              <span className="font-medium text-ink-secondary">{(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} {fmtHours(cfg.hours)}</span>.
+              The terms above are printed on the cardholder's card next to it — if they name a different window, the card contradicts itself.
+            </p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {TERMS_PRESETS.map((t) => (
                 <button key={t} type="button" disabled={!editable}
