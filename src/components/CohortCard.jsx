@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, Badge } from "./ui";
 import { useDemoData, merchantName } from "../data/DataProvider";
-import { SHOW_BASIS_NOTES } from "../data/constants";
 import { humanize, num } from "../data/format";
 
 // The merchant-facing rendering of a showcase persona (merchant §2.1).
@@ -46,7 +45,7 @@ export default function CohortCard({ role, label, count, suppressedReason, patte
       <div className="mt-2.5 flex items-center justify-between gap-2">
         <Badge tone="neutral">Illustrative pattern — not a customer record</Badge>
       </div>
-      {basis && SHOW_BASIS_NOTES && <p className="text-[11px] text-ink-light mt-1.5 leading-snug">{basis}</p>}
+      {basis && <p className="text-[11px] text-ink-light mt-1.5 leading-snug">{basis}</p>}
     </Card>
   );
 }

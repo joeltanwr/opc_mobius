@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Building2, ShieldAlert, RotateCcw } from "lucide-react";
-import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS, DEMO_CAMPAIGN_ID, maxScreenNum } from "../data/constants";
-import { useMobiusState } from "../state/StateProvider";
-import { rewardConfigUnlocked } from "../state/store.js";
+import { Building2, ShieldAlert } from "lucide-react";
+import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS } from "../data/constants";
 import PrivacyAffordance from "./PrivacyAffordance";
 import PersonaSwitcher from "./PersonaSwitcher";
 import { MockDataBadge, ScaleDisclosure } from "./ui";
@@ -34,17 +32,9 @@ const VARIANTS = {
 export default function AppShell({ variant = "merchant" }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const m = useMobiusState();
   const v = VARIANTS[variant] ?? VARIANTS.merchant;
-
-  // The gated entry drops out of the nav until the merchant has applied and the eligibility gate
-  // has cleared that application. The lock is enforced here and by the route guard in App.jsx, and
-  // both read the same selector — a hidden tab whose URL still worked would not be a lock.
-  const unlocked = m ? rewardConfigUnlocked(m.state, DEMO_CAMPAIGN_ID) : false;
-  const nav = useMemo(() => v.screens.filter((s) => s.show !== "gated" || unlocked), [v.screens, unlocked]);
-  const allNav = useMemo(() => [...nav, ...v.optional], [nav, v.optional]);
-  const maxNum = maxScreenNum(nav, v.optional);
-
+  const nav = v.screens;
+  const allNav = [...v.screens, ...v.optional];
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target instanceof HTMLElement) {
@@ -63,11 +53,10 @@ export default function AppShell({ variant = "merchant" }) {
       } else if (e.key === "ArrowLeft" || e.key === "h") {
         if (currentIdx > 0) navigate(nav[currentIdx - 1].path);
       } else {
-        // Matched against the number the tab prints, not against its position in the row. With a
-        // gated tab hidden the two diverge, and a presenter types what they can see.
         const n = Number(e.key);
-        const target = Number.isNaN(n) ? null : allNav.find((s) => s.num === n);
-        if (target) navigate(target.path);
+        if (!Number.isNaN(n) && n >= 1 && n <= allNav.length) {
+          navigate(allNav[n - 1].path);
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
@@ -147,24 +136,9 @@ export default function AppShell({ variant = "merchant" }) {
             <span className="kbd">→</span>
             <span>navigate</span>
             <span className="mx-1.5 text-border">|</span>
-            <span className="kbd">1</span>–<span className="kbd">{maxNum}</span>
+            <span className="kbd">1</span>–<span className="kbd">{allNav.length}</span>
             <span>jump to screen</span>
           </div>
-          {/* Reset the demo to a cold load. In the footer rather than on one screen because the
-              thing that needs resetting — the event log — is shared by all three views, so the
-              control belongs where every view can reach it. Confirmed before it fires: it drops
-              a configuration somebody may be mid-way through. */}
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
-                m?.resetDemoData?.();
-              }
-            }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
-          >
-            <RotateCcw size={11} /> Reset demo data
-          </button>
         </div>
       </footer>
     </div>

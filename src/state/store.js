@@ -200,25 +200,6 @@ export function portfolioGate(portfolio, delivered) {
 // two agree.
 // ---------------------------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------------------------
-// Approved, but not started yet.
-//
-// A campaign is `active` from the moment it is submitted, because that is when its configuration
-// freezes and its allocation is fixed. Whether its window has opened is a separate question, and
-// the merchant's dashboard has to answer it honestly: a programme starting next Tuesday is not
-// "Live" today. True only when a start date is known and is still ahead of the demo clock — an
-// unknown window reads as live, which is what the campaign's own state says.
-//
-// Date-only comparison against the clock's own date. The window's start is a calendar day, not an
-// instant, so a campaign starting today is live from the top of the day rather than at 15:12.
-// ----------------------------------------------------------------------------------------------
-export function isQueued(campaign, clock) {
-  if (!campaign || campaign.status !== "active") return false;
-  const start = campaign.window?.start ?? campaign.configuration?.window_start ?? null;
-  if (!start || !clock) return false;
-  return String(start).slice(0, 10) > String(clock).slice(0, 10);
-}
-
 // The named cardholders in a campaign's cohort. Six showcase personas out of an allocation of
 // several hundred: they are the ones whose own feeds move on screen.
 export function cohortNamed(state, campaign) {
@@ -281,12 +262,7 @@ export function reduce(state, event) {
       const c = state.campaigns[event.campaign_id];
       if (!c) return reject(state, event, "unknown campaign");
       if (!canTransition(c.status, event.to)) return reject(state, event, `no transition ${c.status} → ${event.to}`);
-      // The submit check follows the submit, not the state it used to land in. With approval out
-      // of the workflow the merchant's submit goes draft → active directly, and this is the only
-      // thing standing between a half-filled form and a live campaign — so it guards both edges
-      // out of draft rather than the `pending` label it happened to be attached to.
-      const isSubmit = event.to === "pending" || (c.status === "draft" && event.to === "active");
-      if (isSubmit) {
+      if (event.to === "pending") {
         const cfg = { ...(c.configuration ?? {}), ...(event.configuration ?? {}) };
         const missing = REQUIRED_TO_SUBMIT.filter((f) => cfg[f] == null || (Array.isArray(cfg[f]) && cfg[f].length === 0) || cfg[f] === "");
         if (missing.length) return reject(state, event, `cannot submit: missing ${missing.join(", ")}`);
@@ -305,7 +281,7 @@ export function reduce(state, event) {
         }
       }
       if (event.configuration) campaign.configuration = { ...(campaign.configuration ?? {}), ...event.configuration };
-      if (isSubmit) campaign.submitted_at = event.at;
+      if (event.to === "pending") campaign.submitted_at = event.at;
       if (event.to === "active") {
         campaign.live_since = event.at;
         const cfg = campaign.configuration ?? {};
@@ -333,15 +309,6 @@ export function reduce(state, event) {
       if (!c) return reject(state, event, "unknown campaign");
       if (c.status !== "applied") return reject(state, event, `campaign is ${c.status}; an application only exists at the foot of the ladder`);
       if (c.applied_at) return reject(state, event, `already applied on ${String(c.applied_at).slice(0, 10)}`);
-      // The eligibility gate, enforced at the moment of application rather than displayed ahead
-      // of it. The decision is read off the campaign shell, which carries the pipeline's verdict
-      // from reward_recommendations.json verbatim — reward.py Step 1 is balance above the
-      // threshold AND at least one transaction score at the maximum band or better. No threshold
-      // is recomputed here. A refusal is a logged, attributed event, which is also what keeps the
-      // merchant-facing configuration tab shut: rewardConfigUnlocked below reads the same two facts.
-      if (c.eligibility && c.eligibility.passed === false) {
-        return reject(state, event, c.eligibility.message ?? "You are not eligible for the reward programme.");
-      }
       const next = clone(state);
       const campaign = next.campaigns[event.campaign_id];
       campaign.applied_at = event.at;
@@ -748,24 +715,6 @@ export function liveReach(campaign, rounding) {
   if (campaign.reach == null || rounding == null) return null;
   const raw = campaign.reach - (campaign.segment_departures?.consent ?? 0);
   return Math.max(0, Math.round(raw / rounding) * rounding);
-}
-
-// ---------------------------------------------------------------------------------------------
-// Is the merchant-facing Reward Configuration tab open?
-//
-// Two facts, both read and neither recomputed:
-//   applied_at        the merchant clicked "sign up for the reward programme" (the APPLY event)
-//   eligibility.passed  the pipeline's gate cleared that application — reward.py Step 1, shipped
-//                     in reward_recommendations.json and carried on the campaign shell
-//
-// `passed === true` is required rather than "not false", so a campaign with no decision on file
-// keeps the page shut instead of defaulting it open. A merchant that applied and was refused has
-// an applied_at in the seed data (campaign_results.json carries several), which is exactly why
-// the application alone cannot be the test.
-// ---------------------------------------------------------------------------------------------
-export function rewardConfigUnlocked(state, campaignId) {
-  const c = state?.campaigns?.[campaignId];
-  return Boolean(c && c.eligibility?.passed === true && c.applied_at);
 }
 
 // Invariants a view (or validate.py) can check on any state.

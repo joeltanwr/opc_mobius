@@ -1,21 +1,12 @@
 import React from "react";
 import { Lock, AlertTriangle } from "lucide-react";
-import { CONSTANTS, SHOW_BASIS_NOTES } from "../data/constants";
+import { CONSTANTS } from "../data/constants";
 import { usePrivacyRules, useDemoData } from "../data/DataProvider";
-
-// The default background is applied only when the caller has not asked for one.
-//
-// Tailwind emits `.bg-white` after `.bg-navy`, so `<Card className="bg-navy text-white">` used to
-// render a white card with white text — invisible, silently, with both classes present and neither
-// obviously at fault. Two utilities of equal specificity are decided by stylesheet order, which no
-// call site can see. So the conflict is resolved here instead of being lost to it: a caller that
-// names its own bg- gets it, and everyone else gets white as before.
-const HAS_BG = /(^|\s)bg-/;
 
 export function Card({ children, className = "", interactive = false, ...props }) {
   return (
     <div
-      className={`rounded-xl border border-border ${HAS_BG.test(className) ? "" : "bg-white"} shadow-card ${
+      className={`rounded-xl border border-border bg-white shadow-card ${
         interactive ? "transition-all duration-150 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-ink-light" : ""
       } ${className}`}
       {...props}
@@ -118,9 +109,6 @@ export function ScaleDisclosure({ className = "" }) {
   return <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>{line}</p>;
 }
 
-// The provenance line under a figure. Hidden by default (SHOW_BASIS_NOTES in constants.js) — the
-// call sites and their strings are untouched, so turning the flag on restores every one of them.
 export function BasisNote({ children }) {
-  if (!SHOW_BASIS_NOTES) return null;
   return <p className="text-[11px] text-ink-light mt-1 leading-snug">{children}</p>;
 }

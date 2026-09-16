@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, Gift, UserRound, Smartphone, RotateCcw } from "lucide-react";
+import { Home, Gift, UserRound, Smartphone } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { MockDataBadge, ScaleDisclosure } from "../../components/ui";
 import PersonaSwitcher from "../../components/PersonaSwitcher";
@@ -24,27 +24,8 @@ export const useToast = () => useContext(ToastContext);
 const NAV = [
   { key: "home", label: "Home", path: "/app", icon: Home, end: true },
   { key: "rewards", label: "Rewards", path: "/app/rewards", icon: Gift },
-  { key: "profile", label: "Settings", path: "/app/profile", icon: UserRound },
+  { key: "profile", label: "You", path: "/app/profile", icon: UserRound },
 ];
-
-// ---------------------------------------------------------------------------------------------
-// The two demo modes, and why the toggle is not the persona switcher.
-//
-// The persona switcher in the header moves between three products — merchant, RM, cardholder.
-// This moves between two ways of showing one of them, and only one of the two is a product at
-// all: "Individual" is the cardholder app, "Consolidated" is a pitch device that puts four
-// people's home screens on one slide. Folding the second into the persona switcher would put a
-// presentation mode next to three real interfaces as though it were a fourth, which is exactly
-// the confusion the switcher exists to remove.
-//
-// So it sits inside the cardholder view, in the prototype chrome outside the device, next to the
-// "Prototype" marker — the layer that is already understood to be scaffolding.
-// ---------------------------------------------------------------------------------------------
-const MODES = [
-  { key: "individual", label: "Individual", path: "/app" },
-  { key: "consolidated", label: "Consolidated", path: "/app/all" },
-];
-export const CONSOLIDATED_PATH = "/app/all";
 
 export default function AppFrame() {
   const location = useLocation();
@@ -64,11 +45,7 @@ export default function AppFrame() {
   }, []);
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const consolidated = location.pathname === CONSOLIDATED_PATH;
-
-  // Keyboard: the presenter must be able to reach any of the three screens without a mouse. The
-  // digits are the app's own screens, so they do nothing in the consolidated view — there is one
-  // screen there, and silently jumping out of it mid-sentence would be worse than not responding.
+  // Keyboard: the presenter must be able to reach any of the three screens without a mouse.
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target instanceof HTMLElement) {
@@ -76,13 +53,12 @@ export default function AppFrame() {
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable) return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (consolidated) return;
       const n = Number(e.key);
       if (!Number.isNaN(n) && n >= 1 && n <= NAV.length) navigate(NAV[n - 1].path);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [navigate, consolidated]);
+  }, [navigate]);
 
   if (!m) return null;
   const holder = m.state.cardholders[CARDHOLDER_ID];
@@ -100,51 +76,23 @@ export default function AppFrame() {
             <div className="flex items-center gap-2 shrink-0">
               <Smartphone size={14} />
               <span className="text-[12px] font-semibold uppercase tracking-wide">Prototype</span>
-              <span className="hidden sm:inline text-[12px] text-white/55">
-                {consolidated ? "· cardholder app · four cardholders" : `· cardholder app · ${holder?.name}'s phone`}
-              </span>
+              <span className="hidden sm:inline text-[12px] text-white/55">· cardholder app · {holder?.name}'s phone</span>
             </div>
-
-            {/* The demo-mode toggle. Segmented rather than a dropdown: there are two of them, both
-                fit, and a presenter mid-pitch should not have to open anything. */}
-            <div className="flex items-center gap-1 rounded-lg bg-white/10 p-0.5" role="group" aria-label="Cardholder view mode">
-              {MODES.map((mode) => {
-                const active = mode.key === (consolidated ? "consolidated" : "individual");
-                return (
-                  <button
-                    key={mode.key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => navigate(mode.path)}
-                    className={`rounded-md px-2.5 py-1 text-[12px] font-semibold transition-colors ${
-                      active ? "bg-white text-navy" : "text-white/65 hover:text-white"
-                    }`}
-                  >
-                    {mode.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* The app's own screens. Hidden in the consolidated view, which has no screens of its
-                own to offer — four home screens are the whole of it. */}
-            {!consolidated && (
-              <nav className="flex items-center gap-1 text-[12px]">
-                {NAV.map((s, i) => (
-                  <NavLink
-                    key={s.key}
-                    to={s.path}
-                    end={s.end}
-                    className={({ isActive }) =>
-                      `rounded-md px-2 py-1 font-medium ${isActive ? "bg-white/15 text-white" : "text-white/60 hover:text-white"}`
-                    }
-                  >
-                    <span className="font-num opacity-60 mr-1">{i + 1}</span>
-                    {s.label}
-                  </NavLink>
-                ))}
-              </nav>
-            )}
+            <nav className="flex items-center gap-1 text-[12px]">
+              {NAV.map((s, i) => (
+                <NavLink
+                  key={s.key}
+                  to={s.path}
+                  end={s.end}
+                  className={({ isActive }) =>
+                    `rounded-md px-2 py-1 font-medium ${isActive ? "bg-white/15 text-white" : "text-white/60 hover:text-white"}`
+                  }
+                >
+                  <span className="font-num opacity-60 mr-1">{i + 1}</span>
+                  {s.label}
+                </NavLink>
+              ))}
+            </nav>
             <div className="ml-auto flex items-center gap-3 shrink-0">
               <MockDataBadge />
               <PersonaSwitcher tone="dark" />
@@ -153,50 +101,23 @@ export default function AppFrame() {
         </header>
 
         {/* ---------------------------------------------------------- the app itself */}
-        {/* One phone, or four. The consolidated view draws its own tiles and their bezels, so it
-            is rendered wide and unframed here rather than inside a device that would be a fifth
-            frame around four. The bottom nav goes with the single phone for the same reason: it
-            is the app's navigation, and there is no one app on that screen to navigate. */}
-        {consolidated ? (
-          <main className="flex-1">
-            <div key={location.pathname} className="screen-enter">
-              <Outlet context={{ toast: show }} />
-            </div>
-          </main>
-        ) : (
-          <main className="flex-1 flex justify-center px-0 sm:px-6 py-0 sm:py-8">
-            <div className="w-full max-w-[420px] sm:rounded-[36px] sm:border-8 sm:border-ink sm:shadow-card-hover overflow-hidden bg-white">
-              <div className="sm:rounded-[28px] overflow-hidden flex flex-col min-h-[100dvh] sm:min-h-[760px]">
-                <div key={location.pathname} className="flex-1 screen-enter">
-                  <Outlet context={{ toast: show }} />
-                </div>
-                <BottomNav unread={unread} />
+        <main className="flex-1 flex justify-center px-0 sm:px-6 py-0 sm:py-8">
+          <div className="w-full max-w-[420px] sm:rounded-[36px] sm:border-8 sm:border-ink sm:shadow-card-hover overflow-hidden bg-white">
+            <div className="sm:rounded-[28px] overflow-hidden flex flex-col min-h-[100dvh] sm:min-h-[760px]">
+              <div key={location.pathname} className="flex-1 screen-enter">
+                <Outlet context={{ toast: show }} />
               </div>
+              <BottomNav unread={unread} />
             </div>
-          </main>
-        )}
+          </div>
+        </main>
 
         <footer className="border-t border-border bg-white">
           <div className="max-w-container mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between">
             <ScaleDisclosure />
-            {!consolidated && (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-light">
-                <span className="kbd">1</span>–<span className="kbd">{NAV.length}</span><span>jump to screen</span>
-              </div>
-            )}
-            {/* The same reset as the merchant and RM chromes: one shared event log, so the control
-                has to be reachable from whichever view the presenter happens to be standing in. */}
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
-                  m?.resetDemoData?.();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
-            >
-              <RotateCcw size={11} /> Reset demo data
-            </button>
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-light">
+              <span className="kbd">1</span>–<span className="kbd">{NAV.length}</span><span>jump to screen</span>
+            </div>
           </div>
         </footer>
 

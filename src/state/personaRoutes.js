@@ -29,9 +29,8 @@ export function personaBy(key) {
 const lastPath = { ...ENTRY };
 
 export function rememberPath(pathname) {
-  // "/" is only the redirect into the overview tab; the tab itself is a merchant screen and is
-  // remembered like any other. Recording the redirect would send the merchant switch to a path
-  // that immediately bounces, which reads as a flicker mid-pitch.
+  // The landing card belongs to no persona. Remembering it would send the merchant switch back to
+  // the title slide, which is the one place the demo never wants to return to mid-pitch.
   if (pathname === "/") return;
   lastPath[personaOf(pathname)] = pathname;
 }
