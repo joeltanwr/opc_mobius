@@ -28,7 +28,11 @@ const QUICK = [
   { key: "support", label: "Support", icon: LifeBuoy },
 ];
 
-export default function BankingHome() {
+// `cardholderId` is a prop with the logged-in cardholder as its default, so the consolidated demo
+// view can render this same screen for four people at once rather than growing a second home
+// screen that would drift from this one. Nothing else about the component knows which mode it is
+// in: `compact` only trims chrome that does not fit a tile a quarter of the width.
+export default function BankingHome({ cardholderId = CARDHOLDER_ID, compact = false }) {
   const navigate = useNavigate();
   const toast = useToast();
   const { data } = useDemoData();
@@ -36,8 +40,8 @@ export default function BankingHome() {
   const [dismissed, setDismissed] = useState([]);
   if (!m) return null;
   const { state, allOffersFor } = m;
-  const holder = state.cardholders[CARDHOLDER_ID];
-  const offers = allOffersFor(CARDHOLDER_ID).map((o) => enrich(o, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock: state.clock }));
+  const holder = state.cardholders[cardholderId];
+  const offers = allOffersFor(cardholderId).map((o) => enrich(o, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock: state.clock }));
   const live = offers.filter((o) => o.status === "delivered");
 
   // The newest push that has actually arrived, and has not been dismissed on this screen.
@@ -138,7 +142,10 @@ export default function BankingHome() {
         </section>
 
         {/* ---------------------------------------------------------- mock log-in */}
-        <section className="rounded-2xl border border-border bg-white shadow-card p-4">
+        {/* Dropped in the four-up view. It is a privacy statement about the prototype, not part of
+            what that screen demonstrates, and the same paragraph repeated four times across one
+            slide reads as filler rather than as a claim. The individual view still carries it. */}
+        <section className={`rounded-2xl border border-border bg-white shadow-card p-4 ${compact ? "hidden" : ""}`}>
           <div className="flex items-start gap-2.5">
             <Lock size={15} className="text-ink-light shrink-0 mt-0.5" />
             <div className="flex-1">
