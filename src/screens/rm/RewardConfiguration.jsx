@@ -5,7 +5,7 @@ import { useDemoData, merchantById, usePrivacyRules, natureOf } from "../../data
 import { useMobiusState } from "../../state/StateProvider";
 import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
-import { CONSTANTS } from "../../data/constants";
+import { CONSTANTS, screenNum } from "../../data/constants";
 import { sgd, num, pct, pctOf, cellText, floorRound } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame, REWARD_TYPE_LABELS } from "../../components/RewardCard";
@@ -26,8 +26,14 @@ import { StatusPill, Th, Td } from "./rmCommon";
 // difference on screen rather than trusting the labels: the segment is who qualifies, the reach
 // cap is how many of them get contacted, the redemption limit is how many can claim.
 //
-// Approval is not on this page's submit button. Configuring and approving are two steps with two
-// owners, and the ladder in the state module refuses to skip from draft to active.
+// Submit starts the programme. Approval used to be a second step with a second owner and is no
+// longer part of the workflow, so the button says "Submit" and claims nothing about a review. The
+// check that made submitting meaningful moved with it: the reducer still refuses an incomplete
+// configuration, now on the draft → active edge rather than the draft → pending one.
+//
+// A submitted programme reads "Live" or "In queue" depending on its start date — the same
+// distinction isQueued() draws in the state module, computed here as `startsLater` so the button's
+// own caption cannot disagree with the dashboard it is about to write to.
 // ---------------------------------------------------------------------------------------------
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -70,14 +76,28 @@ const TERMS_PRESETS = [
   "Subject to availability; the merchant may withdraw the offer at any time.",
 ];
 
-export default function RewardConfiguration() {
-  const { campaignId } = useParams();
+// ---------------------------------------------------------------------------------------------
+// The one configuration surface in the build.
+//
+// Written as the RM's screen 3 and now also the merchant's "Reward Configuration" tab, reached
+// from the sign-up action once the eligibility gate clears. There is deliberately no second
+// implementation: two configuration pages drift, and this one is the record a result is explained
+// from six months later.
+//
+// `campaignId` and `actor` are props with a route-param fallback, so the same component serves
+// both mounts. `actor` is what every CONFIGURE and ADVANCE event is attributed to, which is the
+// only thing that differs between them — the field-level permissions, the segment log and the
+// change log are identical either way.
+// ---------------------------------------------------------------------------------------------
+export default function RewardConfiguration({ campaignId: campaignIdProp, actor = "ocbc", backTo, backLabel }) {
+  const params = useParams();
+  const campaignId = campaignIdProp ?? params.campaignId;
   const { data } = useDemoData();
   const { floor, rounding, floorBasis } = usePrivacyRules();
   const m = useMobiusState();
   const [terms, setTerms] = useState(null);
   if (!m) return null;
-  const { state, dispatch, display } = m;
+  const { state, dispatch, display, displayOf } = m;
   const c = state.campaigns[campaignId];
   if (!c) return <NotFound id={campaignId} />;
 
@@ -87,7 +107,7 @@ export default function RewardConfiguration() {
   const seg = c.segment;
   const prefill = c.prefill?.fields ?? {};
   const editable = c.status === "draft";
-  const set = (field, value, note) => dispatch({ type: "CONFIGURE", campaign_id: c.id, field, value, by: "ocbc", note });
+  const set = (field, value, note) => dispatch({ type: "CONFIGURE", campaign_id: c.id, field, value, by: actor, note });
   // A field is still the Mobius draft when nothing has been written over it since the prefill.
   const isPrefilled = (field) => field in prefill && JSON.stringify(cfg[field]) === JSON.stringify(prefill[field]);
   const changedFrom = (field) => (field in prefill && !isPrefilled(field) ? prefill[field] : null);
@@ -100,6 +120,10 @@ export default function RewardConfiguration() {
   const load = useMemo(() => windowLoad(profile, cfg.days_of_week, cfg.hours), [profile, cfg.days_of_week, cfg.hours]);
   const troughLoad = useMemo(() => windowLoad(profile, prefill.days_of_week, prefill.hours), [profile, c.prefill]);
   const missing = REQUIRED_TO_SUBMIT.filter((f) => cfg[f] == null || (Array.isArray(cfg[f]) && cfg[f].length === 0) || cfg[f] === "");
+  // Whether submitting would start the programme or queue it. Date-only against the clock's own
+  // day, matching isQueued() in the state module — the two must agree, or the button promises one
+  // thing and the dashboard shows another the moment it is clicked.
+  const startsLater = Boolean(cfg.window_start) && String(cfg.window_start).slice(0, 10) > String(state.clock).slice(0, 10);
   const lastRejection = [...state.ledger].reverse().find((e) => e.type === "REJECTED" && e.detail?.campaign_id === c.id);
   const reward = ranked.find((r) => r.type === cfg.reward_type) ?? null;
   const durationDays = cfg.window_start && cfg.window_end
@@ -115,15 +139,34 @@ export default function RewardConfiguration() {
   const reachCap = cfg.reach_cap ?? null;
   const contacted = reachCap ?? seg?.reach ?? null;
 
+  // An application with nothing configured against it yet.
+  //
+  // The applied → draft transition used to belong to the RM's pending brief, which is the only
+  // place that fired it. With that screen off the nav the merchant mount has to open its own
+  // draft, or the configuration tab it was just sent to is a dead end.
+  //
+  // It stays an explicit click rather than something a page view does behind the reducer's back:
+  // opening configuration is a logged, attributed transition, and a screen that mutates the
+  // ladder just by being rendered would put an event in the log that nobody performed.
   if (c.status === "applied") {
     return (
       <div className="max-w-container mx-auto px-6 py-16 text-center">
         <h2 className="text-[16px] font-bold text-ink">Nothing is configured yet</h2>
         <p className="text-[13px] text-ink-secondary mt-1 max-w-lg mx-auto">
-          Configuration starts from the pending brief, with the owner on the phone. Opening it there is what moves this to{" "}
-          {display("draft")} — that order is the product, not a formality.
+          {actor === "merchant"
+            ? "Your application is in. Opening configuration is what moves it to a draft — nothing is sent to any cardholder by this, or by anything on the next screen."
+            : "Configuration starts from the pending brief, with the owner on the phone. Opening it there is what moves this to a draft — that order is the product, not a formality."}
         </p>
-        <Link to={`/rm/pending/${c.id}`} className="inline-block mt-3 text-[13px] font-semibold text-brand hover:underline">Open the brief →</Link>
+        {actor === "merchant" ? (
+          <button
+            onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "draft", by: "merchant", note: "merchant opened configuration" })}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover"
+          >
+            Start configuring this reward
+          </button>
+        ) : (
+          <Link to={`/rm/pending/${c.id}`} className="inline-block mt-3 text-[13px] font-semibold text-brand hover:underline">Open the brief →</Link>
+        )}
       </div>
     );
   }
@@ -142,15 +185,20 @@ export default function RewardConfiguration() {
     status: "delivered",
   };
 
+  // The back link and the title follow the mount. The merchant is not "configuring with the
+  // owner" — it *is* the owner — and it has no portfolio to go back to.
+  const back = backTo ?? (actor === "merchant" ? "/target-customer" : "/rm");
+  const backText = backLabel ?? (actor === "merchant" ? "Back to your customer profile" : "Back to the portfolio");
+
   return (
     <div className="max-w-container mx-auto px-6 py-8">
-      <Link to="/rm" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink-secondary hover:text-ink mb-3">
-        <ArrowLeft size={13} /> Back to the portfolio
+      <Link to={back} className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink-secondary hover:text-ink mb-3">
+        <ArrowLeft size={13} /> {backText}
       </Link>
       <SectionTitle
-        eyebrow="Screen 3 · Reward configuration"
-        title={`${c.merchant_name} — configure with the owner`}
-        subtitle="Prefilled from the Mobius recommendation and editable except the segment definition, which neither you nor the merchant can author. Every change is recorded, attributed and timestamped."
+        eyebrow={`Screen ${actor === "merchant" ? screenNum("reward-configuration") : 3} · Reward configuration`}
+        title={actor === "merchant" ? `${c.merchant_name} — configure your reward` : `${c.merchant_name} — configure with the owner`}
+        subtitle="Prefilled from the Mobius recommendation and editable except the segment definition, which cannot be authored here. Every change is recorded, attributed and timestamped."
         right={<StatusPill campaign={c} display={display} />}
       />
 
@@ -521,7 +569,7 @@ export default function RewardConfiguration() {
             </div>
           </Section>
 
-          {/* ---------------------------------------------------------- 5.9 submit, then approve */}
+          {/* ---------------------------------------------------------- 5.9 submit */}
           <Card className="p-6 border-ink/20">
             <h3 className="text-[15px] font-bold text-ink mb-3">Summary — read this back to the owner before anything happens</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-[13px]">
@@ -536,31 +584,51 @@ export default function RewardConfiguration() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
+              {/* Submit starts the programme. Approval was a separate step with a separate owner
+                  until it came out of the workflow; what is left is one act by one party, so the
+                  button says what it does and nothing promises a review that will not happen.
+                  The completeness check that used to guard the `pending` edge now guards this one
+                  — see the reducer — so an incomplete configuration is still refused. */}
               {c.status === "draft" && (
                 <button disabled={missing.length > 0}
-                        onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "pending", by: "rm", note: "configured with the owner and submitted for approval" })}
+                        onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "active", by: actor,
+                                                  push_granted: Boolean(cfg.push_granted),
+                                                  note: actor === "merchant" ? "configured and submitted by the merchant" : "configured with the owner and submitted" })}
                         className="inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-40">
-                  <Send size={15} /> Submit for approval
+                  <Send size={15} /> Submit
                 </button>
+              )}
+              {c.status === "draft" && missing.length === 0 && (
+                <span className="text-[12px] text-ink-secondary">
+                  {startsLater
+                    ? `Starts ${cfg.window_start} — it will sit in the queue until then.`
+                    : "Starts today — it goes live on your dashboard as soon as you submit."}
+                </span>
               )}
               {c.status === "pending" && (
                 <div className="w-full rounded-lg border-2 border-brand/40 bg-[#FDECEC]/40 px-4 py-3">
-                  <p className="text-[13px] font-semibold text-ink">Submitted — approval is a separate step, with a separate owner.</p>
+                  <p className="text-[13px] font-semibold text-ink">Submitted — awaiting approval.</p>
                   <p className="text-[12.5px] text-ink-secondary mt-0.5 mb-3">
-                    Configuring a campaign and approving it are not the same act, and nothing in this product goes live on one click. Approving sets it live,
-                    makes it visible on the merchant's dashboard, and allows the first send.
+                    This campaign was submitted into the approval step, which is no longer part of the workflow. Nothing new arrives here; the control is
+                    kept so a campaign already sitting in this state can still be moved on rather than stranded.
                   </p>
                   <button
                     onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "active", by: "ocbc", push_granted: Boolean(cfg.push_granted), note: "approved by OCBC" })}
                     className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover">
-                    <CheckCircle2 size={15} /> Approve and set the campaign live
+                    <CheckCircle2 size={15} /> Set the campaign live
                   </button>
                 </div>
               )}
+              {/* Where "watch the result" points depends on who is reading. The merchant goes to
+                  their own Reward Dashboard; only the RM is sent to an /rm route. This used to
+                  send everyone to the RM's campaign detail, which mattered little while the RM
+                  was the one submitting and matters a great deal now that the merchant is. */}
               {["active", "capped", "stopped", "completed"].includes(c.status) && (
                 <p className="text-[12.5px] text-ink-secondary">
-                  {display(c.status)}. Configuration is frozen; fire the push and watch the result from{" "}
-                  <Link to={`/rm/campaign/${c.id}`} className="font-semibold text-brand hover:underline">the campaign detail</Link>.
+                  {displayOf(c)}. Configuration is frozen; watch the result on{" "}
+                  {actor === "merchant"
+                    ? <Link to="/results" className="font-semibold text-brand hover:underline">your Reward Dashboard</Link>
+                    : <Link to={`/rm/campaign/${c.id}`} className="font-semibold text-brand hover:underline">the campaign detail</Link>}.
                 </p>
               )}
               {missing.length > 0 && c.status === "draft" && <span className="text-[12px] text-ink-secondary">Missing: {missing.map((f) => f.replace(/_/g, " ")).join(", ")}</span>}
