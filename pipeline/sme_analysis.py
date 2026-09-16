@@ -403,43 +403,6 @@ def analyse_merchant(raw, mid, tags):
         daily = src.groupby("date").agg(n=("amount", "size"), s=("amount", "sum"))
         profile["series"]["daily"] = [[d.isoformat(), int(r["n"]), round(float(r["s"]), 2)] for d, r in daily.iterrows()]
 
-        # ------------------------------------------------------------------------------------
-        # The same days, split by daypart.
-        #
-        # The merchant view charts a reward programme's own targeted window before and after it
-        # launched — for Soujourner, the Tue–Thu afternoon trough. Answering that needs sales
-        # resolved by hour *over time*, which nothing shipped before: `slots` is a single twelve
-        # week aggregate and the hourly `share` array is a fixed distribution, so neither can say
-        # whether the trough moved. Multiplying the overall daily curve by a fixed share would
-        # have produced a chart that is the overall curve in different units and shows no
-        # programme effect by construction, which is worse than no chart.
-        #
-        # Emitted by daypart rather than by hour because a campaign's window is chosen from the
-        # detected trough, which is daypart-aligned (DAYPART_HOURS), and because 24 hours a day
-        # would not fit the manifest's size budget. The app maps a campaign's configured hours
-        # onto these buckets and says which bucket it is showing; a window that does not align is
-        # reported as such rather than silently rounded into the nearest one.
-        #
-        # One row per day: [date, morning, lunch, afternoon, evening, late], sales in SGD. Counts
-        # are left out — the chart is about sales, and carrying both would double this for nothing.
-        # ------------------------------------------------------------------------------------
-        by_dp = src.copy()
-        by_dp["daypart"] = by_dp["dt"].dt.hour.map(daypart_of_hour)
-        grid = by_dp.pivot_table(index="date", columns="daypart", values="amount", aggfunc="sum").fillna(0.0)
-        for dp_name in DAYPARTS:
-            if dp_name not in grid.columns:
-                grid[dp_name] = 0.0
-        profile["series"]["daily_by_daypart"] = [
-            [d.isoformat()] + [round(float(row[dp]), 2) for dp in DAYPARTS] for d, row in grid.iterrows()
-        ]
-        profile["series"]["daypart_basis"] = dict(
-            dayparts=list(DAYPARTS),
-            hours={d: list(DAYPART_HOURS[d]) for d in DAYPARTS},
-            note="Sales in SGD per daypart per day, from the same acquiring records as series.daily. "
-                 "Hours are half-open [start, end). A programme's before-and-after window chart reads "
-                 "the daypart its configured hours fall in.",
-        )
-
     rfm_rows = None
     if gate_passed and len(src):
         rfm = rfm_table(src, DEMO_DATE)

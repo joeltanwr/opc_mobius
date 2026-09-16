@@ -74,126 +74,44 @@ export const CONSTANTS = {
 // system's floor for anything meant to be read off a projector. Width comes out of the words,
 // never out of the type.
 //
-// The real constraint is a measured budget, not a character count. Last measured in the browser at
-// a 1280px viewport with the four-tab set and Reward Configuration unlocked: the nav row used
-// 757px of the ~905px available (Overview 99, Customer Profile & Reward Programme 299, Reward
-// Configuration 182, Reward Dashboard 164), leaving ~148px spare. Adding an entry or lengthening
-// a label is fine while that stays positive; re-measure in the browser rather than estimating,
-// because the last time this overflowed it clipped a label to "Reward s" and nothing failed
-// loudly.
-//
-// Since that measurement the second label shortened to "Customer Profile", which gives back
-// roughly half its width and takes the row well clear. The figures above are left as the last
-// real measurement rather than adjusted by arithmetic — an estimate written in the slot where a
-// measurement belongs is how this stops being a budget.
+// The real constraint is a measured budget, not a character count: at the 1280px container the
+// header row has 1232px, of which the logo lockup takes ~193px, the cardholder link ~86px and the
+// gaps 48px. Measured at seven entries the nav uses 578px of the ~905px available, leaving ~327px
+// spare. Adding an entry or lengthening a label is fine while that stays positive; check it in the
+// browser rather than estimating, because the last time this overflowed it clipped a label to
+// "Reward s" and nothing failed loudly.
 // Order is the demo sequence, walked left to right with the arrow keys.
 //
-// Retired: "Your view" (screen 1's trading summary, absorbed into Customer profile along with the
+// Screen 1 is the merchant's whole story and ends in the application. Screens 2 and 3 are the
+// evidence under the two numbers it shows, placed immediately after it because that is when a
+// sceptical reviewer asks for them — and before screen 4, where the merchant commits budget.
+// Screens 4 and 5 walk the campaign up the ladder; 6 covers the merchants this cannot help yet.
+//
+// Retired: "Your view" (screen 1's trading summary, absorbed into Target customer along with the
 // exact-versus-floored contrast it alone used to make) and "RM handoff" (its six ranked reward
-// types duplicated Customer profile's, its handoff is now the APPLY event, and its incrementality
+// types duplicated Target customer's, its handoff is now the APPLY event, and its incrementality
 // block moved next to the reward ranking it explains).
-// ----------------------------------------------------------------------------------------------
-// The merchant's screens, and which of them the nav offers.
-//
-// `show` is about visibility, never existence:
-//   always   on the nav unconditionally
-//   gated    on the nav only once the merchant has applied and the eligibility gate cleared that
-//            application — see rewardConfigUnlocked in state/store.js
-//   extra    disconnected from the nav and from the router
-//
-// The `extra` screens are the Set-up page that Reward Configuration replaced, plus the demand-gap
-// detector, the segment panel and the allocation preview. Nothing about them has been switched
-// off and their components are untouched: the detectors still run in the pipeline, and their
-// combined output is what "Customer Profile & Reward Programme" presents to the merchant.
-// Flipping MERCHANT_EXTRA_SCREENS puts them all back on the nav and the router in one move,
-// which is why none of this is commented out.
-//
-// Screen numbers are stable per key and do not renumber when visibility changes: a screen that
-// prints "Screen 6" in its own eyebrow must still say 6 when it is reached with the flag on.
-// The visible run is kept contiguous: 1, 2 and 4 always, 3 once Reward Configuration unlocks,
-// and 5 for the hop to the cardholder app, with the disconnected screens numbered above that.
-// So the digits a presenter types always match the numbers printed on the tabs.
-// ----------------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------------
-// The small light-grey provenance lines under figures and panels — <BasisNote>, and the matching
-// basis line on CohortCard.
-//
-// Off: they were the bulk of the words on every screen, and a projector read at three metres is
-// the thing this build is optimised for. The strings themselves are untouched at all 57 call
-// sites, so nothing about where a figure came from has been lost from the codebase — only from
-// the screen. Flip this to true for an audit or a spec review and every one of them comes back.
-//
-// What this does NOT switch off, because the brief requires them visible: the "Mock data" marker
-// on every screen, the `provisional` tag on a provisional figure, and the scale disclosure in
-// each chrome (validate.py checks the last of those renders in both).
-// ----------------------------------------------------------------------------------------------
-export const SHOW_BASIS_NOTES = false;
-
-export const MERCHANT_EXTRA_SCREENS = false;
-
-export const ALL_MERCHANT_SCREENS = [
-  { key: "overview", num: 1, label: "Overview", path: "/overview", show: "always" },
-  // "& Reward Programme" came off the label once Reward Configuration became a tab of its own:
-  // the programme is configured there now, and this tab is the customer picture that justifies it
-  // — the demand-gap output, the RFM distribution and the ranked rewards. The shorter label is
-  // also ~130px of nav budget back, which the measured note above was spending on one word.
-  { key: "target-customer", num: 2, label: "Customer Profile", path: "/target-customer", show: "always" },
-  // The configuration page, gated. It sits third — where it appears once unlocked, not a promise
-  // that it is always there. Its component is the RM view's Configure screen, reused rather than
-  // reimplemented: one configuration surface now, not two that can drift apart.
-  { key: "reward-configuration", num: 3, label: "Reward Configuration", path: "/reward-configuration", show: "gated" },
-  { key: "results", num: 4, label: "Reward Dashboard", path: "/results", show: "always" },
-  // Disconnected. reward-setup is the page Reward Configuration replaced — kept whole in the
-  // codebase, off the nav and off the router, like the three below it.
-  { key: "reward-setup", num: 6, label: "Set-up", path: "/reward-setup", show: "extra" },
-  { key: "demand-gap", num: 7, label: "Demand gap", path: "/demand-gap", show: "extra" },
-  { key: "opportunity", num: 8, label: "Segments", path: "/opportunity", show: "extra" },
-  { key: "preview", num: 9, label: "Preview", path: "/preview", show: "extra" },
+export const SCREENS = [
+  { key: "target-customer", num: 1, label: "Target customer", path: "/target-customer" },
+  { key: "demand-gap", num: 2, label: "Demand gap", path: "/demand-gap" },
+  { key: "opportunity", num: 3, label: "Segments", path: "/opportunity" },
+  { key: "reward-setup", num: 4, label: "Set-up", path: "/reward-setup" },
+  { key: "results", num: 5, label: "Results", path: "/results" },
+  { key: "preview", num: 6, label: "Preview", path: "/preview" },
 ];
-// What the nav may render. The gated entry is in this list; AppShell is what drops it until it
-// unlocks, so the lock is enforced in one place rather than in every consumer of SCREENS.
-export const SCREENS = ALL_MERCHANT_SCREENS.filter((s) => s.show !== "extra" || MERCHANT_EXTRA_SCREENS);
 
-// The cardholder's app is a build of its own, not a fourth merchant tab — it has its own
+// The cardholder's app is a build of its own, not a seventh merchant screen — it has its own
 // chrome, its own nav and its own audience. The merchant nav keeps a link across to it, which is
 // what this entry is: a way out of the merchant view, numbered so the keyboard can reach it.
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 5, label: "Cardholder", path: "/app" },
+  { key: "consumer", num: 7, label: "Cardholder", path: "/app" },
 ];
 
-// The screen number a view prints in its eyebrow. Read off the full table, not the filtered nav,
-// so a screen reached while disconnected still announces its own number instead of a blank.
+// The screen number a view prints in its eyebrow. Derived from SCREENS so reordering the nav can
+// never leave a screen announcing a number the chrome disagrees with.
 export const screenNum = (key) =>
-  [...ALL_MERCHANT_SCREENS, ...OPTIONAL_SCREENS].find((s) => s.key === key)?.num ?? "";
+  [...SCREENS, ...OPTIONAL_SCREENS].find((s) => s.key === key)?.num ?? "";
 
-// The highest number the keyboard can jump to. AppShell matches a typed digit against `num`
-// rather than against a position, so a hidden gated tab does not shift the others under the
-// presenter's fingers mid-pitch.
-export const maxScreenNum = (screens, optional) =>
-  Math.max(0, ...[...screens, ...optional].map((s) => s.num ?? 0));
-
-
-// ----------------------------------------------------------------------------------------------
-// The RFM segments in plain language, for the info button beside the segmentation chart.
-//
-// The keys are the taxonomy the pipeline actually scores into (profiles[mid].rfm.segments), so a
-// segment the pipeline stops producing loses its gloss rather than showing a stale one, and a new
-// one shows up unexplained rather than mislabelled. Wording is the merchant's vocabulary — what
-// the segment means about their own customers — not the recency/frequency/monetary arithmetic
-// behind it, which is the pipeline's business and not something an SME needs read to them.
-// ----------------------------------------------------------------------------------------------
-export const RFM_SEGMENT_GLOSSARY = {
-  "Champions": "Bought recently, come in often, and spend the most.",
-  "Loyal Customers": "Come in regularly and respond well to what you offer.",
-  "Potential Loyalists": "Recent customers spending well who could become regulars.",
-  "New Customers": "Bought from you for the first time very recently.",
-  "Promising": "Recent first-time buyers, modest spend so far.",
-  "Need Attention": "Were regular and spent above average, but it has been a while.",
-  "Can't Lose Them": "Used to spend heavily and often, and have not been back for a long time.",
-  "At Risk": "Spent well before, and the gap since their last visit is growing.",
-  "Hibernating": "Few visits, low spend, and a long time since the last one.",
-  "Lost": "The lowest spend and frequency, and away the longest.",
-};
 export const HERO_MERCHANT_ID = "M0001";
 export const HERO_RIVAL_MERCHANT_ID = "M0055";
 export const COLD_START_MERCHANT_ID = "M0002";
@@ -222,28 +140,15 @@ export const DEMO_CAMPAIGN_ID = "C-SJ-03";
 // drill-down (control arm, redeemer profile, verdict) rather than a row of dashes.
 export const RM_DETAIL_DEFAULT_CAMPAIGN = "C-SJ-02";
 
-// ----------------------------------------------------------------------------------------------
-// The RM's screens. Same `show` vocabulary as the merchant table.
-//
-// Pending brief and Configure are off the RM nav and off the RM router. Configure is a special
-// case among the disconnected screens: its component is not parked, it is now the merchant view's
-// "Reward Configuration" tab, so only the RM-side tab and route entry are hidden. Pending brief
-// is fully parked — but note it was the only thing that moved a campaign applied → draft, so the
-// merchant configuration page opens its own draft now (see RewardConfiguration).
-//
-// Consequence worth saying out loud: with both hidden there is no RM approval step anywhere in
-// the demo. That reverses the logged human-in-the-loop decision and needs a talk-track line.
-// ----------------------------------------------------------------------------------------------
-export const RM_EXTRA_SCREENS = false;
-
-export const ALL_RM_SCREENS = [
-  { key: "rm-portfolio", num: 1, label: "Portfolio", path: "/rm", show: "always" },
-  { key: "rm-campaign", num: 2, label: "Campaign detail", path: `/rm/campaign/${RM_DETAIL_DEFAULT_CAMPAIGN}`, show: "always" },
-  { key: "rm-pending", num: 3, label: "Pending brief", path: `/rm/pending/${DEMO_CAMPAIGN_ID}`, show: "extra" },
-  { key: "rm-configure", num: 4, label: "Configure", path: `/rm/configure/${DEMO_CAMPAIGN_ID}`, show: "extra" },
+// The RM view's four screens (RM prompt §3-§6). Screens 2-4 are per-campaign and open from a row;
+// the nav points each at the campaign the pitch uses, so all four are reachable from the keyboard
+// without a mouse and any of them can be opened cold in Q&A.
+export const RM_SCREENS = [
+  { key: "rm-portfolio", num: 1, label: "Portfolio", path: "/rm" },
+  { key: "rm-pending", num: 2, label: "Pending brief", path: `/rm/pending/${DEMO_CAMPAIGN_ID}` },
+  { key: "rm-configure", num: 3, label: "Configure", path: `/rm/configure/${DEMO_CAMPAIGN_ID}` },
+  { key: "rm-campaign", num: 4, label: "Campaign detail", path: `/rm/campaign/${RM_DETAIL_DEFAULT_CAMPAIGN}` },
 ];
-
-export const RM_SCREENS = ALL_RM_SCREENS.filter((s) => s.show !== "extra" || RM_EXTRA_SCREENS);
 
 // -----------------------------------------------------------------------------
 // The three interfaces of the one platform, named once so the persona switcher,
@@ -261,65 +166,3 @@ export const PERSONAS = [
 
 // Merchant first: the pitch opens there, and so does a cold load.
 export const DEFAULT_PERSONA = PERSONAS[0].key;
-
-// ----------------------------------------------------------------------------------------------
-// A campaign that has been submitted but whose window has not opened yet.
-//
-// Not a ladder state: the campaign really is `active` — approved, frozen, allocated — it simply
-// has a start date in the future, and calling it "Live" on a merchant's dashboard the week before
-// it starts is the kind of small lie that gets noticed. So it is a display refinement applied at
-// render time, exactly like the capped_display refinement the pipeline ships, and it lives here
-// rather than in constants.json because validate.py asserts the shipped status_display has one key
-// per ladder status and no more. Adding a key there would fail that check, correctly.
-// ----------------------------------------------------------------------------------------------
-export const QUEUED_DISPLAY = "In queue";
-
-// ----------------------------------------------------------------------------------------------
-// DEMO PRESENTATION LAYER — not the product's information architecture.
-//
-// The consolidated cardholder view is a pitch device: four cardholders' home screens side by side
-// so a judge can watch the allocator reach two of them and not the other two. No real cardholder
-// app shows four people's phones at once, and nothing about this belongs in a shipped IA. It is
-// kept behind its own toggle, labelled as a demo control on screen, and every part of it reads the
-// same state as the individual view rather than a parallel fixture.
-//
-// The four, and why each is here:
-//   edwin    in Soujourner's acquisition cohort — an existing customer inside the target segment
-//   bernice  in the same cohort — the lookalike who has never walked in (the acquisition case)
-//   alvin    Champions, not the acquisition cohort — an existing regular the allocator leaves be
-//   charles  excluded on price band — a non-customer who does not match, and is not contacted
-//
-// Scope is decided by cohort_membership against the campaign's cohort_tag, in store.js — the same
-// rule the RM's dialog and the reducer use. This screen has no targeting logic of its own, which
-// is the whole reason it is worth showing.
-// ----------------------------------------------------------------------------------------------
-export const CONSOLIDATED_CARDHOLDERS = [
-  { id: "edwin", caption: "In segment · existing customer" },
-  { id: "bernice", caption: "Lookalike · not yet a customer" },
-  { id: "alvin", caption: "Champion · outside this segment" },
-  { id: "charles", caption: "No match · not a customer" },
-];
-
-// ----------------------------------------------------------------------------------------------
-// Edwin's weekly push cap, lifted for the demo.
-//
-// The shipped dataset puts Edwin at 2 of 2 pushes for the demo week, which makes him the named
-// suppressed-push recipient: in scope for the campaign, delivered a feed card, and refused the
-// push by the frequency cap. That is a deliberate fixture — it is his description, his role and
-// his second cohort tag in showcase_personas.json.
-//
-// The consolidated view needs both in-scope cardholders to visibly receive the notification, so
-// this drops his count to zero at seed time. Consequences, said plainly rather than discovered on
-// stage: the RM's push dialog no longer names anyone as suppressed (the aggregate suppression
-// count from the allocation is unaffected and still shown), and the suppressed-push demonstration
-// now has no named face. Flip this to false to put the fixture back exactly as the pipeline
-// shipped it.
-//
-// It is applied in the seed and nowhere else, so every screen agrees about Edwin. The alternative
-// — overriding him only inside the consolidated view — would have shown him receiving a push on
-// one screen and being refused one on another, which is worse than either state on its own.
-//
-// The pipeline is the proper home for this and cannot be re-run in this environment; when it can,
-// move it to pipeline/config.py and delete this.
-// ----------------------------------------------------------------------------------------------
-export const DEMO_LIFT_EDWIN_PUSH_CAP = true;

@@ -2,8 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useSyncEx
 import { useDemoData } from "../data/DataProvider";
 import { buildSeed } from "./seed.js";
 import { createBus } from "./bus.js";
-import { liveReach, isQueued } from "./store.js";
-import { QUEUED_DISPLAY } from "../data/constants";
+import { liveReach } from "./store.js";
 
 // The one shared state for all three views: seeded from public/data, mutated only through the
 // bus, rendered through display() so status keys never leak onto a screen as raw strings.
@@ -60,25 +59,6 @@ export function StateProvider({ children }) {
       reset: bus.reset,
       // Demo control: back to before the merchant applied, so the handoff can be clicked live.
       rewind: () => { skipBootstrap = true; bus.reset(); },
-      // ----------------------------------------------------------------------------------------
-      // Reset the demo to a cold load — the general utility, not a fix for one programme.
-      //
-      // What actually caches a configuration between sessions is the append-only event log in
-      // localStorage (bus.js, "mobius.events.v1"). State is seed + replay(log), so a campaign
-      // configured on Tuesday is still configured on Wednesday: the CONFIGURE events are replayed
-      // over a fresh seed. Nothing is wrong with the seed; the log is the memory.
-      //
-      // `rewind()` clears that log too, but it also sets skipBootstrap for the life of the page,
-      // which suppresses the seeded application — useful for demonstrating the handoff live,
-      // wrong for "give me this programme back the way it shipped". This does the other thing:
-      // drop the log and reload, so the bootstrap runs again and every view starts from the
-      // pipeline's own state. The reload is deliberate — it clears any per-page React state the
-      // bus does not own, which is the other half of "reset" that a bus.reset() alone misses.
-      // ----------------------------------------------------------------------------------------
-      resetDemoData: () => {
-        bus.reset();
-        if (typeof window !== "undefined") window.location.reload();
-      },
       log: bus.getLog,
       // The display map from constants.json, applied here and nowhere else. `capped` takes the
       // refinement keyed by the reason the reducer recorded, so a campaign closed by its reach cap
@@ -87,16 +67,10 @@ export function StateProvider({ children }) {
         (statusKey === "capped" && capReason && state.capped_display?.[capReason]) ||
         state.status_display[statusKey] ||
         statusKey,
-      // The campaign-aware form. Two refinements on top of the shipped map, both of which need
-      // the campaign and not just its status key: a capped campaign is labelled by the reason it
-      // capped, and an active one whose window has not opened yet reads "In queue" rather than
-      // "Live". Screens that only hold a status string keep using display() and get the plain map.
       displayOf: (campaign) => {
         const key = campaign?.status;
-        if (isQueued(campaign, state.clock)) return QUEUED_DISPLAY;
         return (key === "capped" && state.capped_display?.[campaign?.capped?.why]) || state.status_display[key] || key;
       },
-      isQueued: (campaign) => isQueued(campaign, state.clock),
       reachOf: (campaign) => liveReach(campaign, rounding),
       offersFor: (cardholderId) => (state.cardholders[cardholderId]?.feed ?? []).map((id) => state.offers[id]).filter(Boolean),
       // Every card this cardholder has ever held, feed or not. The rewards list needs the expired

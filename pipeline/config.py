@@ -44,7 +44,7 @@ CONSTANTS = {
     "DORMANT_TXN_PER_MONTH": C(10, "retailer-transaction-data-analysis Step 1 — fixed cutoff; the operative threshold is min(this, 10th percentile)"),
     "DORMANT_PERCENTILE": C(10, "retailer-transaction-data-analysis Step 1 — distribution cutoff"),
     "MIN_SEGMENT_SIZE": C(250, "Brief §2 — privacy floor for every cell shown to a merchant or RM"),
-    "REACH_ROUNDING": C(10, "Brief §2 — reach rounded to nearest 10; the 250 floor remains the primary control against sequential differencing"),
+    "REACH_ROUNDING": C(50, "Brief §2 — reach rounded to nearest 50; with the floor this closes sequential differencing"),
     "NARROW_MAX_REFINEMENTS": C(5, "Merchant prompt §7.1 — narrowing cap per campaign; applied narrowings and floor refusals both count, a refusal is still a query"),
     "NARROW_PROTECTED_TERMS": C({"nationality": ["nationality", "national", "foreigner", "foreigners", "expat", "expats", "citizen", "citizens", "pr", "singaporean", "singaporeans", "malaysian", "chinese national", "indian national", "filipino", "indonesian"],
                                  "race": ["race", "ethnic", "ethnicity", "chinese", "malay", "indian", "eurasian", "caucasian", "asian"],
