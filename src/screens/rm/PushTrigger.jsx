@@ -8,7 +8,7 @@ import { Badge, BasisNote } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame } from "../../components/RewardCard";
 
 // ---------------------------------------------------------------------------------------------
-// RM §3.4 — the manual push trigger.
+// RM §3.4 — the manual allocator trigger (the manual push trigger, renamed for what it does).
 //
 // A demo control, and it looks like one: dashed border, an explicit label, and never the word
 // "Send" sitting bare beside a routine action.
@@ -42,9 +42,15 @@ export function PushTriggerProvider({ children }) {
   );
 }
 
-export default function PushTrigger({ campaign, compact = false }) {
+// `queued` is passed by the caller rather than recomputed here: the dashboard already knows which
+// of its rows have not started, and the trigger's availability must agree with the label printed
+// beside it. A programme in the queue can be fired at only in one sense — it would deliver a card
+// against a window nobody can redeem in — so the button refuses and says which date it is waiting
+// for rather than going quiet.
+export default function PushTrigger({ campaign, compact = false, queued = false }) {
   const open = useContext(PushDialogContext);
-  const pushable = campaign.status === "active" && campaign.reach != null && Boolean(campaign.cohort_tag);
+  const startsOn = campaign.window?.start ?? campaign.configuration?.window_start ?? null;
+  const pushable = campaign.status === "active" && !queued && campaign.reach != null && Boolean(campaign.cohort_tag);
 
   if (!pushable) {
     return (
@@ -52,13 +58,15 @@ export default function PushTrigger({ campaign, compact = false }) {
         type="button"
         disabled
         title={
-          campaign.status !== "active"
-            ? `This campaign is ${campaign.status}, so nothing can be sent for it.`
-            : "No computed allocation is loaded for this campaign in the demo — the trigger only fires against an allocation the pipeline produced, never against an invented list."
+          queued
+            ? `This programme has not started${startsOn ? ` — its window opens on ${startsOn}` : ""}. Sending now would put a reward in a cardholder's app that they could not redeem.`
+            : campaign.status !== "active"
+              ? `This campaign is ${campaign.status}, so nothing can be sent for it.`
+              : "No computed allocation is loaded for this campaign in the demo — the trigger only fires against an allocation the pipeline produced, never against an invented list."
         }
         className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-canvas/60 px-3 py-1.5 text-[12px] font-medium text-ink-light"
       >
-        <Ban size={12} /> No allocation to push
+        <Ban size={12} /> {queued ? "Not started yet" : "No allocation to push"}
       </button>
     );
   }
@@ -70,7 +78,7 @@ export default function PushTrigger({ campaign, compact = false }) {
       className="inline-flex items-center gap-1.5 rounded-lg border-2 border-dashed border-warning bg-warning-bg/50 px-3 py-1.5 text-[12px] font-bold text-ink hover:bg-warning-bg"
     >
       <FlaskConical size={13} className="text-warning" />
-      {compact ? "Demo: fire push" : "Demonstration trigger — fire the push"}
+      {compact ? "Demo: fire the allocator" : "Demonstration trigger — fire the allocator"}
     </button>
   );
 }
@@ -112,7 +120,7 @@ function Confirmation({ campaignId, onClose }) {
           <div>
             <Badge tone="warning"><FlaskConical size={11} /> Demonstration control</Badge>
             <h3 className="text-[17px] font-bold text-ink mt-2">
-              {result ? "Push fired" : `Send this offer to ${campaign.merchant_name}'s allocated cardholders?`}
+              {result ? "Allocator fired" : `Send this offer to ${campaign.merchant_name}'s allocated cardholders?`}
             </h3>
             <p className="text-[12.5px] text-ink-secondary mt-0.5">
               {result
@@ -155,7 +163,7 @@ function Confirmation({ campaignId, onClose }) {
                 disabled={!canFire}
                 className="inline-flex items-center gap-2 rounded-lg border-2 border-dashed border-warning bg-brand px-5 py-2.5 text-[13px] font-bold text-white hover:bg-brand-hover disabled:opacity-40 disabled:bg-ink-light"
               >
-                <Send size={15} /> Fire the push to {num(preview.delivered)} cardholders
+                <Send size={15} /> Fire the allocator — {num(preview.delivered)} cardholders
               </button>
               <button onClick={onClose} className="rounded-lg border border-border bg-white px-4 py-2 text-[13px] font-medium text-ink-secondary">Cancel</button>
             </>

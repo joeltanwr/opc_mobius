@@ -1,12 +1,11 @@
-import React from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { CheckCircle2, XCircle, Lock, ShieldCheck } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { CheckCircle2, XCircle, Lock, ShieldCheck, ChevronRight, Radio } from "lucide-react";
 import { useDemoData, merchantById } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
-import { HERO_MERCHANT_ID, screenNum } from "../data/constants";
+import { HERO_MERCHANT_ID, screenNum, SHOW_BASIS_NOTES } from "../data/constants";
 import { sgd, num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
-import { Radio } from "lucide-react";
+import ProgrammeCharts, { buildBeforeAfter } from "../components/BeforeAfterCharts";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -15,28 +14,296 @@ export default function CampaignResults() {
   const m = useMobiusState();
   const profile = merchantById(data.merchantProfiles, HERO_MERCHANT_ID);
   const measured = data.campaignResults.completed.filter((c) => c.measured && c.merchant_id === HERO_MERCHANT_ID);
-  const winner = measured.find((c) => c.cost.net_sign === "positive");
-  const loser = measured.find((c) => c.cost.net_sign === "negative");
-  // The campaign running right now, from the shared state rather than the shipped JSON. This is
-  // the merchant's half of the propagation contract: when a cardholder redeems in the customer
-  // app, these counters move here without a reload, in whatever tab this page is open in.
-  const live = m ? Object.values(m.state.campaigns).find((c) => c.merchant_id === HERO_MERCHANT_ID && c.source === "live" && c.counters.feed_delivered > 0) : null;
+  // From the shared state rather than the shipped JSON — the merchant's half of the propagation
+  // contract: when a cardholder redeems in the customer app, these counters move here without a
+  // reload, in whatever tab this page is open in.
+  //
+  // Everything submitted and not yet finished, whether its window has opened or not. It used to
+  // take only a campaign that had already been pushed to somebody; a merchant who has just
+  // submitted has a programme and expects to see it, and "nothing here yet" while their own
+  // dashboard is open is the wrong answer.
+  const ongoing = m
+    ? Object.values(m.state.campaigns).filter((c) => c.merchant_id === HERO_MERCHANT_ID && c.status === "active")
+        .sort((a, b) => Number(m.isQueued(a)) - Number(m.isQueued(b)))
+    : [];
+
+  // Sales uplift across every programme this merchant has run with OCBC, not just the one being
+  // read. The headline a merchant actually wants: what the whole relationship has been worth.
+  //
+  // It is a sum of the measured incremental figures, so the test-vs-control measurement behind it
+  // is unchanged — that methodology still runs, still feeds the OCBC KPI view and still backs any
+  // pitch claim. What changed is that this screen no longer puts the control arm on screen: a
+  // held-out group is how OCBC knows the number is real, and it is not what an SME reads.
+  const withIncremental = measured.filter((c) => c.incremental);
+  const upliftSgd = withIncremental.reduce((a, c) => a + (c.incremental.incremental_sales_sgd ?? 0), 0);
+  const upliftTxns = withIncremental.reduce((a, c) => a + (c.incremental.incremental_transactions ?? 0), 0);
 
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <SectionTitle
-        eyebrow={`Screen ${screenNum("results")} · Campaign results`}
-        title="Test vs. control — not before vs. after"
-        subtitle={`${profile.name}'s completed campaigns, each measured against a held-out group from the same segment, not against its own pre-campaign baseline.`}
+        eyebrow={`Screen ${screenNum("results")} · Reward dashboard`}
+        title="What your reward programmes have been worth"
+        subtitle={`${profile.name}'s completed programmes, and the trade they added.`}
       />
 
-      {live && <LiveCampaign campaign={live} display={m.display} reachOf={m.reachOf} />}
+      {withIncremental.length > 0 && (
+        <Card className="p-6 mb-6">
+          <div className="flex flex-wrap items-end gap-10">
+            <div>
+              <div className="text-[12px] text-ink-secondary mb-1">Sales uplift across all your reward programmes</div>
+              <div className={`font-num text-[44px] font-extrabold leading-none ${upliftSgd >= 0 ? "text-success" : "text-brand"}`}>
+                {sgd(upliftSgd)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[12px] text-ink-secondary mb-1">Added transactions</div>
+              <div className="font-num text-[28px] font-bold text-ink leading-none">{num(upliftTxns, 1)}</div>
+            </div>
+            <div>
+              <div className="text-[12px] text-ink-secondary mb-1">Programmes measured</div>
+              <div className="font-num text-[28px] font-bold text-ink leading-none">{num(withIncremental.length)}</div>
+            </div>
+          </div>
 
-      {winner && <CampaignDetail campaign={winner} rationale={data.rationales[winner.campaign_id]} merchantName={profile.name} />}
-      {loser && <CampaignDetail campaign={loser} rationale={data.rationales[loser.campaign_id]} merchantName={profile.name} />}
+        </Card>
+      )}
+
+      {/* ------------------------------------------------------------------ not yet completed */}
+      {/* Live and In queue share a section because they are one thing to a merchant — a programme
+          they have committed to — and the row says which it is. Completed is its own section
+          because it is the only one with a result to read. */}
+      <Section
+        title="Live / In queue reward programmes"
+        note="Programmes you have submitted that have not finished. Open one to see how it is doing."
+        count={ongoing.length}
+        empty="Nothing running. A programme appears here as soon as you submit one on Reward Configuration."
+      >
+        {ongoing.map((c) => (
+          <OngoingProgramme
+            key={c.id}
+            campaign={c}
+            profile={profile}
+            queued={m.isQueued(c)}
+            label={m.displayOf(c)}
+            display={m.display}
+            reachOf={m.reachOf}
+          />
+        ))}
+      </Section>
+
+      {/* ------------------------------------------------------------------ completed */}
+      <Section
+        title="Completed reward programmes"
+        note="Finished and measured. One of these lost money, and it stays on the list."
+        count={measured.length}
+        empty="No programme has finished yet."
+      >
+        {/* Every measured programme, not just the best and worst. The section's count is the
+            length of this list, and a count that does not match the rows under it is the kind of
+            small wrongness a banker notices and then stops trusting the rest of the screen for. */}
+        {measured.map((c) => (
+          <CompletedProgramme
+            key={c.campaign_id}
+            campaign={c}
+            profile={profile}
+            rationale={data.rationales[c.campaign_id]}
+            merchantName={profile.name}
+          />
+        ))}
+      </Section>
 
       <BasisNote>{data.campaignResults.basis}</BasisNote>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// A section of the dashboard, and one collapsed programme row inside it.
+//
+// Collapsed by default. Two charts and a full result block per programme is more than a projector
+// can hold at once, and a merchant opening this screen wants the list first — which programmes do
+// I have, and how are they doing — before any one of them in depth. Opening a row is what asks
+// for the depth, and it is also what keeps the charts to one programme at a time so there is no
+// question which set belongs to which.
+// ---------------------------------------------------------------------------------------------
+function Section({ title, note, count, empty, children }) {
+  return (
+    <section className="mb-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+        <h2 className="text-[17px] font-bold text-ink">{title}</h2>
+        <span className="font-num text-[12px] text-ink-light">{num(count)}</span>
+      </div>
+      <p className="text-[12.5px] text-ink-secondary mb-3 max-w-3xl">{note}</p>
+      {count === 0 ? (
+        <Card className="p-5 border-dashed">
+          <p className="text-[13px] text-ink-light">{empty}</p>
+        </Card>
+      ) : (
+        <div className="space-y-3">{children}</div>
+      )}
+    </section>
+  );
+}
+
+function ProgrammeRow({ headline, sub, right, badge, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card className={open ? "border-ink/20" : ""}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex flex-wrap items-center gap-3 px-6 py-4 text-left hover:bg-canvas/50 transition-colors rounded-xl"
+      >
+        <ChevronRight size={16} className={`shrink-0 text-ink-light transition-transform ${open ? "rotate-90" : ""}`} />
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            {badge}
+            <span className="text-[15px] font-bold text-ink">{headline}</span>
+          </span>
+          {sub && <span className="block text-[12.5px] text-ink-secondary mt-0.5">{sub}</span>}
+        </span>
+        {right && <span className="shrink-0 text-right">{right}</span>}
+      </button>
+      {open && <div className="px-6 pb-6 pt-1 border-t border-border">{children}</div>}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// How many whole weeks a programme ran, used to size both sides of its before-and-after charts.
+// Null when the window is unknown, which is what stops the charts rendering at all.
+function durationWeeks(start, end) {
+  if (!start || !end) return null;
+  return Math.max(1, Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / (7 * 86_400_000)));
+}
+
+function windowLabel(daysOfWeek, hours) {
+  const d = Array.isArray(daysOfWeek) && daysOfWeek.length ? daysOfWeek.map((i) => WEEKDAYS[i]).join("/") : null;
+  const h = Array.isArray(hours) && hours.length === 2
+    ? `${String(hours[0]).padStart(2, "0")}:00–${String(hours[1]).padStart(2, "0")}:00` : null;
+  return [d, h].filter(Boolean).join(" ") || "—";
+}
+
+// ---------------------------------------------------------------------------------------------
+// A programme that has been submitted and has not finished.
+//
+// Two readings. One whose window has opened and has at least a week of trading behind it gets the
+// running counters and the before-and-after charts. One that has not — either queued for a future
+// start, or launched so recently that there is no post-launch week to compare — gets what it
+// actually has: the configuration it was submitted with, and the date it starts. There is no
+// honest "after launch" for either, and an empty right half of a chart is not a result.
+// ---------------------------------------------------------------------------------------------
+function OngoingProgramme({ campaign, profile, queued, label, display, reachOf }) {
+  const c = campaign;
+  const cfg = c.configuration ?? {};
+  const start = c.window?.start ?? cfg.window_start ?? null;
+  const end = c.window?.end ?? cfg.window_end ?? null;
+  const weeks = durationWeeks(start, end);
+
+  // Whether there is anything on the far side of the launch to chart. Asked of the data rather
+  // than of the status: a programme can be Live in the ladder and still have no trading week
+  // after its start date, which is exactly the demo campaign's own situation on stage.
+  const charted = useMemo(
+    () => (queued ? null : buildBeforeAfter((profile?.series?.daily ?? []).map(([d, , s]) => [d, s]), start, weeks)),
+    [queued, profile, start, weeks]
+  );
+  const hasAfter = Boolean(charted && charted.after_weeks > 0);
+
+  return (
+    <ProgrammeRow
+      headline={c.name}
+      sub={cfg.offer_headline ?? "Configured with your relationship manager"}
+      badge={<Badge tone={queued ? "neutral" : "success"}>{queued ? label : <><Radio size={11} /> {label}</>}</Badge>}
+      right={
+        <>
+          <span className="block font-num text-[12px] text-ink">{start ?? "—"}{end ? ` → ${end}` : ""}</span>
+          <span className="block text-[11px] text-ink-light">{windowLabel(cfg.days_of_week, cfg.hours)}</span>
+        </>
+      }
+    >
+      {hasAfter ? (
+        <>
+          <LiveCampaign campaign={c} display={display} reachOf={reachOf} />
+          <ProgrammeCharts
+            profile={profile}
+            launchDate={start}
+            durationWeeks={weeks}
+            hours={cfg.hours}
+            weekdayLabel={Array.isArray(cfg.days_of_week) ? cfg.days_of_week.map((i) => WEEKDAYS[i]).join("/") : null}
+          />
+        </>
+      ) : (
+        <PreLaunch campaign={c} queued={queued} start={start} end={end} reachOf={reachOf} />
+      )}
+    </ProgrammeRow>
+  );
+}
+
+// What a programme has before it has a result: what was set up, and when it opens. No counters
+// that would all read zero, and no charts — the point of saying "in queue" is that nothing has
+// happened yet, and a row of zeros says something different and worse.
+function PreLaunch({ campaign, queued, start, end, reachOf }) {
+  const cfg = campaign.configuration ?? {};
+  return (
+    <div className="pt-4">
+      <div className="rounded-lg border border-border bg-canvas/50 px-4 py-3 mb-4">
+        <p className="text-[13px] font-semibold text-ink">
+          {queued ? `Starts ${start ?? "on a date not yet set"}.` : "Launched today — no trading week after launch yet."}
+        </p>
+        <p className="text-[12.5px] text-ink-secondary mt-0.5 max-w-3xl">
+          {queued
+            ? "Nothing has been sent and nothing can be redeemed until the window opens. The before-and-after charts appear once it has run for a week."
+            : "The before-and-after charts compare whole weeks either side of launch, so they appear once the first full week has been traded."}
+        </p>
+      </div>
+      <h4 className="text-[13px] font-bold text-ink mb-2">What was set up</h4>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12.5px]">
+        <ConfigItem label="Reward" value={cfg.offer_headline ?? "—"} />
+        <ConfigItem label="Window" value={windowLabel(cfg.days_of_week, cfg.hours)} />
+        <ConfigItem label="Dates" value={start ? `${start} to ${end ?? "—"}` : "—"} />
+        <ConfigItem label="Outlets" value={`${(cfg.outlets ?? []).length} included`} />
+        <ConfigItem label="Cardholders in the allocation" value={num(reachOf(campaign) ?? campaign.reach)} />
+        <ConfigItem label="Redemption limit" value={cfg.redemption_limit == null ? "none" : num(cfg.redemption_limit)} />
+        <ConfigItem label="Maximum cost (whole cost)" value={cfg.max_reward_value_sgd == null || cfg.redemption_limit == null ? "—" : sgd(cfg.max_reward_value_sgd * cfg.redemption_limit)} />
+        <ConfigItem label="Channel" value={`Feed${cfg.push_granted ? " + push" : ", no push"}`} />
+      </div>
+    </div>
+  );
+}
+
+function CompletedProgramme({ campaign, profile, rationale, merchantName }) {
+  const c = campaign;
+  const cleared = c.cost.net_sign === "positive";
+  const start = String(c.window ?? "").slice(0, 10) || null;
+  const end = String(c.window ?? "").slice(-10) || null;
+
+  return (
+    <ProgrammeRow
+      headline={c.name}
+      sub={c.configuration?.offer_headline ?? c.configuration?.offer_terms}
+      badge={<Badge tone={cleared ? "success" : "warning"}>{cleared ? "Cleared its reward cost" : "Did not clear its reward cost"}</Badge>}
+      right={
+        <>
+          <span className={`block font-num text-[15px] font-bold ${cleared ? "text-success" : "text-brand"}`}>
+            {sgd(c.cost.net_contribution_sgd)}
+          </span>
+          <span className="block text-[11px] text-ink-light">net contribution</span>
+        </>
+      }
+    >
+      <div className="pt-4">
+        <ProgrammeCharts
+          profile={profile}
+          launchDate={start}
+          durationWeeks={durationWeeks(start, end)}
+          hours={c.configuration?.hours}
+          weekdayLabel={Array.isArray(c.configuration?.days_of_week) ? c.configuration.days_of_week.map((i) => WEEKDAYS[i]).join("/") : null}
+          measured
+        />
+      </div>
+      <CampaignDetail campaign={c} rationale={rationale} merchantName={merchantName} />
+    </ProgrammeRow>
   );
 }
 
@@ -44,13 +311,15 @@ export default function CampaignResults() {
 // sentence: there is no incremental figure here because there cannot be one until the window
 // closes and the control arm has been observed, and a redemption count presented as a result is
 // the exact confusion this whole product exists to avoid.
+// Rendered inside an expanded programme row now, so it carries no card of its own: a card nested
+// in a card reads as two separate things, and this is one thing.
 function LiveCampaign({ campaign, display, reachOf }) {
   const c = campaign;
   const cfg = c.configuration ?? {};
   const maxValue = cfg.max_reward_value_sgd ?? cfg.cap_per_txn_sgd ?? null;
   const redemptions = c.counters.redemptions + c.post_freeze.redemptions;
   return (
-    <Card className="p-6 mb-6 border-brand/30">
+    <div className="pt-4 mb-6">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
           <Badge tone={c.status === "active" ? "success" : "neutral"}>
@@ -75,58 +344,42 @@ function LiveCampaign({ campaign, display, reachOf }) {
         appear when the window closes: they need the held-out control group, and a redemption count on its own measures popularity,
         not trade you would not otherwise have had.
       </BasisNote>
-    </Card>
+    </div>
   );
 }
 
 function CampaignDetail({ campaign, rationale, merchantName }) {
   const c = campaign;
   const cleared = c.cost.net_sign === "positive";
-  const conversionChart = [
-    { group: "Treated (got the offer)", rate: c.conversion.treated_rate_pct },
-    { group: "Control (held out)", rate: c.conversion.control_rate_pct },
-  ];
 
+  // No card and no header of its own. The row that expanded to show this already carries the
+  // programme's name, its verdict badge and its net contribution; repeating them here would say
+  // the same thing twice and push the result itself below the fold.
   return (
-    <Card className={`p-6 mb-6 ${cleared ? "" : "border-ink-light/30"}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <div>
-          <Badge tone={cleared ? "success" : "warning"}>
-            {cleared ? "Cleared its reward cost" : "Did not clear its reward cost"}
-          </Badge>
-          <h3 className="text-[16px] font-bold text-ink mt-2">{c.name}</h3>
-          <p className="text-[12.5px] text-ink-secondary">{c.configuration.offer_terms}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-[11px] text-ink-light">{c.window}</div>
-          <div className="text-[12px] text-ink-secondary">{c.status_display}</div>
-        </div>
-      </div>
+    <div>
+      <p className="text-[12.5px] text-ink-secondary mb-4">{c.configuration.offer_terms}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={conversionChart} margin={{ left: -10 }}>
-              <CartesianGrid vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="group" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
-              <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={40} />
-              <Tooltip formatter={(v) => pctOf(v, 1)} contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }} />
-              <Bar dataKey="rate" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                <Cell fill="#ED1C24" />
-                <Cell fill="#94A3B8" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <BasisNote>
-            {num(c.cohort.treated)} treated vs. {num(c.cohort.control)} held-out control ({c.cohort.basis}).{" "}
-            {c.conversion.definition}. Lift: {c.conversion.lift_points} points.
-          </BasisNote>
+          {/* The treated-vs-held-out conversion chart is off this screen. It is the clearest
+              picture of how the number was proved, and it is a picture of OCBC's method rather
+              than of the merchant's trade — the same reason the incrementality box left Customer
+              Profile. `c.conversion` and `c.cohort` are untouched in campaign_results.json and
+              still render on the RM's campaign detail, which is where that argument belongs. */}
+          <div className="rounded-lg border border-border bg-canvas/40 p-4">
+            <div className="text-[12px] text-ink-secondary mb-1">Cardholders who redeemed</div>
+            <div className="font-num text-[30px] font-extrabold text-ink leading-none">{num(c.redemption.redeemers)}</div>
+            <div className="text-[12.5px] text-ink-secondary mt-2">
+              {num(c.redemption.redeemed_transactions)} redeemed transactions, at an average ticket of{" "}
+              {sgd(c.redemption.avg_ticket_sgd, 2)}.
+            </div>
+          </div>
         </div>
 
         <div className="space-y-3">
           <ResultLine
             label="Redemptions"
-            value={`${num(c.redemption.redeemers)} cardholders, ${num(c.redemption.redeemed_transactions)} transactions (${pctOf(c.redemption.redemption_rate_pct, 1)} of treated)`}
+            value={`${num(c.redemption.redeemers)} cardholders, ${num(c.redemption.redeemed_transactions)} transactions (${pctOf(c.redemption.redemption_rate_pct, 1)} of cardholders reached)`}
           />
           <ResultLine label="Average redeemed ticket" value={sgd(c.redemption.avg_ticket_sgd, 2)} />
           <ResultLine
@@ -206,7 +459,7 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
             <MiniFigure label="New to the business" value={num(c.redeemer_profile.new_to_business)} />
             <MiniFigure label="Already returning" value={num(c.redeemer_profile.returning)} />
           </div>
-          <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>
+          {SHOW_BASIS_NOTES && <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>}
           <CompositionBlock title="Age bands" composition={c.redeemer_profile.age_bands} />
           <CompositionBlock title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} />
         </div>
@@ -217,10 +470,6 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
             <ResultLine
               label="Returned within 30 days"
               value={`${num(c.repeat.returned_within_30d)} of ${num(c.redemption.redeemers)} (${pctOf(c.repeat.return_rate_pct, 1)})`}
-            />
-            <ResultLine
-              label="Control group, same measure"
-              value={c.repeat.control_return_rate_pct === null ? "—" : `${num(c.repeat.control_returned)} (${pctOf(c.repeat.control_return_rate_pct, 1)})`}
             />
             <ResultLine
               label="Further visits: 1 / 2 / 3+"
@@ -243,10 +492,20 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
           <XCircle size={20} className="text-warning shrink-0 mt-0.5" />
         )}
         <div>
-          <p className="text-[13px] text-ink-secondary">{c.verdict}</p>
-          {rationale?.verdict && rationale.verdict !== c.verdict && (
-            <p className="text-[12.5px] text-ink-light mt-1">{rationale.verdict}</p>
-          )}
+          {/* The written verdict is off this screen. Both the pipeline's `verdict` and the
+              generated one open on the treated-versus-control comparison — "16% of treated
+              cardholders against 4% of the matched control" — which is the thing this screen
+              stopped showing. They are pipeline-written strings, so the fix is to have reward
+              measurement emit a merchant-facing verdict without the control clause, not to
+              split a generated sentence in a component.
+
+              Nothing the verdict concluded is lost from the page: the badge above says whether
+              the programme cleared its reward cost, net contribution is in the column beside
+              it, and "Returned within 30 days" carries the repeat figure. The losing campaign
+              still visibly says it lost money, which is the part that must never be cut. */}
+          <p className="text-[13px] font-semibold text-ink">
+            {cleared ? "This programme cleared its reward cost." : "This programme did not clear its reward cost."}
+          </p>
           <BasisNote>
             Written from the figures above (campaign_results.json verdict) — the same method produced both results,
             and the one that lost money says so.
@@ -264,7 +523,7 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
           </p>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 

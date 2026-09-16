@@ -3,6 +3,7 @@
 // demo campaign's identity) but no numbers of its own.
 
 import { PER_CUSTOMER_OPTIONS } from "./store.js";
+import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
 
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
@@ -135,7 +136,9 @@ export function buildSeed(data) {
     const seg = (data.segments?.[alloc.merchant_id] ?? []).find((x) => x.narrowing) ?? null;
     const weekdayIndex = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
     // Timing and money defaults come from the merchant's own last completed campaign of the same
-    // reward type; the window starts the Monday after the demo clock and runs as long as that one did.
+    // reward type, and the window runs as long as that one did. It opens on the demo clock's own
+    // day — see the note on `opensOn` below, which this line used to contradict by claiming the
+    // following Monday.
     const lastSame = (results.completed ?? []).filter((c) => c.merchant_id === alloc.merchant_id && c.measured && c.configuration?.reward_type === top?.type)
       .sort((a, b) => (b.window ?? "").localeCompare(a.window ?? ""))[0] ?? null;
     const clock = new Date(state.clock ?? Date.now());
@@ -223,7 +226,11 @@ export function buildSeed(data) {
       // is what keeps an offer to somewhere the cardholder can actually walk to, so turning it off
       // makes the offers worse rather than fewer. Stated as a choice, not buried as a default.
       consent: { offers: Boolean(p.consent?.offers), push: Boolean(p.consent?.push), location: true, changed_at: null },
-      pushes_this_week: p.push_state?.pushes_this_week ?? 0,
+      // Edwin ships at the cap so the frequency cap has a named face. The consolidated cardholder
+      // view needs both in-scope cardholders to visibly receive the push, so the demo flag zeroes
+      // his count here — once, in the seed, so no two screens disagree about him. See the flag's
+      // comment in data/constants.js for what that costs and how to put it back.
+      pushes_this_week: DEMO_LIFT_EDWIN_PUSH_CAP && p.id === "edwin" ? 0 : (p.push_state?.pushes_this_week ?? 0),
       offers_held_30d: p.push_state?.offers_held_30d ?? 0,
       push_state_basis: p.push_state?.basis ?? null,
       profile: { category_weights: { ...(p.profile?.category_weights ?? {}) }, daypart_availability: p.profile?.daypart_availability ?? {},

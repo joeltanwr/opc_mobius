@@ -6,6 +6,7 @@ import { useDemoData, merchantById } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num, pct, pctOf, cellText, cellCount } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
+import { SHOW_BASIS_NOTES } from "../../data/constants";
 import { PER_CUSTOMER_LIMITS } from "../../state/store.js";
 import PushTrigger, { PushTriggerProvider } from "./PushTrigger";
 import { StatusPill, Th, Td, daysBetween } from "./rmCommon";
@@ -29,7 +30,7 @@ export default function RMCampaignDetail() {
   const { data } = useDemoData();
   const m = useMobiusState();
   if (!m) return null;
-  const { state, display, reachOf } = m;
+  const { state, display, displayOf, isQueued, reachOf } = m;
   const c = state.campaigns[campaignId];
   if (!c) return <NotFound id={campaignId} />;
 
@@ -39,6 +40,10 @@ export default function RMCampaignDetail() {
   const measured = Boolean(c.measured && r.cost);
   const rationale = data.rationales?.[c.campaign_id ?? c.id] ?? null;
   const live = c.status === "active";
+  // Live in the ladder is not the same as started. A programme whose window has not opened has
+  // nothing to allocate to anyone yet, and the trigger beside its status pill says so rather
+  // than offering a send that would land a card nobody can redeem.
+  const queued = isQueued(c);
   // A campaign configured and sent in this session has counters of its own whatever the ladder
   // says. Capping it — the reach cap or the redemption limit firing — freezes the results but does
   // not make them disappear, and a redemption honoured after the freeze is counted apart rather
@@ -58,13 +63,13 @@ export default function RMCampaignDetail() {
       </Link>
 
       <SectionTitle
-        eyebrow={`Screen 4 · ${live ? "Ongoing" : "Completed"} programme`}
+        eyebrow={`Screen 4 · ${live ? "Ongoing" : "Completed"} programme · ${displayOf(c)}`}
         title={c.name}
         subtitle={`${c.merchant_name}${c.window ? ` · ${c.window.start} to ${c.window.end}` : ""}`}
         right={
           <div className="flex items-center gap-2">
             <StatusPill campaign={c} display={display} />
-            {live && <PushTrigger campaign={c} compact />}
+            {live && <PushTrigger campaign={c} compact queued={queued} />}
           </div>
         }
       />
@@ -277,7 +282,7 @@ function MeasuredResults({ campaign, results: c }) {
             <Figure label="New to the business" value={num(c.redeemer_profile.new_to_business)} />
             <Figure label="Already returning" value={num(c.redeemer_profile.returning)} />
           </div>
-          <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>
+          {SHOW_BASIS_NOTES && <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>}
           <Composition title="Age bands" composition={c.redeemer_profile.age_bands} />
           <Composition title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} />
         </div>
