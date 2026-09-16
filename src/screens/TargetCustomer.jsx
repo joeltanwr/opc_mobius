@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
-import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
+import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles, Info } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
-import { TAB3_ACCOUNTS, screenNum } from "../data/constants";
+import { rewardConfigUnlocked } from "../state/store.js";
+import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard } from "../components/ui";
 
@@ -76,6 +77,17 @@ export default function TargetCustomer() {
     () => Object.values(state.campaigns).find((c) => c.merchant_id === merchantId && c.status === "applied") ?? null,
     [state.campaigns, merchantId]
   );
+  // The same merchant's campaign once it has left the application stage. Configuration now lives
+  // on a tab of this view rather than on the RM's desk, so a merchant whose programme is already
+  // in draft has somewhere to be sent — and this screen used to tell it there was no application
+  // at all, which is true of the ladder and useless as a next step.
+  const inFlight = useMemo(
+    () =>
+      Object.values(state.campaigns).find(
+        (c) => c.merchant_id === merchantId && c.source === "live" && c.status !== "applied"
+      ) ?? null,
+    [state.campaigns, merchantId]
+  );
 
   return (
     <div className="max-w-container mx-auto px-6 py-10">
@@ -86,18 +98,22 @@ export default function TargetCustomer() {
       </div>
 
       <SectionTitle
-        eyebrow={`Screen ${screenNum("target-customer")} · Target customer`}
+        eyebrow={`Screen ${screenNum("target-customer")} · Customer profile`}
         title={`${profile.name} — ${category?.label ?? profile.category}, District ${profile.district}`}
         subtitle="Who your customers are, where the gap is, and which reward fits it. Every figure here is an aggregate of your own transactions; no cardholder identity reaches this screen at any point."
       />
 
-      <Eligibility eligibility={eligibility} name={profile.name} />
+      {/* The eligibility panel is deliberately not rendered. The gate still decides — it runs in
+          the APPLY reducer when the merchant signs up, and it is what keeps the Set-up tab shut —
+          but a merchant does not need its balance and its score bands read back to it before it
+          has asked for anything. The <Eligibility> component below is kept for the RM-facing and
+          diagnostic use it was written for; only this screen stops showing it. */}
 
       {!hasProfile ? (
         <ThinHistory profile={profile} data={data} gap={gap} rounding={rounding} />
       ) : (
         <>
-          <TradingSummary profile={profile} trailingMonths={trailingMonths} rounding={rounding} />
+          <TradingSummary profile={profile} trailingMonths={trailingMonths} />
           <RecencyFrequencyValue profile={profile} />
           <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} floor={floor} />
           <CustomerAnalysis
@@ -111,29 +127,31 @@ export default function TargetCustomer() {
       )}
 
       {eligible && hasProfile && recs && (
-        <>
-          <RewardOptions
-            recs={recs}
-            rationale={rationale}
-            campaign={campaign}
-            reachOf={reachOf}
-            rounding={rounding}
-            data={data}
-          />
-          <Apply campaign={campaign} profile={profile} state={state} dispatch={dispatch} display={display} rewind={rewind} />
-        </>
+        <RewardOptions
+          recs={recs}
+          rationale={rationale}
+          campaign={campaign}
+          reachOf={reachOf}
+          rounding={rounding}
+          data={data}
+        />
       )}
 
-      {!eligible && (
-        <Card className="p-6 mt-6 border-dashed">
-          <h3 className="text-[15px] font-bold text-ink mb-1">No reward recommendation is generated</h3>
-          <p className="text-[13px] text-ink-secondary max-w-3xl">
-            The gate runs before the recommendation, not after it, so there is nothing on this page to override. Your
-            trading summary above is your own data and stays available. Your relationship manager can talk through what
-            would change the outcome.
-          </p>
-          <BasisNote>reward_recommendations.json eligibility — the same gate, applied to every merchant.</BasisNote>
-        </Card>
+      {/* The sign-up action is reachable whatever the gate will decide, because the decision is
+          the outcome of asking and not a precondition for being allowed to ask. A merchant that
+          clears it is routed into Set-up; one that does not gets the refusal, and the tab stays
+          shut. Without a trading profile there is nothing to apply about at all. */}
+      {hasProfile && (
+        <Apply
+          campaign={campaign}
+          inFlight={inFlight}
+          profile={profile}
+          eligibility={eligibility}
+          state={state}
+          dispatch={dispatch}
+          display={display}
+          rewind={rewind}
+        />
       )}
     </div>
   );
@@ -270,7 +288,7 @@ function ThinHistory({ profile, data, gap, rounding }) {
 
 // ---------------------------------------------------------------------------- §6 trading summary
 
-function TradingSummary({ profile, trailingMonths, rounding }) {
+function TradingSummary({ profile, trailingMonths }) {
   const t = profile.trading_summary;
   const months = useMemo(() => completeMonths(profile.series), [profile]);
   // The baseline is the merchant's own mean over the complete months on this chart — dashed slate,
@@ -288,16 +306,13 @@ function TradingSummary({ profile, trailingMonths, rounding }) {
         <StatTile label="Average monthly sales" value={sgd(t.avg_monthly_sales_6m_sgd)} sub={`The same ${trailingMonths} months`} />
         <StatTile label="Average spend per ticket" value={sgd(t.avg_ticket_sgd, 2)} sub={`Ticket trend ${t.ticket_trend.direction}`} />
         <StatTile label="Top payment method" value={t.top_payment_method ?? "—"} sub="By transaction count" />
-        <StatTile label="Core customer base" value={cellText(t.core_customer_base)} sub={t.core_customer_base_basis} />
+        <StatTile label="Core customer base" value={cellText(t.core_customer_base)} />
       </div>
-
-      <ExactVersusFloored trading={t} rounding={rounding} />
 
       <Card className="p-5 mb-4">
         <h4 className="text-[14px] font-semibold text-ink mb-1">Transaction volume, month on month</h4>
         <p className="text-[12px] text-ink-secondary mb-3">
-          Volume trend: <span className="font-medium text-ink">{t.volume_trend.direction}</span> ({pctOf(t.volume_trend.change_pct, 1)} on{" "}
-          {t.volume_trend.basis}). The dashed slate line is your own {months.length}-month average, not a target.
+          Volume trend: <span className="font-medium text-ink">{t.volume_trend.direction}</span> ({pctOf(t.volume_trend.change_pct, 1)}).
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={months} margin={{ left: -8, right: 12, top: 6 }}>
@@ -580,46 +595,23 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
 // ---------------------------------------------- §6 customer analysis — /sme-business-customer-analysis
 
 function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailingWeeks }) {
-  const cp = profile.customer_profile;
   const rfm = profile.rfm;
   return (
     <Card className="p-6 mt-8">
-      <div className="flex flex-wrap items-center gap-2 mb-1">
+      <div className="flex flex-wrap items-center gap-2 mb-5">
         <Sparkles size={15} className="text-analytics" />
         <h3 className="text-[16px] font-bold text-ink">Customer analysis</h3>
-        <Badge tone="analytics">/sme-business-customer-analysis</Badge>
-      </div>
-      <p className="text-[12.5px] text-ink-secondary mb-5 max-w-3xl">
-        One attributed panel, three blocks. Every claim in it traces to a figure shown above on this page — the numbers
-        are computed in the pipeline and the sentences are generated from them, never the other way round.
-      </p>
-
-      <div className="mb-6">
-        <BlockHeading n={1} title="Customer profile" />
-        {cp ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CategoryList title="All your OCBC-card customers" rows={cp.all_customers.top_categories} breadth={cp.all_customers.basket_breadth_median_categories} />
-              <CategoryList title="Your top 20% by spend" rows={cp.top_20pct.top_categories} breadth={cp.top_20pct.basket_breadth_median_categories} emphasis />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-              <MiniFact label="Visit interval, all customers" value={`${num(cp.differences.visit_interval_days_all, 1)} days`} />
-              <MiniFact label="Visit interval, top 20%" value={`${num(cp.differences.visit_interval_days_top20, 1)} days`} tone="brand" />
-              <MiniFact label="Share of revenue, top 20%" value={pctOf(cp.differences.top20_revenue_share_pct, 1)} tone="brand" />
-            </div>
-            {rationale?.customer_profile && <p className="text-[13px] text-ink mt-3 max-w-3xl">{rationale.customer_profile}</p>}
-            <BasisNote>{cp.basis}</BasisNote>
-          </>
-        ) : (
-          <p className="text-[13px] text-ink-light">
-            No category profile on file for this merchant — too few resolvable OCBC-card customers to describe one
-            without falling below the floor.
-          </p>
-        )}
       </div>
 
+      {/* The per-customer category profile that used to open this panel is gone from the screen.
+          A breakdown that granular reads as the merchant being handed customer data even when
+          every row is synthetic, and there is no version of it a merchant needs. The analysis
+          itself is unchanged: sme-business-customer-analysis still produces it, the pipeline
+          still writes it to merchant_profiles.json, and reward.py still consumes it as an input
+          to the recommendation below. It is an internal computation now, not a panel. */}
+
       <div className="mb-6">
-        <BlockHeading n={2} title="Demand gap" />
+        <BlockHeading n={1} title="Demand gap" />
         {gap ? (
           <>
             {/* Only off-peak gaps carry a window, a magnitude and a structural finding. A peer-only
@@ -635,22 +627,12 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
               />
             </div>
             <p className="text-[13px] text-ink mt-3 max-w-3xl">{gap.message}</p>
-            <p className="text-[12.5px] text-ink-secondary mt-2 max-w-3xl">
-              {gap.structural === true && `${gap.structural_basis}. `}
-              {gap.structural === false && "Tied to a season rather than recurring weekly, so a campaign against it has to be timed to that season rather than left running. "}
-              {gap.weeks_below_min != null && `Below the threshold in ${gap.weeks_below_min} of the trailing ${trailingWeeks} weeks. `}
-              Compared against {gap.peers_used} comparable merchants ({gap.peer_basis}).
-            </p>
             {(gap.other_flagged_slots ?? []).length > 0 && (
               <p className="text-[12.5px] text-ink-secondary mt-2 max-w-3xl">
-                <span className="font-medium text-ink">Negative finding:</span> {gap.other_flagged_slots.length} other slots
-                were flagged and none reached usable confidence — every one came back{" "}
-                {gap.other_flagged_slots[0].gap_confidence}. {gap.window
-                  ? "They are not proposed as a second window: saying so is the finding, and a window at that confidence would be invented rather than measured."
-                  : "No window clears the bar, so none is proposed. A negative finding is a finding."}
+                <span className="font-medium text-ink">{gap.other_flagged_slots.length} other slots</span> were flagged and
+                none reached usable confidence, so {gap.window ? "none is proposed as a second window" : "no window is proposed"}.
               </p>
             )}
-            <BasisNote>demand_gaps.json ({gap.trailing_window}) — the same detector, run on every merchant.</BasisNote>
           </>
         ) : (
           <p className="text-[13px] text-ink-light">No demand gap of any type was detected for this merchant.</p>
@@ -658,42 +640,105 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
       </div>
 
       <div>
-        <BlockHeading n={3} title="RFM segmentation" />
-        {rfm ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {RFM_ORDER.filter((k) => rfm.segments[k]).map((k) => (
-                <div
-                  key={k}
-                  className={`rounded-lg border px-3 py-2 ${isSuppressed(rfm.segments[k]) ? "border-dashed border-border bg-canvas/60" : "border-border bg-white"}`}
-                >
-                  <div className="text-[11.5px] text-ink-secondary leading-tight">{k}</div>
-                  {isSuppressed(rfm.segments[k]) ? (
-                    <div className="flex items-center gap-1 text-[11.5px] text-ink-light italic mt-0.5">
-                      <Lock size={10} /> Below threshold
-                    </div>
-                  ) : (
-                    <div className="font-num text-[19px] font-bold text-ink leading-tight">{num(cellCount(rfm.segments[k]))}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <p className="text-[13px] text-ink mt-3 max-w-3xl">
-              <span className="font-semibold">Lapsed total: {cellText(rfm.lapsed_total)}</span> ({rfm.lapsed_definition}).
-              {hasRecommendation
-                ? " That is the number the reward recommendation below acts on."
-                : " It is the number a win-back reward would act on, if the eligibility gate had cleared."}
-            </p>
-            <BasisNote>
-              merchant_profiles.json rfm — {num(rfm.customers_scored)} customers scored, of whom {num(rfm.ocbc_resolvable)}{" "}
-              resolve to an OCBC cardholder and are therefore reachable. {rfm.coverage_note}
-            </BasisNote>
-          </>
-        ) : (
+        <BlockHeading n={2} title="RFM segmentation" />
+        {rfm ? <RfmDistribution rfm={rfm} hasRecommendation={hasRecommendation} /> : (
           <p className="text-[13px] text-ink-light">Not enough history to score customers into RFM segments.</p>
         )}
       </div>
     </Card>
+  );
+}
+
+// The segmentation as a share of the merchant's own scored customers, which is the shape a
+// merchant reads — "a quarter of my people are Champions" rather than ten separate headcounts to
+// hold in mind at once.
+//
+// Suppressed segments keep a bar position and a lock rather than dropping out of the axis. A
+// segment silently missing from a distribution is the one failure mode worse than an empty bar:
+// the chart would read as complete while the shares no longer account for everyone.
+//
+// The denominator is every customer scored, so the visible bars deliberately do not sum to 100%
+// when a segment is suppressed. That is the honest total, and the residual is the suppression.
+function RfmDistribution({ rfm, hasRecommendation }) {
+  const [openGlossary, setOpenGlossary] = useState(false);
+  const scored = rfm.customers_scored || 0;
+  const rows = useMemo(
+    () =>
+      RFM_ORDER.filter((k) => rfm.segments[k]).map((k) => {
+        const count = cellCount(rfm.segments[k]);
+        return {
+          segment: k,
+          short: k.replace("Customers", "Cust.").replace("Potential Loyalists", "Potential"),
+          suppressed: count === null,
+          share: count === null || !scored ? 0 : Math.round((count / scored) * 1000) / 10,
+        };
+      }),
+    [rfm, scored]
+  );
+  const suppressed = rows.filter((r) => r.suppressed);
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <p className="text-[12.5px] text-ink-secondary">Share of your scored customers, by segment</p>
+        <button
+          type="button"
+          onClick={() => setOpenGlossary((v) => !v)}
+          aria-expanded={openGlossary}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1 text-[12px] font-medium text-ink-secondary hover:text-ink hover:bg-canvas"
+        >
+          <Info size={13} />
+          What the segments mean
+        </button>
+      </div>
+
+      {openGlossary && (
+        <div className="mb-3 rounded-lg border border-border bg-canvas/60 p-4">
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
+            {rows.map((r) => (
+              <div key={r.segment} className="flex gap-2 text-[12.5px]">
+                <dt className="font-semibold text-ink shrink-0 min-w-[9.5rem]">{r.segment}</dt>
+                <dd className="text-ink-secondary">{RFM_SEGMENT_GLOSSARY[r.segment] ?? "—"}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={rows} margin={{ left: -12, right: 12, top: 8, bottom: 28 }}>
+          <CartesianGrid vertical={false} stroke="#E2E8F0" />
+          <XAxis dataKey="short" interval={0} angle={-30} textAnchor="end" height={54}
+                 tick={{ fontSize: 11, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
+          <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={44} />
+          <Tooltip
+            formatter={(v, _n, p) => (p?.payload?.suppressed ? ["Below threshold", p.payload.segment] : [`${v}%`, p.payload.segment])}
+            labelFormatter={() => ""}
+            contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }}
+          />
+          <Bar dataKey="share" radius={[4, 4, 0, 0]}>
+            {rows.map((r) => (
+              <Cell key={r.segment} fill={r.suppressed ? "#E2E8F0" : "#C8102E"} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+
+      {suppressed.length > 0 && (
+        <p className="flex items-center gap-1.5 text-[12px] text-ink-light mt-1">
+          <Lock size={11} />
+          {suppressed.map((r) => r.segment).join(", ")} {suppressed.length === 1 ? "is" : "are"} below the reporting
+          threshold and {suppressed.length === 1 ? "carries" : "carry"} no share.
+        </p>
+      )}
+
+      <p className="text-[13px] text-ink mt-3 max-w-3xl">
+        <span className="font-semibold">Lapsed total: {cellText(rfm.lapsed_total)}</span>
+        {hasRecommendation
+          ? " — the number the reward recommendation below acts on."
+          : " — the number a win-back reward would act on."}
+      </p>
+    </>
   );
 }
 
@@ -707,14 +752,9 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 mt-10 mb-1">
+      <div className="flex flex-wrap items-center gap-2 mt-10 mb-4">
         <h3 className="text-[17px] font-bold text-ink">Reward options</h3>
-        <Badge tone="analytics">/reward-programme-recommendation</Badge>
       </div>
-      <p className="text-[13px] text-ink-secondary mb-4 max-w-3xl">
-        All six types, always shown and always ranked — by expected incremental value, never by the size of the
-        discount. The type that does not apply stays on screen with its reason rather than disappearing. {recs.gap_note}
-      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {recs.ranked.map((r) => (
@@ -729,9 +769,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
                 </Badge>
               ) : r.rank === 1 ? (
                 <Badge tone="brand">Recommended</Badge>
-              ) : (
-                <span className="font-num text-[12px] text-ink-light shrink-0">score {r.score}</span>
-              )}
+              ) : null}
             </div>
             <p className={`text-[13px] ${r.disabled ? "text-ink-light" : "text-ink-secondary"}`}>
               {r.disabled ? r.rejected_reason : r.reason}
@@ -740,13 +778,6 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
               <>
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-secondary">
                   <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{r.new_or_returning}</Badge>
-                  <span>
-                    Expected incremental share {pct(r.expected_incremental_share, 0)}
-                    {r.incremental_share_provisional && (
-                      <span className="ml-1 rounded bg-warning-bg px-1 py-0.5 text-[11px] font-medium text-warning">provisional</span>
-                    )}
-                  </span>
-                  {r.rank === 1 && <span className="font-num text-ink">score {r.score}</span>}
                 </div>
                 <div className="mt-3">
                   <div className="text-[11.5px] font-medium text-ink-secondary mb-1">
@@ -757,7 +788,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {r.target_pool === "non_customers" && r.non_customer_reach && (
-                      <Badge tone="brand">New customer reach {cellText(r.non_customer_reach)}</Badge>
+                      <Badge tone="brand">Prospect customers (pre-consent) {cellText(r.non_customer_reach)}</Badge>
                     )}
                     {(r.target_segments ?? []).map((t) => (
                       <Badge key={t.segment} tone="neutral">
@@ -781,11 +812,9 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
       </div>
       <BasisNote>Score: {recs.score_basis}</BasisNote>
 
-      <Incrementality data={data} />
-
       {acquisition && (
         <Card className="p-6 mt-4">
-          <h4 className="text-[15px] font-bold text-ink mb-2">New customer reach</h4>
+          <h4 className="text-[15px] font-bold text-ink mb-2">Prospect customers (post-consent)</h4>
           <div className="flex flex-wrap items-end gap-8">
             <div>
               <div className="font-num text-[44px] font-extrabold text-brand leading-none">
@@ -809,18 +838,10 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
         </Card>
       )}
 
-      {rationale?.reward_options && (
-        <Card className="p-5 mt-4 flex items-start gap-3">
-          <Sparkles size={15} className="mt-0.5 shrink-0 text-analytics" />
-          <div>
-            <p className="text-[13px] text-ink-secondary">{rationale.reward_options}</p>
-            <BasisNote>
-              Generated by Mobius AI from the ranked scores above (rationales.json, pre-computed) — every sentence sits
-              beside the number that produced it.
-            </BasisNote>
-          </div>
-        </Card>
-      )}
+      {/* The generated ranking rationale is off this screen too. It quoted the expected incremental
+          share and the score by name, and with both figures gone the sentence would be narrating
+          numbers the merchant can no longer see — which breaks the adjacency rule from the other
+          direction. rationales.json still carries it, pre-computed, for the deck and for Q&A. */}
     </>
   );
 }
@@ -886,72 +907,150 @@ function IncrementalityBlock({ label, value, detail, tone }) {
   );
 }
 
-// --------------------------------------------------------------------------- §6 the application
+// The sign-up action, and the eligibility gate's only appearance on this screen — as an outcome,
+// never as a panel of the merchant's own balance and score bands read back to it.
+//
+// Three states, and the middle one is the point:
+//   not applied   the button. The gate has not been asked yet and nothing is claimed about it.
+//   refused       the pipeline's own message. Set-up stays shut and the merchant is told why in
+//                 one sentence, not shown the arithmetic behind the decision.
+//   applied       the receipt, and the way into Set-up, which is now unlocked.
+//
+// The decision is never recomputed here: `eligibility.passed` is reward.py's verdict, shipped in
+// reward_recommendations.json, and the APPLY reducer refuses on the same field. This component
+// only reads which of the three states the state module is in.
+function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, display, rewind }) {
+  const navigate = useNavigate();
+  const [requested, setRequested] = useState(false);
+  const unlocked = campaign ? rewardConfigUnlocked(state, campaign.id) : false;
 
-function Apply({ campaign, profile, state, dispatch, display, rewind }) {
+  // Routed into Set-up by the state the reducer produced, not by the click. A refused application
+  // never satisfies this, so the failing case stays on this page with its message.
+  useEffect(() => {
+    if (requested && unlocked) navigate("/reward-configuration");
+  }, [requested, unlocked, navigate]);
   if (!campaign) {
+    // Already past the application stage: the programme exists, it is just being configured or is
+    // running. Send the merchant to the tab that now owns it rather than reporting an absence.
+    if (inFlight) {
+      return (
+        <Card className="p-6 mt-6">
+          <h3 className="text-[15px] font-bold text-ink mb-1">Your reward programme is already open</h3>
+          <p className="text-[13px] text-ink-secondary max-w-3xl">
+            {inFlight.name} is {display(inFlight.status)}. Configuration and everything that follows live on the
+            Reward Configuration tab.
+          </p>
+          <Link
+            to="/reward-configuration"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover"
+          >
+            Open Reward Configuration →
+          </Link>
+        </Card>
+      );
+    }
     return (
       <Card className="p-6 mt-6 border-dashed">
         <h3 className="text-[15px] font-bold text-ink mb-1">No open application for {profile.name}</h3>
         <p className="text-[13px] text-ink-secondary max-w-3xl">
-          The demo dataset carries one live application per merchant at most, and this merchant either has none or has
-          already moved past the application stage. The profile and the ranked rewards above are what a merchant sees
-          before applying; the action itself is wired on {profile.name === "Soujourner Coffee" ? "this merchant" : "Soujourner Coffee"}.
+          The demo dataset carries one live application per merchant at most, and this merchant has none. The profile
+          and the ranked rewards above are what a merchant sees before applying; the action itself is wired on{" "}
+          {profile.name === "Soujourner Coffee" ? "this merchant" : "Soujourner Coffee"}.
         </p>
       </Card>
     );
   }
+
+  const gate = campaign.eligibility ?? eligibility ?? null;
+  const gateFailed = gate?.passed === false;
   const applied = Boolean(campaign.applied_at);
   const rejection = [...state.ledger]
     .reverse()
     .find((e) => e.type === "REJECTED" && e.event === "APPLY" && e.detail?.campaign_id === campaign.id);
+  // Refused once the gate has actually been asked — either the reducer turned this session's click
+  // away, or the seed already carries an application that the gate did not clear.
+  const refused = gateFailed && (applied || Boolean(rejection));
+
+  if (refused) {
+    return (
+      <Card className="p-6 mt-6 border-brand/30 bg-[#FFF8F8]">
+        <div className="flex items-start gap-3">
+          <ShieldX size={18} className="text-brand shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[15px] font-semibold text-ink">
+              {gate?.message ?? "You are not eligible for the reward programme."}
+            </p>
+            <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
+              Your trading summary above is your own data and stays available. Nothing has been configured and nothing
+              has been sent. Your relationship manager can talk through what would change the outcome.
+            </p>
+            <BasisNote>
+              reward_recommendations.json eligibility (pipeline/reward.py Step 1) — the same gate, applied to every
+              merchant, and refused here as a logged event rather than a hidden branch.
+            </BasisNote>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="p-6 mt-6 bg-navy text-white border-navy">
+    // Light, with ink text. This card used to be navy with white text, which Tailwind's class
+    // order quietly turned into white-on-white — see the Card component. It is fixed by not
+    // depending on a background override to make the words visible at all: dark type on a light
+    // card reads the same whatever order the stylesheet lands in.
+    <Card className="p-6 mt-6 border-ink/15">
       {!applied ? (
         <>
-          <h3 className="text-[18px] font-bold mb-1">Sign up for the campaign now</h3>
-          <p className="text-[13px] text-white/75 max-w-2xl">
-            This sends an application to OCBC. Nothing is configured and nothing goes to any cardholder at this point —
-            a relationship manager makes contact first, and the two of you configure the reward together on the set-up
-            page. There is no one-click launch anywhere in this product.
+          <h3 className="text-[18px] font-bold text-ink mb-1">Sign up for the reward programme</h3>
+          <p className="text-[13px] text-ink-secondary max-w-2xl">
+            This sends an application to OCBC and opens the set-up page, where you and your relationship manager
+            configure the reward together. Nothing goes to any cardholder at this point, and nothing can: configuring a
+            reward and sending one are separate steps, and the second belongs to OCBC. There is no one-click launch
+            anywhere in this product.
           </p>
           <button
-            onClick={() => dispatch({ type: "APPLY", campaign_id: campaign.id, by: "merchant" })}
+            onClick={() => {
+              setRequested(true);
+              dispatch({ type: "APPLY", campaign_id: campaign.id, by: "merchant" });
+            }}
             className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-hover active:bg-brand-active transition-colors"
           >
-            Sign up for the campaign now
+            Sign up for the reward programme
           </button>
-          {rejection && <p className="text-[12px] text-white/70 mt-2">Refused: {rejection.reason}</p>}
+          {rejection && <p className="text-[12px] text-brand mt-2">Refused: {rejection.reason}</p>}
         </>
       ) : (
         <div className="flex items-start gap-3">
+          {/* The tick keeps its white glyph: it sits on a filled green disc, which is its own
+              background and was the one part of this card that stayed visible throughout. */}
           <div className="h-8 w-8 rounded-full bg-success flex items-center justify-center shrink-0">
             <Check size={16} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-[15px] font-semibold">OCBC has received your application.</p>
-            <p className="text-[13px] text-white/75 mt-1 max-w-2xl">
+            <p className="text-[15px] font-semibold text-ink">OCBC has received your application.</p>
+            <p className="text-[13px] text-ink-secondary mt-1 max-w-2xl">
               {campaign.rm_message ?? "A relationship manager will be in touch within the week."} Nothing has been
               configured and nothing has been sent. It shows on your dashboard as{" "}
-              <span className="font-semibold text-white">{display(campaign.status)}</span> — awaiting that contact, not
+              <span className="font-semibold text-ink">{display(campaign.status)}</span> — awaiting that contact, not
               awaiting review, because there is nothing to review yet.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
-                to="/reward-setup"
-                className="inline-flex items-center gap-2 rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-[13px] font-semibold text-white hover:bg-white/20"
+                to="/reward-configuration"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-hover"
               >
-                Open the set-up page, as the RM would →
+                Open the configuration page →
               </Link>
-              <span className="text-[12px] text-white/55">
+              <span className="text-[12px] text-ink-light">
                 {display(campaign.status)} · applied {String(campaign.applied_at).slice(0, 10)}
               </span>
               {/* The application is seeded so the RM's queue is populated on a cold load. This puts
-                  the handoff back in front of the presenter so it can still be performed live. */}
+                  the handoff back in front of the presenter so it can still be performed live —
+                  and it is the only way to see the Set-up tab lock again mid-demo. */}
               <button
                 onClick={rewind}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-white/40 px-3 py-1.5 text-[12px] font-semibold text-white/80 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-ink-light px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:text-ink"
               >
                 Demo · rewind to before the application
               </button>

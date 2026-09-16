@@ -8,7 +8,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
-import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView } from "./store.js";
+import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued } from "./store.js";
+import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -52,9 +53,28 @@ check("ladder: no transition to an unknown state", ladder.transitions_to_unknown
 check("seed: every seeded campaign status is a ladder state", Object.values(seed.campaigns).every((c) => STATUSES.includes(c.status)));
 check("seed: live demo campaign starts at applied with reach from allocation_summary",
       seed.campaigns[DEMO]?.status === "applied" && seed.campaigns[DEMO]?.reach === data.allocationSummary.final_allocation.count);
-check("seed: Edwin starts at the weekly push cap, Bernice does not",
-      seed.cardholders.edwin.pushes_this_week >= seed.caps.push_per_week && seed.cardholders.bernice.pushes_this_week < seed.caps.push_per_week,
-      { edwin: seed.cardholders.edwin.pushes_this_week, bernice: seed.cardholders.bernice.pushes_this_week, cap: seed.caps.push_per_week });
+// ----------------------------------------------------------------------------------------------
+// The weekly push cap is tested against a cardholder this file puts at the cap, not against
+// whichever persona the shipped dataset happens to have there.
+//
+// Edwin used to be that persona and the assertions below read his seeded count directly, which
+// made the frequency cap's entire proof depend on one fixture value. DEMO_LIFT_EDWIN_PUSH_CAP now
+// moves him off the cap so the consolidated demo view can show both in-scope cardholders being
+// notified — and the cap has to stay proven either way. So the blocks that test suppression set
+// the state they are about to assert on, and what the seed ships is checked separately, here.
+// ----------------------------------------------------------------------------------------------
+const atCap = (st, id) => ({
+  ...st,
+  cardholders: { ...st.cardholders, [id]: { ...st.cardholders[id], pushes_this_week: st.caps.push_per_week } },
+});
+
+check("seed: the demo flag decides Edwin's starting push count, and Bernice is under the cap either way",
+      (DEMO_LIFT_EDWIN_PUSH_CAP
+        ? seed.cardholders.edwin.pushes_this_week === 0
+        : seed.cardholders.edwin.pushes_this_week >= seed.caps.push_per_week)
+      && seed.cardholders.bernice.pushes_this_week < seed.caps.push_per_week,
+      { lifted: DEMO_LIFT_EDWIN_PUSH_CAP, edwin: seed.cardholders.edwin.pushes_this_week,
+        bernice: seed.cardholders.bernice.pushes_this_week, cap: seed.caps.push_per_week });
 check("seed: an expired reward is seeded from a real allocation row",
       Object.values(seed.offers).some((o) => o.status === "expired" && o.source === "allocations.parquet"));
 check("seed: audit clean", audit(seed).length === 0, audit(seed));
@@ -75,6 +95,9 @@ check("ladder walked applied → draft → pending → active with history recor
       s.campaigns[DEMO].status === "active" && s.campaigns[DEMO].history.map((h) => h.to).join(">") === "draft>pending>active");
 
 // ---------------------------------------------------------------- event 1: push with suppression
+// Edwin is put at the cap here rather than assumed to be there, so this proves the cap and not the
+// dataset. Every assertion below is unchanged from when the seed supplied that state.
+s = atCap(s, "edwin");
 const beforePush = s;
 s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(6), seq: 6 });
 const push = s.campaigns[DEMO].pushes[0];
@@ -311,9 +334,51 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("live: the segment cannot be narrowed once live", n.ledger.at(-1).type === "REJECTED");
 }
 
+// ---------------------------------------------------------------- submit straight to live (no approval step)
+// The workflow the demo walks now: the merchant configures and submits, and the programme starts.
+// The check that made submitting meaningful moved onto this edge with it, so an incomplete
+// configuration has to be refused here exactly as it was on draft → pending.
+{
+  let d = seed;
+  d = reduce(d, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  d = reduce(d, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2,
+                  configuration: { ...CONFIG, outlets: [] } });
+  check("submit: draft → active is refused while a required field is missing, naming it",
+        d.ledger.at(-1).type === "REJECTED" && /outlets/.test(d.ledger.at(-1).reason) && d.campaigns[DEMO].status === "draft",
+        d.ledger.at(-1));
+
+  // No explicit window: the prefilled one is used, and it opens on the demo clock's own day (see
+  // seed.js `opensOn`). That is the pitch's path — submit, and the programme is live to be fired
+  // at — so it is the one asserted here.
+  d = reduce(d, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(3), seq: 3, configuration: CONFIG });
+  check("submit: a complete configuration goes draft → active with no approval in between",
+        d.campaigns[DEMO].status === "active"
+        && d.campaigns[DEMO].history.map((h) => h.to).join(">") === "draft>active"
+        && d.campaigns[DEMO].submitted_at && d.campaigns[DEMO].live_since);
+
+  // Live versus in queue is a display refinement, not a ladder state: the campaign is `active`
+  // either way, and only the start date decides which word the merchant reads.
+  const clockDay = seed.clock;
+  check("submit: the demo campaign's own window opens today, so it submits live and can be fired at",
+        isQueued(d.campaigns[DEMO], clockDay) === false,
+        { start: d.campaigns[DEMO].window?.start, clock: clockDay });
+
+  let q = seed;
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2,
+                  configuration: { ...CONFIG, window_start: "2026-12-01", window_end: "2026-12-28" },
+                  window: { start: "2026-12-01", end: "2026-12-28" } });
+  check("submit: a start date ahead of the clock reads as in queue, and the campaign is still active",
+        q.campaigns[DEMO].status === "active" && isQueued(q.campaigns[DEMO], clockDay) === true,
+        { start: q.campaigns[DEMO].window?.start, clock: clockDay });
+  check("submit: audit clean after a direct submit", audit(q).length === 0, audit(q));
+}
+
 // ---------------------------------------------------------------- push to the whole cohort → reach cap fires
 {
-  let k = seed;
+  // At the cap by construction, so the named half of the cohort push's suppression is proven here
+  // rather than inherited from whatever the dataset ships.
+  let k = atCap(seed, "edwin");
   k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(2), seq: 2 });
   k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(3), seq: 3 });
@@ -344,8 +409,9 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         Math.round(seed.portfolio.ceiling_share_of_consented_base * seed.portfolio.consented_base) === seed.portfolio.weekly_ceiling,
         { share: seed.portfolio.ceiling_share_of_consented_base, base: seed.portfolio.consented_base, ceiling: seed.portfolio.weekly_ceiling });
 
-  // Walk the campaign live, then look at what a cohort push would do before doing it.
-  let g = seed;
+  // Walk the campaign live, then look at what a cohort push would do before doing it. Edwin is at
+  // the cap by construction so the preview has a named suppression to report.
+  let g = atCap(seed, "edwin");
   g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", configuration: CONFIG, at: at(2), seq: 2 });
   g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, window: WINDOW, at: at(3), seq: 3 });
