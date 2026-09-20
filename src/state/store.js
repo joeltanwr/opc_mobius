@@ -81,18 +81,65 @@ export const PER_CUSTOMER_LIMITS = {
 // because it also has to read the generator's historical configurations back.
 export const PER_CUSTOMER_OPTIONS = ["once_per_customer", "once_per_week"];
 
-// The prior redemption that a per-customer limit refuses this one for, or null if none does.
+// The prior claim or redemption that a per-customer limit refuses this one for, or null if none
+// does. A claimed voucher counts: it is locked in and the merchant has to honour it, so a rule
+// reading "once per customer" that let somebody hold two claimed vouchers would not be that rule.
+// The date the window is measured from is whichever the offer reached first — claimed_at where
+// there is one, otherwise redeemed_at — because that is when the cardholder took the reward.
+const CLAIMED_STATUSES = ["claimed", "redeemed"];
+const tookAt = (o) => o.claimed_at ?? o.redeemed_at ?? null;
+
 function perCustomerBlocker(state, campaign, cardholderId, at) {
   const rule = PER_CUSTOMER_LIMITS[campaign.configuration?.per_customer_limit];
   if (!rule) return null;
   const cutoff = rule.days == null ? null : Date.parse(at) - rule.days * 86_400_000;
   return Object.values(state.offers).find((o) => {
-    if (o.cardholder_id !== cardholderId || o.status !== "redeemed") return false;
+    if (o.cardholder_id !== cardholderId || !CLAIMED_STATUSES.includes(o.status)) return false;
     if (rule.scope === "campaign" ? o.campaign_id !== campaign.id : o.merchant_id !== campaign.merchant_id) return false;
     if (cutoff === null) return true;
-    // A redemption we cannot date cannot be shown to fall inside the window, so it does not refuse.
-    return o.redeemed_at != null && Date.parse(o.redeemed_at) >= cutoff;
+    // One we cannot date cannot be shown to fall inside the window, so it does not refuse.
+    const when = tookAt(o);
+    return when != null && Date.parse(when) >= cutoff;
   }) ?? null;
+}
+
+// Why a per-customer limit refused a claim or a redemption, in the words of the rule itself.
+function perCustomerReason(campaign, offer, blocker) {
+  const rule = PER_CUSTOMER_LIMITS[campaign.configuration.per_customer_limit];
+  const when = tookAt(blocker);
+  return `per-customer limit: this campaign is ${rule.label}, and ${offer.cardholder_id} already took ${blocker.id}${when ? ` on ${when.slice(0, 10)}` : ""}`;
+}
+
+// Lock a voucher in for its cardholder: the step that spends one of the N and issues the code.
+// Shared by CLAIMED and by a REDEEMED that arrives straight from the feed, so there is exactly
+// one place where the limit is spent and one place where a code is minted.
+//
+// A claim on a campaign whose results have frozen (stopped, completed) is honoured for the
+// cardholder and counted apart, the same way a late redemption is — the reward is real either way
+// and a frozen result must not silently absorb it.
+function claimOffer(next, campaign, offer, event) {
+  const live = campaign.status === "active";
+  offer.status = "claimed";
+  offer.claimed_at = event.at;
+  offer.code = offer.code ?? redemptionCode(offer, event.seq ?? 0);
+  if (live) {
+    campaign.counters.claims += 1;
+    if (!campaign.counters.claimers.includes(offer.cardholder_id)) campaign.counters.claimers.push(offer.cardholder_id);
+  } else {
+    campaign.post_freeze.claims += 1;
+    if (!campaign.post_freeze.offers.includes(offer.id)) campaign.post_freeze.offers.push(offer.id);
+  }
+  return { code: offer.code, counted_in: live ? "live results" : "post-freeze ledger" };
+}
+
+// N claimed means the programme is spent. This is the only place the redemption limit closes a
+// campaign, and it reads claims rather than redemptions on purpose: the merchant is committed the
+// moment a voucher is locked in, not when it is finally presented at the counter.
+function capIfFullyClaimed(next, campaign, event) {
+  const limit = campaign.configuration?.redemption_limit;
+  if (campaign.status === "active" && limit != null && campaign.counters.claims >= limit) {
+    cap(next, campaign, event, "redemption limit reached");
+  }
 }
 
 function reject(state, event, reason) {
@@ -123,14 +170,20 @@ function cap(next, campaign, event, why) {
   campaign.status = "capped";
   campaign.capped = { at: event.at, why };
   freeze(campaign, event.at, why);
-  // A redemption limit is exhausted: nobody can redeem again, so the cards close and say so.
-  // A reach cap only stops new deliveries; a card already delivered is a reward the customer
-  // holds, and it stays valid until it expires — the contract says never revoke one.
+  // The redemption limit is exhausted: all N have been claimed, so no card that is merely
+  // delivered can be claimed any more and those close and say so.
+  //
+  // A CLAIMED card is untouched, and that is the whole point of claiming. The cardholder already
+  // took one of the N — it is counted against the limit and the merchant is committed to it — so
+  // closing it here would spend the slot and then refuse to honour it. They keep it until it
+  // expires, exactly as the contract's "never revoke a delivered reward" intends.
+  //
+  // A reach cap only stops new deliveries and closes nothing at all.
   if (why === "redemption limit reached") {
     for (const offer of Object.values(next.offers)) {
       if (offer.campaign_id === campaign.id && offer.status === "delivered") {
         offer.status = "closed";
-        offer.closed = { at: event.at, why: "This offer has been fully redeemed." };
+        offer.closed = { at: event.at, why: "This offer has been fully claimed." };
       }
     }
   }
@@ -564,7 +617,9 @@ export function reduce(state, event) {
       // Delivered offers are untouched: each still carries its own expires_at and stays
       // redeemable until then. The customer view says when it expires instead of pulling it.
       let held = 0;
-      for (const offer of Object.values(next.offers)) if (offer.campaign_id === campaign.id && offer.status === "delivered") held += 1;
+      for (const offer of Object.values(next.offers)) {
+        if (offer.campaign_id === campaign.id && ["delivered", "claimed"].includes(offer.status)) held += 1;
+      }
       campaign.history.push({ from: "active", to: "stopped", by: event.by ?? "merchant", at: event.at, note: event.reason ?? null });
       log(next, event, { campaign_id: campaign.id, offers_still_held: held, note: "results frozen; delivered offers stay valid until expiry" });
       return next;
@@ -639,29 +694,68 @@ export function reduce(state, event) {
       return next;
     }
 
-    // ---------------------------------------------------------------- event 2 + 3: redeem, limit
-    case "REDEEMED": {
+    // ---------------------------------------------------------------- event 2a: claim, limit
+    // Claiming locks the voucher in. It is the step that spends one of the N, issues the code the
+    // cardholder will show at the counter, and — once N are gone — closes the programme to
+    // everybody who had only been offered it.
+    //
+    // Claim, not delivery, is where the limit goes, and the two channels make the reason concrete.
+    // Push hands cards to an allocated cohort; pull lets anybody who searches find the same
+    // programme. If delivery reserved limit, the allocator would spend the merchant's whole
+    // allowance on people who never turned up and the cardholder who came looking would find
+    // nothing left. Because it is claims that count, the channels genuinely race: first to claim
+    // wins, neither has a reserved pool, and the merchant pays for interest rather than delivery.
+    case "CLAIMED": {
       const o = state.offers[event.offer_id];
       if (!o) return reject(state, event, "unknown offer");
       const c = state.campaigns[o.campaign_id];
       if (o.status !== "delivered") return reject(state, event, `offer is ${o.status}, not delivered`);
       if (o.expires_at && Date.parse(event.at) > Date.parse(o.expires_at)) return reject(state, event, `offer expired ${o.expires_at}`);
       if (["applied", "draft", "pending"].includes(c.status)) return reject(state, event, `campaign is ${c.status}`);
+      const claimBlocker = perCustomerBlocker(state, c, o.cardholder_id, event.at);
+      if (claimBlocker) return reject(state, event, perCustomerReason(c, o, claimBlocker));
+      const next = clone(state);
+      const claimed = claimOffer(next, next.campaigns[o.campaign_id], next.offers[event.offer_id], event);
+      log(next, event, { offer_id: o.id, campaign_id: c.id, cardholder_id: o.cardholder_id, code: claimed.code,
+                         counted_in: claimed.counted_in, claims: next.campaigns[o.campaign_id].counters.claims,
+                         redemption_limit: c.configuration?.redemption_limit ?? null });
+      capIfFullyClaimed(next, next.campaigns[o.campaign_id], event);
+      return next;
+    }
+
+    // ---------------------------------------------------------------- event 2 + 3: redeem, limit
+    case "REDEEMED": {
+      const o = state.offers[event.offer_id];
+      if (!o) return reject(state, event, "unknown offer");
+      const c = state.campaigns[o.campaign_id];
+      // Either step is a valid starting point. A cardholder who claimed earlier redeems the card
+      // they locked in; one who taps Redeem straight from the feed claims and redeems in the same
+      // event, so the limit is spent exactly once either way and no path skips the counter.
+      if (!["delivered", "claimed"].includes(o.status)) return reject(state, event, `offer is ${o.status}, not delivered`);
+      if (o.expires_at && Date.parse(event.at) > Date.parse(o.expires_at)) return reject(state, event, `offer expired ${o.expires_at}`);
+      if (["applied", "draft", "pending"].includes(c.status)) return reject(state, event, `campaign is ${c.status}`);
       // No status check beyond that: a delivered card is a reward the customer holds. A redemption
       // limit closes the cards themselves (status "closed", caught above); a reach cap, a stop or
       // a completed window leave them valid until expiry, and the redemption is honoured.
-      const blocker = perCustomerBlocker(state, c, o.cardholder_id, event.at);
-      if (blocker) {
-        const rule = PER_CUSTOMER_LIMITS[c.configuration.per_customer_limit];
-        return reject(state, event, `per-customer limit: this campaign is ${rule.label}, and ${o.cardholder_id} redeemed ${blocker.id}${blocker.redeemed_at ? ` on ${blocker.redeemed_at.slice(0, 10)}` : ""}`);
+      //
+      // The per-customer limit is only asked on the way in from `delivered`. A card already in
+      // `claimed` passed this test when it was claimed, and it would now find itself as its own
+      // blocker.
+      if (o.status === "delivered") {
+        const blocker = perCustomerBlocker(state, c, o.cardholder_id, event.at);
+        if (blocker) return reject(state, event, perCustomerReason(c, o, blocker));
       }
       const next = clone(state);
       const offer = next.offers[event.offer_id];
       const campaign = next.campaigns[o.campaign_id];
       const ch = next.cardholders[o.cardholder_id];
+      // Redeeming straight from the feed still spends a claim, and the code it issues is the one
+      // claiming would have issued.
+      const wasClaimed = offer.status === "claimed";
+      if (!wasClaimed) claimOffer(next, campaign, offer, event);
       offer.status = "redeemed";
       offer.redeemed_at = event.at;
-      offer.code = redemptionCode(offer, event.seq ?? 0);
+      offer.code = offer.code ?? redemptionCode(offer, event.seq ?? 0);
       // The customer's own weights move toward what they just redeemed (customer §5, §6).
       const before = ch.profile.category_weights[campaign.merchant_category] ?? 0;
       ch.profile.category_weights = learn(ch.profile.category_weights, campaign.merchant_category, next.caps.profile_weight_step);
@@ -672,15 +766,18 @@ export function reduce(state, event) {
         if (!campaign.counters.redeemers.includes(o.cardholder_id)) campaign.counters.redeemers.push(o.cardholder_id);
       } else {
         // Stopped or completed: results are frozen, but the reward is honoured and the
-        // redemption is counted where a reader can find it.
+        // redemption is counted where a reader can find it. The offer list is a set — a voucher
+        // claimed after the freeze and redeemed after it too is one offer, listed once.
         campaign.post_freeze.redemptions += 1;
-        campaign.post_freeze.offers.push(offer.id);
+        if (!campaign.post_freeze.offers.includes(offer.id)) campaign.post_freeze.offers.push(offer.id);
       }
       log(next, event, { offer_id: offer.id, campaign_id: campaign.id, cardholder_id: o.cardholder_id, code: offer.code,
                          counted_in: campaign.status === "active" ? "live results" : "post-freeze ledger",
+                         claimed_first: wasClaimed, claims: campaign.counters.claims,
                          weight: ch.profile.last_redemption });
-      const limit = campaign.configuration?.redemption_limit;
-      if (campaign.status === "active" && limit != null && campaign.counters.redemptions >= limit) cap(next, campaign, event, "redemption limit reached");
+      // Only a redemption that also claimed can be the one that exhausts the limit; where the card
+      // was claimed earlier, the claim already ran this and the campaign capped then.
+      if (!wasClaimed) capIfFullyClaimed(next, campaign, event);
       return next;
     }
 
@@ -694,23 +791,31 @@ export function reduce(state, event) {
       holder.consent.offers = false;
       holder.consent.changed_at = event.at;
       holder.segments_left_at = event.at;
-      let withdrawn = 0;
+      // Cards they were merely offered are withdrawn; a voucher they CLAIMED is not. Turning
+      // offers off stops OCBC marketing at them — it is not a forfeit of something they already
+      // took, and the claim is counted against the merchant's limit either way, so withdrawing it
+      // would spend the slot and hand back nothing.
+      let withdrawn = 0, kept = 0;
       for (const oid of holder.feed) {
         const offer = next.offers[oid];
         if (offer && offer.status === "delivered") {
           offer.status = "withdrawn";
           offer.withdrawn = { at: event.at, why: "You turned offers off." };
           withdrawn += 1;
+        } else if (offer && offer.status === "claimed") {
+          kept += 1;
         }
       }
-      holder.feed = [];
+      // The feed keeps exactly what they claimed, and nothing else.
+      holder.feed = holder.feed.filter((oid) => next.offers[oid]?.status === "claimed");
       holder.notifications = [];
       // Out of every future segment: the pipeline's reach is static JSON, so the departure is
       // recorded here and the live reach shown is reach − departures (still rounded).
       for (const campaign of Object.values(next.campaigns)) {
         if (!isTerminal(campaign.status)) campaign.segment_departures.consent += 1;
       }
-      log(next, event, { cardholder_id: holder.id, withdrawn, note: "feed emptied; excluded from every future push" });
+      log(next, event, { cardholder_id: holder.id, withdrawn, vouchers_kept: kept,
+                         note: "unclaimed cards withdrawn, claimed vouchers kept; excluded from every future push" });
       return next;
     }
 
@@ -981,6 +1086,13 @@ export function audit(state) {
     if (c.counters.pushes_suppressed - (c.counters.seeded?.pushes_suppressed ?? 0) !== fromPushes.x) problems.push(`${c.id}: pushes_suppressed != Σ pushes`);
     const liveRedeemed = Object.values(state.offers).filter((o) => o.campaign_id === c.id && o.status === "redeemed" && o.source === "live").length;
     if (liveRedeemed !== c.counters.redemptions - (c.counters.seeded?.redemptions ?? 0) + c.post_freeze.redemptions) problems.push(`${c.id}: redeemed offers != counted redemptions`);
+    // Claims reconcile the same way, and this is the invariant that would catch the limit being
+    // spent somewhere other than claimOffer(). Every card that reached `claimed` counts, whether
+    // it has since been redeemed or is still a voucher waiting to be presented.
+    const liveClaimed = Object.values(state.offers).filter((o) => o.campaign_id === c.id && o.source === "live"
+                                                                 && CLAIMED_STATUSES.includes(o.status)).length;
+    if (liveClaimed !== c.counters.claims - (c.counters.seeded?.claims ?? 0) + (c.post_freeze.claims ?? 0)) problems.push(`${c.id}: claimed offers != counted claims`);
+    if (c.counters.claims < c.counters.redemptions) problems.push(`${c.id}: redemptions (${c.counters.redemptions}) exceed claims (${c.counters.claims})`);
     if (isTerminal(c.status) && !c.frozen) problems.push(`${c.id}: terminal without frozen results`);
     if (c.frozen && c.status === "active") problems.push(`${c.id}: frozen while active`);
   }

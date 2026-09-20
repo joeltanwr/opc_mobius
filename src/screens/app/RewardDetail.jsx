@@ -83,7 +83,20 @@ export default function RewardDetail() {
           <p className="rounded-lg border border-border bg-canvas px-3 py-2 text-[12.5px] text-ink-secondary">{offer.closed.why}</p>
         )}
 
+        {/* Claim locks one of the merchant's N in for this cardholder and is offered whenever the
+            card is still only delivered, in or out of the redemption window. Once claimed, the
+            window governs redeeming and nothing else. */}
         {offer.status === "delivered" ? (
+          <div className="space-y-2">
+            <button onClick={() => m.dispatch({ type: "CLAIMED", offer_id: offer.id })}
+                    className="w-full rounded-lg bg-brand py-3 text-[14px] font-bold text-white">
+              Claim this reward
+            </button>
+            <p className="text-center text-[11.5px] text-ink-light">
+              Claiming holds one for you. You redeem it at the counter {window ? window.toLowerCase() : "inside the window above"}.
+            </p>
+          </div>
+        ) : offer.status === "claimed" ? (
           o.availableNow ? (
             <button onClick={() => navigate(`/app/redeem/${encodeURIComponent(offer.id)}`)}
                     className="w-full rounded-lg bg-brand py-3 text-[14px] font-bold text-white">
@@ -91,7 +104,7 @@ export default function RewardDetail() {
             </button>
           ) : (
             <div className="rounded-lg border border-border bg-canvas px-3 py-3 text-center">
-              <p className="text-[12.5px] font-semibold text-ink">Not redeemable right now</p>
+              <p className="text-[12.5px] font-semibold text-ink">Claimed — not redeemable right now</p>
               <p className="text-[12px] text-ink-secondary mt-0.5">It's yours until it expires — come back {window.toLowerCase()}.</p>
             </div>
           )

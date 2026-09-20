@@ -12,7 +12,7 @@ import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioVie
          cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool } from "./store.js";
 import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
 import { expectedOutcome } from "./expected.js";
-import { INTENTS, isFindable, searchPull } from "../screens/app/chatbot.js";
+import { INTENTS, isFindable, searchPull, openNow } from "../screens/app/chatbot.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -137,13 +137,15 @@ check("event 1: a repeat push to a holder of the card is counted as already_hold
 // now; if the send reserved anything the campaign would already have capped. It is still active,
 // its redemption count is still zero, and only feed_delivered has moved.
 // ----------------------------------------------------------------------------------------------
-check("the send reserves nothing: 3 cards delivered against a limit of 2 and the counter is still zero",
-      s.campaigns[DEMO].counters.redemptions === beforePush.campaigns[DEMO].counters.redemptions
+check("the send reserves nothing: 3 cards delivered against a limit of 2 and nothing is claimed",
+      s.campaigns[DEMO].counters.claims === beforePush.campaigns[DEMO].counters.claims
+      && s.campaigns[DEMO].counters.claims === 0
       && s.campaigns[DEMO].counters.redemptions === 0
       && s.campaigns[DEMO].counters.feed_delivered === beforePush.campaigns[DEMO].counters.feed_delivered + 3
       && s.campaigns[DEMO].status === "active",
       { limit: s.campaigns[DEMO].configuration.redemption_limit, delivered: s.campaigns[DEMO].counters.feed_delivered,
-        redemptions: s.campaigns[DEMO].counters.redemptions, status: s.campaigns[DEMO].status });
+        claims: s.campaigns[DEMO].counters.claims, redemptions: s.campaigns[DEMO].counters.redemptions,
+        status: s.campaigns[DEMO].status });
 
 // ---------------------------------------------------------------- event 2: redemption propagates
 const wBefore = s.cardholders.bernice.profile.category_weights[s.campaigns[DEMO].merchant_category];
@@ -165,7 +167,7 @@ s = reduce(s, { type: "REDEEMED", offer_id: eOffer.id, at: at(11), seq: 11 });
 check("event 3: reaching the redemption limit moves the campaign to capped with the reason",
       s.campaigns[DEMO].status === "capped" && s.campaigns[DEMO].capped.why === "redemption limit reached" && s.campaigns[DEMO].frozen != null);
 const alvinOffer = s.offers[offerId(DEMO, "alvin")];
-check("event 3: unredeemed cards close in the feed and say why", alvinOffer.status === "closed" && /fully redeemed/i.test(alvinOffer.closed.why));
+check("event 3: unclaimed cards close in the feed and say why", alvinOffer.status === "closed" && /fully claimed/i.test(alvinOffer.closed.why));
 check("event 3: redeemed cards keep their redemption", s.offers[bOffer.id].status === "redeemed" && s.offers[eOffer.id].status === "redeemed");
 s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["farah"], by: "rm", at: at(12), seq: 12 });
 check("event 3: pushes after capped are rejected", s.ledger.at(-1).type === "REJECTED");
@@ -553,6 +555,93 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     [DEMO]: { ...f.campaigns[DEMO], capped: { ...f.campaigns[DEMO].capped, why: "redemption limit reached" } } } };
   check("pull: a campaign capped because it is fully redeemed is not findable",
         !isFindable(redeemed.campaigns[DEMO]));
+
+  // ------------------------------------------------------------------ the time filter
+  // The hero programme runs Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so it is
+  // genuinely shut at the moment the pitch searches for coffee. The filter is applied and
+  // reported — open_now is false and the funnel line says so — but it does not hide the
+  // programme, because the voucher can be claimed now and redeemed inside the window. If that
+  // ever becomes a hide, this check is the one that should fail first.
+  check("pull: the demo clock is outside the hero programme's own window",
+        !openNow(f.campaigns[DEMO], f.clock),
+        { clock: f.clock, days: f.campaigns[DEMO].configuration?.days_of_week, hours: f.campaigns[DEMO].configuration?.hours });
+  const hero = found.results.find((r) => r.campaign.id === DEMO);
+  check("pull: a programme shut right now is still listed, flagged shut rather than hidden",
+        Boolean(hero) && hero.open_now === false && found.open_now < found.results.length,
+        { open_now_count: found.open_now, results: found.results.length, hero_open_now: hero?.open_now });
+  check("pull: results are ordered open-now first",
+        found.results.every((r, i) => i === 0 || Number(found.results[i - 1].open_now) >= Number(r.open_now)),
+        found.results.map((r) => ({ name: r.merchant?.name, open_now: r.open_now })));
+}
+
+// ---------------------------------------------------------------- claim locks the voucher in
+// Claiming is the step that spends one of the N. These pin the four properties the two channels
+// depend on: a claim costs a slot and issues a code, a claimed voucher survives everything that
+// closes an unclaimed card, redeeming never spends a second slot, and N claims close the
+// programme to everybody who had only been offered it.
+{
+  const LIMIT2 = { ...CONFIG, redemption_limit: 2 };
+  let q = atCap(seed, "edwin");
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: LIMIT2 });
+  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
+
+  const bId = offerId(DEMO, "bernice"), eId = offerId(DEMO, "edwin"), cId = offerId(DEMO, "charles");
+  q = reduce(q, { type: "CLAIMED", offer_id: bId, at: at(4), seq: 4 });
+  check("claim: locks the voucher in — status claimed, code issued, one of N spent",
+        q.offers[bId].status === "claimed" && Boolean(q.offers[bId].code) && Boolean(q.offers[bId].claimed_at)
+        && q.campaigns[DEMO].counters.claims === 1 && q.campaigns[DEMO].counters.claimers.includes("bernice"),
+        { status: q.offers[bId].status, code: q.offers[bId].code, claims: q.campaigns[DEMO].counters.claims });
+  check("claim: claiming is not redeeming — the merchant has not paid for it yet",
+        q.campaigns[DEMO].counters.redemptions === 0 && q.offers[bId].redeemed_at === undefined,
+        { redemptions: q.campaigns[DEMO].counters.redemptions });
+
+  // A claim is not a redemption, so a second claim of the same voucher is refused.
+  const dup = reduce(q, { type: "CLAIMED", offer_id: bId, at: at(5), seq: 5 });
+  check("claim: claiming the same voucher twice is rejected", dup.ledger.at(-1).type === "REJECTED");
+
+  // Redeeming what was already claimed must not spend a second slot.
+  q = reduce(q, { type: "REDEEMED", offer_id: bId, at: at(6), seq: 6 });
+  check("claim: redeeming a claimed voucher spends no second slot and keeps the claimed code",
+        q.campaigns[DEMO].counters.claims === 1 && q.campaigns[DEMO].counters.redemptions === 1
+        && q.offers[bId].status === "redeemed" && q.ledger.at(-1).claimed_first === true,
+        { claims: q.campaigns[DEMO].counters.claims, redemptions: q.campaigns[DEMO].counters.redemptions });
+
+  // Edwin skips the claim step and redeems straight from the feed: exactly one claim, and it is
+  // this claim that takes the limit to N and closes the programme.
+  q = reduce(q, { type: "REDEEMED", offer_id: eId, at: at(7), seq: 7 });
+  check("claim: redeeming straight from the feed claims once, not zero times and not twice",
+        q.campaigns[DEMO].counters.claims === 2 && q.campaigns[DEMO].counters.redemptions === 2
+        && q.ledger.at(-2).claimed_first === false,
+        { claims: q.campaigns[DEMO].counters.claims, redemptions: q.campaigns[DEMO].counters.redemptions });
+  check("claim: N claims caps the campaign on the redemption limit",
+        q.campaigns[DEMO].status === "capped" && q.campaigns[DEMO].capped.why === "redemption limit reached",
+        { status: q.campaigns[DEMO].status, why: q.campaigns[DEMO].capped?.why });
+  check("claim: an unclaimed card closes when the last slot goes",
+        q.offers[cId].status === "closed" && /fully claimed/i.test(q.offers[cId].closed.why));
+  check("claim: audit is clean once the limit is spent", audit(q).length === 0, audit(q));
+
+  // The other half of the same rule: a voucher already claimed must survive the cap, because the
+  // slot is spent on it. Fresh run so the claim is outstanding when the limit closes.
+  let v = atCap(seed, "edwin");
+  v = reduce(v, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  v = reduce(v, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: LIMIT2 });
+  v = reduce(v, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
+  v = reduce(v, { type: "CLAIMED", offer_id: bId, at: at(4), seq: 4 });   // claimed, not yet redeemed
+  v = reduce(v, { type: "CLAIMED", offer_id: eId, at: at(5), seq: 5 });   // second claim takes it to N
+  check("claim: a claimed voucher is NOT closed by the cap — the slot is already spent on it",
+        v.offers[bId].status === "claimed" && v.offers[eId].status === "claimed" && v.offers[cId].status === "closed",
+        { bernice: v.offers[bId].status, edwin: v.offers[eId].status, charles: v.offers[cId].status });
+  const late = reduce(v, { type: "REDEEMED", offer_id: bId, at: at(6), seq: 6 });
+  check("claim: a voucher claimed before the cap can still be redeemed after it",
+        late.offers[bId].status === "redeemed" && late.campaigns[DEMO].post_freeze.redemptions === 1,
+        late.ledger.at(-1));
+
+  // Turning offers off stops marketing; it does not confiscate what they already took.
+  const off = reduce(v, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(6), seq: 6 });
+  check("claim: turning offers off keeps a claimed voucher and withdraws only unclaimed cards",
+        off.offers[bId].status === "claimed" && off.cardholders.bernice.feed.includes(bId),
+        { status: off.offers[bId].status, feed: off.cardholders.bernice.feed });
 }
 
 // ---------------------------------------------------------------- maximum cost counts claims, not sends

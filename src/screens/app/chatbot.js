@@ -140,9 +140,66 @@ export function isFindable(campaign) {
   return campaign?.status === "capped" && campaign?.capped?.why === "reach cap reached";
 }
 
+// Is the programme's own redemption window open at this instant? Days and hours are the
+// merchant's own configuration and "now" is the demo clock read in Singapore time, the same rule
+// and the same parsing the feed card uses for "Available now" — a programme cannot be offered as
+// findable-right-now on one screen and closed on another.
+export function openNow(campaign, clock) {
+  if (!clock) return true;
+  const cfg = campaign?.configuration ?? {};
+  const days = cfg.days_of_week, hours = cfg.hours;
+  if (!days?.length && !(hours?.length === 2)) return true;   // no window configured constrains nothing
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Singapore", weekday: "short", hour: "2-digit", hour12: false })
+    .formatToParts(new Date(Date.parse(clock)));
+  const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(parts.find((p) => p.type === "weekday").value);
+  const hour = Number(parts.find((p) => p.type === "hour").value);
+  if (days?.length && !days.includes(weekday)) return false;
+  if (hours?.length === 2 && !(hour >= hours[0] && hour < hours[1])) return false;
+  return true;
+}
+
 export function searchPull({ intent, campaigns, profiles, holderProfile, clock, adjacency }) {
   const live = Object.values(campaigns ?? {}).filter(isFindable);
   const today = String(clock ?? "").slice(0, 10);
+  // --------------------------------------------------------------------------------------------
+  // THE PULL FILTER. It narrows on exactly two things, and this comment is the reason the list is
+  // not narrowed on anything else:
+  //
+  //     1. WHERE  the merchant has an outlet the cardholder can reach (catchmentOf, above)
+  //     2. WHEN   the programme's own window is open at the demo clock (openNow, above)
+  //
+  // DO NOT ADD the push channel's gates here. Specifically, NONE of these belongs in this filter:
+  //
+  //     RFM segment            what the merchant's own history says about this cardholder
+  //     target-segment fit     whether the allocator would have picked them for this programme
+  //     marketing consent      whether they agreed to be marketed at
+  //     portfolio frequency cap   how many unsolicited offers they have already had this week
+  //
+  // Every one of those exists to bound contact OCBC initiates. This list is the cardholder
+  // asking. A search that answered "you are not in the target segment" would be refusing to tell
+  // somebody what is publicly on offer near them, and a frequency cap applied to a question the
+  // customer asked is not a frequency cap, it is a broken search. Wiring any of them in here
+  // would also quietly break the demo's whole point: Charles finds the Soujourner programme he
+  // was never targeted for, and that is the moment the two channels are shown to be different.
+  //
+  // What DOES belong: isFindable() above, which drops a programme whose N are all claimed —
+  // offering something nobody can claim is the one dishonest result this list could return.
+  // --------------------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------------------------
+  // HOW "WHEN" IS APPLIED, and why it labels rather than hides.
+  //
+  // A programme whose run has not started or has already ended is not an offer, so it is dropped
+  // outright. A programme that is running but is outside its redemption hours right now is a
+  // different thing: it is real, it is claimable, and the cardholder can lock a voucher in today
+  // and use it tomorrow. Those stay in the list, ranked below the ones open now and labelled with
+  // when they come back.
+  //
+  // This is deliberate and it is load-bearing for the demo. The hero programme's window is
+  // Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so hiding what is shut right now
+  // would take Soujourner Coffee out of the pull list at exactly the moment the pitch searches
+  // for coffee. To hide them instead, move openNow() into the filter below and drop `open_now`
+  // from the sort — one line each, and the funnel line already reports both counts either way.
+  // --------------------------------------------------------------------------------------------
   const open = live.filter((c) => {
     const start = c.window?.start ?? c.configuration?.window_start ?? null;
     const end = c.window?.end ?? c.configuration?.window_end ?? null;
@@ -159,15 +216,20 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
       const mp = profiles?.[c.merchant_id] ?? null;
       const districts = outletDistricts(mp);
       const near = districts.filter((d) => catchment.has(d));
-      return { campaign: c, merchant: mp, districts, near, nearest: near[0] ?? null };
+      return { campaign: c, merchant: mp, districts, near, nearest: near[0] ?? null,
+               open_now: openNow(c, clock) };            // 2. WHEN — see the filter note above
     })
-    .filter((r) => r.near.length > 0)
-    // Most outlets the cardholder can reach first, then by name so the order is stable between
-    // renders. Nothing here is ranked by propensity: that is the push channel's question.
-    .sort((a, b) => b.near.length - a.near.length || String(a.merchant?.name).localeCompare(String(b.merchant?.name)));
+    .filter((r) => r.near.length > 0)                    // 1. WHERE — see the filter note above
+    // Open right now first, then most outlets the cardholder can reach, then by name so the order
+    // is stable between renders. Nothing here is ranked by propensity: that is the push channel's
+    // question.
+    .sort((a, b) => Number(b.open_now) - Number(a.open_now)
+                    || b.near.length - a.near.length
+                    || String(a.merchant?.name).localeCompare(String(b.merchant?.name)));
 
   return {
     searched: live.length, open: open.length, in_category: inCategory.length, results,
+    open_now: results.filter((r) => r.open_now).length,
     districts: districtsOf(holderProfile), exact_only,
   };
 }

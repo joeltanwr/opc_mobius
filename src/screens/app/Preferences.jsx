@@ -53,7 +53,7 @@ export default function Preferences() {
   ].slice(0, 8);
   const dayparts = Object.entries(holder.profile.daypart_availability ?? {}).sort((a, b) => b[1] - a[1]);
   const interests = holder.profile.interests ?? {};
-  const held = Object.values(state.offers).filter((o) => o.cardholder_id === cardholderId && o.status === "delivered").length;
+  const held = Object.values(state.offers).filter((o) => o.cardholder_id === cardholderId && ["delivered", "claimed"].includes(o.status)).length;
 
   const setInterest = (categoryId, direction) => {
     dispatch({ type: "INTEREST", cardholder_id: cardholderId, category: categoryId, direction });

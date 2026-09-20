@@ -1,10 +1,14 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Sparkles, Send, MapPin } from "lucide-react";
+import { Sparkles, Send, MapPin, Clock } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { RewardFeedCard } from "../../components/RewardCard";
 import { INTENTS, FALLBACK, matchIntent, searchPull } from "./chatbot";
 import { enrich } from "./offers";
+import { formatDays, formatHours } from "../../components/RewardCard";
+
+// The programme's own window, in the words the feed card uses for it.
+const windowLabel = (offer) => [formatDays(offer.days_of_week), formatHours(offer.hours)].filter(Boolean).join(" ");
 
 // ---------------------------------------------------------------------------------------------
 // Ask for a reward — the pull channel, inside the cardholder's own Rewards tab.
@@ -167,6 +171,7 @@ function Funnel({ found }) {
     <p className="text-[11px] text-ink-light mt-1.5 leading-snug">
       {found.open} live programme{found.open === 1 ? "" : "s"} · {found.in_category} matching what you asked for ·{" "}
       <span className="font-semibold text-ink-secondary">{found.results.length} near you</span>
+      {found.results.length > 0 && <>, {found.open_now} open right now</>}
       {found.districts.length > 0 && (
         <> — district{found.districts.length > 1 ? "s" : ""} {found.districts.join(" and ")}
           {found.exact_only ? ", exact match only" : " and the ones next to them"}</>
@@ -211,6 +216,15 @@ function PullResult({ result, onOpen }) {
         {result.districts.length > result.near.length && ` of ${result.districts.length}`}
         {" · found by searching, not sent to you"}
       </p>
+      {/* A programme that is running but shut at this hour is still worth claiming — the voucher
+          is locked in now and used inside the window. Saying so is the honest version of the
+          time filter: it is applied and visible, not hidden. */}
+      {!result.open_now && (
+        <p className="text-[10.5px] text-ink-light mt-0.5 px-1 flex items-center gap-1">
+          <Clock size={10} className="shrink-0" />
+          Not open right now — redeem {windowLabel(offer) || "inside its window"}
+        </p>
+      )}
     </div>
   );
 }

@@ -48,7 +48,7 @@ export default function BankingHome({ cardholderId: cardholderIdProp, compact = 
   const { state, allOffersFor } = m;
   const holder = state.cardholders[cardholderId];
   const offers = allOffersFor(cardholderId).map((o) => enrich(o, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock: state.clock }));
-  const live = offers.filter((o) => o.status === "delivered");
+  const live = offers.filter((o) => ["delivered", "claimed"].includes(o.status));
 
   // The newest push that has actually arrived, and has not been dismissed on this screen.
   const notification = [...(holder?.notifications ?? [])].reverse().find((n) => !dismissed.includes(n.offer_id)) ?? null;

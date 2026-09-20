@@ -19,18 +19,25 @@ function required(constants, key) {
 }
 
 function counters(seeded = {}) {
+  // Claims and redemptions are counted apart because they answer different questions. The
+  // redemption limit ("available to the first N customers") is spent by CLAIMS — a claimed
+  // voucher is locked in and the merchant has to honour it. What the merchant has actually PAID
+  // for is redemptions, so cost to date still counts those. Every seeded redemption implies a
+  // seeded claim, which is why claims start level with redemptions rather than at zero.
+  const seededClaims = seeded.claims ?? seeded.redemptions ?? 0;
   return {
     feed_delivered: seeded.feed_delivered ?? 0, pushes_sent: seeded.pushes_sent ?? 0, pushes_suppressed: seeded.pushes_suppressed ?? 0,
-    excluded_consent: 0, redemptions: seeded.redemptions ?? 0, redeemers: [],
+    excluded_consent: 0, redemptions: seeded.redemptions ?? 0, redeemers: [], claims: seededClaims, claimers: [],
     // What came from the pipeline before any live event, so audits can separate the two.
-    seeded: { feed_delivered: seeded.feed_delivered ?? 0, pushes_sent: seeded.pushes_sent ?? 0, pushes_suppressed: seeded.pushes_suppressed ?? 0, redemptions: seeded.redemptions ?? 0 },
+    seeded: { feed_delivered: seeded.feed_delivered ?? 0, pushes_sent: seeded.pushes_sent ?? 0, pushes_suppressed: seeded.pushes_suppressed ?? 0,
+              redemptions: seeded.redemptions ?? 0, claims: seededClaims },
   };
 }
 
 function campaignShell(base) {
   return {
     configuration: null, recommended: null, window: null, reach: null, reach_cap: null, live_since: null,
-    frozen: null, capped: null, stopped: null, history: [], changes: [], pushes: [], post_freeze: { redemptions: 0, offers: [] },
+    frozen: null, capped: null, stopped: null, history: [], changes: [], pushes: [], post_freeze: { redemptions: 0, claims: 0, offers: [] },
     segment_departures: { consent: 0 }, segment: null, prefill: null, cohort_tag: null, ...base,
   };
 }

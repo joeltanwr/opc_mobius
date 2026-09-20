@@ -71,7 +71,7 @@ export default function Rewards() {
             ? "Offers are turned off"
             : all.length === 0
               ? "Nothing here yet — ask below and we'll look"
-              : `${all.filter((o) => o.availableNow).length} you can use right now · ${all.filter((o) => o.status === "delivered").length} saved · ${all.length} in total`}
+              : `${all.filter((o) => o.availableNow).length} you can use right now · ${all.filter((o) => ["delivered", "claimed"].includes(o.status)).length} saved · ${all.length} in total`}
         </p>
       </header>
 
@@ -212,9 +212,12 @@ export default function Rewards() {
                   key={o.id}
                   offer={o}
                   clock={clock}
-                  highlight={o.source === "live" && o.status === "delivered"}
+                  highlight={o.source === "live" && ["delivered", "claimed"].includes(o.status)}
                   availableNow={o.availableNow}
                   onDetails={() => navigate(`/app/rewards/${encodeURIComponent(o.id)}`)}
+                  // Claiming takes one of the merchant's N and is allowed whenever the card is
+                  // held; redeeming is what the window gates, so it is only offered inside it.
+                  onClaim={() => m.dispatch({ type: "CLAIMED", offer_id: o.id })}
                   onRedeem={o.availableNow ? () => navigate(`/app/redeem/${encodeURIComponent(o.id)}`) : undefined}
                 />
               ))

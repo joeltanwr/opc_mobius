@@ -92,7 +92,7 @@ export default function AppFrame() {
   // The badge counts rewards available to redeem — the same thing the Rewards quick action on the
   // home screen counts. Two badges on the same word showing two different numbers is the kind of
   // detail that makes a prototype feel untrustworthy for no benefit.
-  const unread = Object.values(m.state.offers).filter((o) => o.cardholder_id === cardholderId && o.status === "delivered").length;
+  const unread = Object.values(m.state.offers).filter((o) => o.cardholder_id === cardholderId && ["delivered", "claimed"].includes(o.status)).length;
 
   return (
     <ToastContext.Provider value={show}>

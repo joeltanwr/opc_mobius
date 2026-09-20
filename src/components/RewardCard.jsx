@@ -54,7 +54,8 @@ export function daysRemaining(expiryIso, clockIso) {
 // "now" is the demo clock — never the wall clock, or the Available-now filter quietly changes
 // meaning depending on when the pitch is given.
 export function isRedeemableNow(offer, clockIso) {
-  if (!offer || offer.status !== "delivered" || !clockIso) return false;
+  // A claimed voucher is as redeemable as a delivered card — more so, since it is locked in.
+  if (!offer || !["delivered", "claimed"].includes(offer.status) || !clockIso) return false;
   const now = new Date(Date.parse(clockIso));
   // The clock is stamped +08:00 and every window is Singapore local, so read the parts in SGT.
   const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Singapore", weekday: "short", hour: "2-digit", hour12: false }).formatToParts(now);
@@ -72,8 +73,11 @@ const NATURE_ICON = { "F&B": Coffee, Retail: ShoppingBag, "Services & Lifestyle"
 
 const STATUS_TONE = {
   delivered: { label: "Available", cls: "bg-success-bg text-success border-[#A7F3D0]" },
+  // Claimed is the strongest state a card can be in before it is used: one of the merchant's N is
+  // spent on this cardholder and cannot be taken back, so it reads as held rather than available.
+  claimed: { label: "Claimed", cls: "bg-brand/10 text-brand border-brand/30" },
   redeemed: { label: "Redeemed", cls: "bg-canvas text-ink-secondary border-border" },
-  closed: { label: "Fully redeemed", cls: "bg-canvas text-ink-light border-border" },
+  closed: { label: "Fully claimed", cls: "bg-canvas text-ink-light border-border" },
   expired: { label: "Expired", cls: "bg-canvas text-ink-light border-border" },
   withdrawn: { label: "Withdrawn", cls: "bg-canvas text-ink-light border-border" },
 };
@@ -84,11 +88,13 @@ const STATUS_TONE = {
  * @param offer     {company, nature, reward_type, offer_headline, offer_terms, days_of_week, hours,
  *                   expires_at, status}
  * @param clock     the demo clock, for days remaining
+ * @param onClaim   fired by the Claim button, which locks one of the merchant's N in for this
+ *                  cardholder. Omitted where the card should keep the old single-step Redeem.
  * @param onRedeem  fired by the Redeem button. Omitted in the RM's preview, where the card is a
  *                  rendering of what will be sent and nothing on it should be operable.
  * @param onDetails fired by View details.
  */
-export function RewardFeedCard({ offer, clock, highlight = false, onRedeem, onDetails, availableNow = null }) {
+export function RewardFeedCard({ offer, clock, highlight = false, onClaim, onRedeem, onDetails, availableNow = null }) {
   const days = daysRemaining(offer.expires_at, clock);
   const base = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
   // "Available" is reserved for a card that can be used at this moment. One the cardholder holds
@@ -143,10 +149,22 @@ export function RewardFeedCard({ offer, clock, highlight = false, onRedeem, onDe
         )}
       </div>
 
-      {availableNow === false && offer.status === "delivered" && (
-        <p className="mt-2 text-[11.5px] text-ink-light">Not redeemable right now — comes back inside the window above.</p>
+      {availableNow === false && ["delivered", "claimed"].includes(offer.status) && (
+        <p className="mt-2 text-[11.5px] text-ink-light">
+          {offer.status === "claimed"
+            ? "Yours to use — comes back inside the window above."
+            : "Not redeemable right now — comes back inside the window above."}
+        </p>
       )}
 
+      {/* ------------------------------------------------------------------ claim, then redeem
+          Claiming is the step that locks the voucher in, and it is deliberately NOT gated on the
+          card being redeemable at this moment: a cardholder who finds a lunchtime offer at ten at
+          night should be able to secure one of the N there and then and use it tomorrow. Redeem
+          is what is gated by the window, because that is the thing that happens at the counter.
+
+          Where no onClaim is wired the card keeps its old single-step Redeem, so the RM's preview
+          and any caller that has not adopted the two steps behave exactly as before. */}
       <div className="mt-3 flex gap-2">
         {onDetails && (
           <button
@@ -157,14 +175,24 @@ export function RewardFeedCard({ offer, clock, highlight = false, onRedeem, onDe
             View details
           </button>
         )}
-        <button
-          type="button"
-          onClick={onRedeem}
-          disabled={offer.status !== "delivered" || !onRedeem}
-          className="flex-1 rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border"
-        >
-          {offer.status === "delivered" ? "Redeem" : status.label}
-        </button>
+        {offer.status === "delivered" && onClaim ? (
+          <button
+            type="button"
+            onClick={onClaim}
+            className="flex-1 rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2"
+          >
+            Claim
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onRedeem}
+            disabled={!["delivered", "claimed"].includes(offer.status) || !onRedeem}
+            className="flex-1 rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border"
+          >
+            {["delivered", "claimed"].includes(offer.status) ? "Redeem" : status.label}
+          </button>
+        )}
       </div>
     </div>
   );
