@@ -482,7 +482,11 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   // a retention selection must say the count is unknown — never borrow the acquisition figure,
   // which is a different group of people standing in different places.
   const champOutlets = perOutletFromSelection(champions.campaigns[DEMO]);
-  const hasPerOutlet = Boolean(seed.campaigns[DEMO].allocation?.retention_pools_per_outlet);
+  // Written means POPULATED. The pipeline now ships the key as an empty object when it has not
+  // computed the table, and Boolean({}) is true — so a truthiness test took the "table is here"
+  // branch while the table held nothing, and the check failed the moment the key appeared.
+  const perOutletTable = seed.campaigns[DEMO].allocation?.retention_pools_per_outlet;
+  const hasPerOutlet = Boolean(perOutletTable) && Object.keys(perOutletTable).length > 0;
   check("outlets: a retention pool is counted from its own per-outlet table, or reported as not computed",
         hasPerOutlet
           ? champOutlets.every((o) => ["ok", "suppressed"].includes(o.state))
@@ -656,7 +660,9 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 // alone. A send that reserved limit would make the same max-cost figure an overstatement of what
 // the merchant can be charged and an understatement of how fast the programme closes.
 {
-  const segment = { reach: 900, floor: 250, constraints: {},
+  // The floor comes from the seed, never retyped here — validate.py enforces that, and a wrong
+  // floor that looks right is the worst failure this build has.
+  const segment = { reach: 900, floor: seed.caps.segment_floor ?? seed.campaigns[DEMO].segment?.floor, constraints: {},
                     narrowing: { dimensions: { daypart: [{ id: "afternoon", hours: [12, 17] }] } } };
   const cfg = { ...CONFIG, max_reward_value_sgd: 5 };   // limit 2 × S$5
   const out = expectedOutcome({ segment, configuration: cfg, profile: { trading_summary: { avg_ticket_sgd: 6 } },

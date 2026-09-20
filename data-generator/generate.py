@@ -1336,6 +1336,7 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     ]
     used = set(HERO_MERCHANT_IDS) | {PLANT_BALANCE_FAIL, PLANT_BANDS_FAIL, PLANT_NO_SCORES} | set(completed_m) | set(active_m) | set(applied_m)
     feed_campaigns = []
+    pull_campaigns = []
     for suffix, category, rtype, dows, hours, ws, we, status, _ in FEED_SPECS:
         pick = next((m for m in merchants_df[merchants_df["is_ocbc_acquired"] & (merchants_df["category"] == category)]["merchant_id"]
                      if m not in used), None)
@@ -1349,6 +1350,52 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
         feed_campaigns.append((camp, suffix))
         campaigns.append(camp)
 
+    # ---- Programmes the cardholder can FIND, not ones she was sent (customer pull channel) -
+    # The pull list answers "what is running near me", so it filters on where the cardholder is
+    # and whether the programme is open at that moment — never on the segment, the consent or
+    # the frequency cap, which gate the push channel only.
+    #
+    # Everything above is allocated TO somebody. These three are planted so that the search has a
+    # real population to select from: without them the list near the showcase cardholder is two
+    # national chains, and a filter that only ever returns the one merchant that exists proves
+    # nothing on stage.
+    #
+    # Planted in her OWN home and work districts rather than merely adjacent ones, so they are
+    # found under either proximity rule — the exact-district fallback as well as the adjacency
+    # table the pipeline ships. Three different categories, each reached by a different question
+    # the assistant understands ("coffee", "somewhere to eat", "hair and nails"), and three
+    # different hour windows so that at the demo clock (Friday 15:12) two are open and the third
+    # is visibly shut rather than absent.
+    #
+    # (suffix, category, reward_type, days_of_week, hours, window_start, window_end)
+    PULL_SPECS = [
+        ("01", "bubble_tea",       "bundle_1for1", [0, 1, 2, 3, 4, 5, 6], [11, 20], "2026-08-18", "2026-10-25"),
+        ("02", "beauty_cosmetics", "discount",     [1, 2, 3, 4, 5],       [10, 19], "2026-08-25", "2026-11-08"),
+        ("03", "zichar_chinese_casual", "voucher", [0, 1, 2, 3, 4, 5, 6], [17, 22], "2026-09-01", "2026-10-18"),
+    ]
+    bernice_row = cardholders_df[cardholders_df["card_id"] == bernice].iloc[0]
+    near_districts = {int(bernice_row["home_district"]), int(bernice_row["work_district"])}
+
+    def _outlet_districts(mid):
+        return {o["district"] for o in m_by_id.loc[mid, "outlets"]}
+
+    for suffix, category, rtype, dows, hours, ws, we in PULL_SPECS:
+        # Nearest first: a merchant with an outlet in one of her own districts, falling back to
+        # any unused merchant in the category so a thin category still plants something.
+        in_category = [m for m in merchants_df[merchants_df["is_ocbc_acquired"] & (merchants_df["category"] == category)]["merchant_id"]
+                       if m not in used]
+        pick = next((m for m in in_category if _outlet_districts(m) & near_districts), None) or next(iter(in_category), None)
+        if pick is None:
+            continue
+        used.add(pick)
+        camp = mk(f"C-PULL-{suffix}", pick, "active", rtype, ws, we,
+                  (date.fromisoformat(ws) - timedelta(days=14)).isoformat(), ws)
+        camp.update(days_of_week=dows, hours=hours,
+                    offer_headline=_feed_headline(rtype, m_by_id.loc[pick, "canonical_name"]),
+                    offer_terms=_feed_terms(rtype, dows, hours))
+        campaigns.append(camp)
+        pull_campaigns.append(camp)
+
     # Allocations for the six other-merchant campaigns, concentrated on a subset that includes Edwin.
     generic_ids = cardholders_df[cardholders_df["marketing_consent"] & ~cardholders_df["card_id"].isin(set(cohorts["h1_a_only"]) | set(cohorts["h1_overlap"]) | set(cohorts["h1_b_only"]) | set(cohorts["showcase"].values()))]["card_id"].tolist()
     edwin = cohorts["showcase"]["edwin"]
@@ -1356,18 +1403,25 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     heavy = list(r.choice(generic_ids, size=800, replace=False)) + [edwin]
     light = [c for c in generic_ids if c not in set(heavy)]
     feed_ids = {c["campaign_id"] for c, _ in feed_campaigns}
+    # The pull programmes are allocated to an ordinary population so they are real live campaigns
+    # with real reach — but never to Bernice, and never to the cardholders the frequency-cap story
+    # depends on. She has to FIND them. An allocated programme would arrive in her feed, and the
+    # one thing the pull channel exists to demonstrate is a reward reaching somebody the allocator
+    # never picked.
+    pull_ids = {c["campaign_id"] for c in pull_campaigns}
+    held_out = feed_ids | pull_ids
     for camp in campaigns:
         if camp["merchant_id"] == "M0001" or camp["status"] == "applied":
             continue
         n = int(r.integers(300, 600))
         picks = list(r.choice(heavy, size=int(n * 0.7), replace=False)) + list(r.choice(light, size=n - int(n * 0.7), replace=False))
-        if camp["status"] == "active" and camp["campaign_id"] not in feed_ids:
+        if camp["status"] == "active" and camp["campaign_id"] not in held_out:
             picks = picks + freq_cap_plants
         # Edwin holds exactly two live offers and is at the weekly push cap; a feed campaign
         # allocated inside the 30-day window would make it three and the frequency cap would
         # remove him from the Soujourner cohort, taking the suppressed push with him.
-        if camp["campaign_id"] in feed_ids:
-            picks = [c for c in picks if c != edwin]
+        if camp["campaign_id"] in held_out:
+            picks = [c for c in picks if c not in (edwin, bernice)]
         ws = date.fromisoformat(camp["window_start"])
         for c in picks:
             pushed = camp["channel_push"] and r.random() < 0.6
@@ -1387,7 +1441,11 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
 
     # Edwin: pushed twice in the demo week (Mon 7 Sep – Sun 13 Sep) → at the weekly push cap.
     alloc_df = pd.DataFrame(alloc_rows)
-    core_active = [c["campaign_id"] for c in campaigns if c["status"] == "active" and c["campaign_id"] not in feed_ids]
+    # held_out, not feed_ids: the pull programmes must be invisible to this block too. It force-
+    # adds Edwin to every core_active campaign and then removes him from exactly one, so a longer
+    # list leaves him holding more offers, trips the 30-day frequency cap, and drops him from the
+    # Soujourner cohort — taking the suppressed push, which the brief says never to cut, with him.
+    core_active = [c["campaign_id"] for c in campaigns if c["status"] == "active" and c["campaign_id"] not in held_out]
     edwin_active = alloc_df[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"].isin(core_active))]
     for cid in core_active:
         if cid not in set(edwin_active["campaign_id"]):
