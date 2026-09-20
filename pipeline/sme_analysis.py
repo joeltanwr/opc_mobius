@@ -443,6 +443,19 @@ def analyse_merchant(raw, mid, tags):
     rfm_rows = None
     if gate_passed and len(src):
         rfm = rfm_table(src, DEMO_DATE)
+        # Which outlets each scored customer actually uses.
+        #
+        # The merchant's configuration screen counts the selected target group per outlet, and for
+        # an existing customer the honest measure is where they have really transacted — observed,
+        # not inferred. (The acquisition pool cannot be counted this way: those cardholders have
+        # never been to an outlet, so allocate.py falls back to catchment for them, which is the
+        # right question to ask about somebody who has not arrived yet.)
+        #
+        # Carried on the RFM frame rather than aggregated here, because the counting has to happen
+        # after the consent filter that allocate.py applies, not before it.
+        if "outlet_id" in src.columns and src["outlet_id"].notna().any():
+            used = src.dropna(subset=["outlet_id"]).groupby("cust")["outlet_id"].agg(lambda s: sorted(set(s)))
+            rfm["outlets"] = [list(used.get(cust, [])) for cust in rfm.index]
         counts = rfm["segment"].value_counts()
         seg_cells = {name: cell(int(counts.get(name, 0))) for name, _, _ in RFM_SEGMENTS}
         lapsed = int(sum(counts.get(s, 0) for s in ("At Risk", "Can't Lose Them", "Hibernating", "Lost")))

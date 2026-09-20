@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, ShieldCheck, HelpCircle, Clock, MapPin, CalendarX2 } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
-import { CARDHOLDER_ID } from "./cardholder";
+import { useCardholderId } from "./cardholder";
 import { enrich, whyThisOffer } from "./offers";
 import { formatDays, formatHours, REWARD_TYPE_LABELS } from "../../components/RewardCard";
 import { num } from "../../data/format";
@@ -12,6 +12,7 @@ import { num } from "../../data/format";
 // "why am I seeing this?" is answered, because it is where the question gets asked.
 
 export default function RewardDetail() {
+  const cardholderId = useCardholderId();
   const { offerId } = useParams();
   const navigate = useNavigate();
   const { data } = useDemoData();
@@ -31,7 +32,7 @@ export default function RewardDetail() {
     );
   }
 
-  const holder = m.state.cardholders[CARDHOLDER_ID];
+  const holder = m.state.cardholders[cardholderId];
   const campaign = m.state.campaigns[offer.campaign_id] ?? null;
   const categoryId = data.merchantProfiles?.[offer.merchant_id]?.category ?? null;
   const why = whyThisOffer(offer, { campaign, holder, categoryId, categoryLabel: o.categoryLabel });

@@ -66,7 +66,7 @@ def allocate(raw, tags, cohorts, rfm_by_merchant, mid="M0001"):
         per_outlet.append(c)
 
     # Retention pools for the same merchant, post-consent.
-    retention = {}
+    retention, retention_per_outlet = {}, {}
     if mid in rfm_by_merchant:
         rfm = rfm_by_merchant[mid]
         rfm = rfm[rfm["card_id"].notna()]
@@ -74,6 +74,31 @@ def allocate(raw, tags, cohorts, rfm_by_merchant, mid="M0001"):
         counts = rfm["segment"].value_counts()
         retention = {s: cell(int(counts.get(s, 0))) for s in RETENTION_POOLS}
         retention["_note"] = "Existing customers by RFM segment, consented, OCBC-resolvable. Below-floor segments must be grouped before selection."
+
+        # ------------------------------------------------------------------------------------
+        # The same pools, per outlet — so the configuration screen can count whichever target
+        # group is selected at each location rather than always reporting the acquisition pool.
+        #
+        # Counted on where these customers have actually transacted (sme_analysis attaches the
+        # outlets each one uses), not on catchment: for somebody who already comes in, where they
+        # come in is observed and does not need inferring. The acquisition pool above keeps its
+        # catchment measure for the opposite reason.
+        #
+        # A customer who uses two outlets is counted at both, so these do not sum to the pool and
+        # were never meant to — the screen says so rather than inviting the addition.
+        # ------------------------------------------------------------------------------------
+        if "outlets" in rfm.columns:
+            for s in RETENTION_POOLS:
+                pool = rfm[rfm["segment"] == s]
+                cells = []
+                for o in arow["outlets"]:
+                    n = sum(1 for used in pool["outlets"] if o["outlet_id"] in (used or []))
+                    c = cell(n)
+                    c.update(outlet_id=o["outlet_id"], name=o["name"], district=o["district"])
+                    if c["suppressed"]:
+                        c["prompt"] = "Below the reporting floor on its own — group it with another outlet."
+                    cells.append(c)
+                retention_per_outlet[s] = cells
 
     # Portfolio exposure (RM only): the panel no merchant can see.
     # The ceiling is a share of the consented base, turned into a headcount here, against the base
@@ -94,7 +119,7 @@ def allocate(raw, tags, cohorts, rfm_by_merchant, mid="M0001"):
         ranking_rule="highest propensity first — visits at the lift-source merchant × afternoon availability; not random, not alphabetical",
         frequency_cap=dict(offers_per_30_days=FREQ_CAP_OFFERS, provisional=CONSTANTS["FREQ_CAP_OFFERS"].provisional,
                            window=f"{CAP_WINDOW_START.isoformat()} to {DEMO_DATE.isoformat()}"),
-        per_outlet=per_outlet, retention_pools=retention,
+        per_outlet=per_outlet, retention_pools=retention, retention_pools_per_outlet=retention_per_outlet,
         portfolio=dict(contacted_this_week=contacted_week, weekly_ceiling=weekly_ceiling,
                        weekly_ceiling_share_of_consented_base=PORTFOLIO_WEEKLY_CEIL_SHARE,
                        ceiling_provisional=CONSTANTS["PORTFOLIO_WEEKLY_CEIL_SHARE"].provisional,

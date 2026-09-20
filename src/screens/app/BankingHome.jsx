@@ -4,7 +4,7 @@ import { QrCode, Send, LineChart, Gift, Grid3x3, LifeBuoy, Lock, Bell, ChevronRi
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { useToast } from "./AppFrame";
-import { CARDHOLDER_ID } from "./cardholder";
+import { useCardholderId } from "./cardholder";
 import { enrich } from "./offers";
 
 // ---------------------------------------------------------------------------------------------
@@ -28,11 +28,17 @@ const QUICK = [
   { key: "support", label: "Support", icon: LifeBuoy },
 ];
 
-// `cardholderId` is a prop with the logged-in cardholder as its default, so the consolidated demo
-// view can render this same screen for four people at once rather than growing a second home
-// screen that would drift from this one. Nothing else about the component knows which mode it is
-// in: `compact` only trims chrome that does not fit a tile a quarter of the width.
-export default function BankingHome({ cardholderId = CARDHOLDER_ID, compact = false }) {
+// Whose home screen this is, resolved in that order: an explicit prop, else whichever phone the
+// individual view is currently showing.
+//
+// The consolidated view passes the id explicitly — it renders four of these at once, so it cannot
+// rely on a single current cardholder. Everywhere else the screen is mounted by the router with no
+// props at all, and the fallback used to be the Bernice constant: switching the chrome to Charles
+// left his Rewards tab correct and his home screen still greeting Bernice with her offers on it.
+// Reading the context is what makes the switch mean anything.
+export default function BankingHome({ cardholderId: cardholderIdProp, compact = false }) {
+  const contextCardholderId = useCardholderId();
+  const cardholderId = cardholderIdProp ?? contextCardholderId;
   const navigate = useNavigate();
   const toast = useToast();
   const { data } = useDemoData();

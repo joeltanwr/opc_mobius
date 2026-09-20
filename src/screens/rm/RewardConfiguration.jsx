@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Lock, RotateCcw, AlertTriangle, Send, Ban, Sparkles, CheckCircle2, Users, Radio, Ticket } from "lucide-react";
+import { ArrowLeft, Lock, RotateCcw, AlertTriangle, Send, Ban, Sparkles, CheckCircle2, Users, Radio, Ticket, ChevronRight } from "lucide-react";
 import { useDemoData, merchantById, usePrivacyRules, natureOf } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
-import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS } from "../../state/store.js";
+import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS, reachFromSelection, perOutletFromSelection,
+         onAllocatedPool, FIELD_OWNERS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
 import { CONSTANTS, screenNum } from "../../data/constants";
-import { sgd, num, pct, pctOf, cellText, floorRound } from "../../data/format";
+import { sgd, num, pctOf } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame, REWARD_TYPE_LABELS } from "../../components/RewardCard";
 import { StatusPill, Th, Td } from "./rmCommon";
@@ -96,6 +97,10 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
   const { floor, rounding, floorBasis } = usePrivacyRules();
   const m = useMobiusState();
   const [terms, setTerms] = useState(null);
+  // The change log is collapsed by default. It is the longest block on the page and it grows with
+  // every edit, so by the time a campaign is configured it pushes the submit button off the
+  // screen. Declared here with the other hooks, above the early returns.
+  const [logOpen, setLogOpen] = useState(false);
   if (!m) return null;
   const { state, dispatch, display, displayOf } = m;
   const c = state.campaigns[campaignId];
@@ -136,8 +141,36 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
   const windowIncludesToday =
     (cfg.days_of_week ?? []).includes(clockDay) &&
     (!cfg.hours || cfg.hours.length !== 2 || (clockHour >= cfg.hours[0] && clockHour < cfg.hours[1]));
-  const reachCap = cfg.reach_cap ?? null;
-  const contacted = reachCap ?? seg?.reach ?? null;
+  // ------------------------------------------------------------------------------------------
+  // Reach follows the selection, in one place, and everything on the page reads it from here.
+  //
+  // The target-group checkboxes write `configuration.target_segments`; the segment itself is
+  // pipeline-set and narrowed only, which is a control worth keeping — nobody authors a segment on
+  // this screen. But the reach cap and the summary used to read `segment.reach` directly, so
+  // picking "Loyal Customers" left both of them reporting the acquisition pool the merchant had
+  // just deselected: the cap slider ran to 550 against a pool of 250, and the summary agreed with
+  // it. Two panels on one page disagreeing about who qualifies.
+  //
+  // So the selection is resolved once, here, and the cap, the summary and the cost all read the
+  // same object. The floor and the rounding are applied to the combination, not just to the parts:
+  // two pools that each clear the floor can still be reported only as a rounded total.
+  // ------------------------------------------------------------------------------------------
+  const reachSel = useMemo(
+    () => reachFromSelection(c, floor, rounding),
+    [c, floor, rounding]
+  );
+  const perOutlet = useMemo(() => perOutletFromSelection(c, floor, rounding), [c, floor, rounding]);
+  const qualifying = reachSel.total;
+  // What the cap is a cap ON. Contactable, not qualifying: consent and the frequency cap have
+  // already removed people the campaign can never reach, and a cap set above that number would be
+  // a cap on nobody — the panel below says as much ("the cap cannot raise that figure"), so the
+  // control has to honour it.
+  const contactable = reachSel.contactable ?? qualifying;
+  // A stored cap can also outlive the selection that justified it — switch from a 550 pool to a
+  // 250 one and the old cap is above the whole group. Clamped for display either way; the reducer
+  // clamps again on submit.
+  const reachCap = cfg.reach_cap == null ? null : (contactable == null ? cfg.reach_cap : Math.min(cfg.reach_cap, contactable));
+  const contacted = reachCap ?? contactable ?? null;
 
   // An application with nothing configured against it yet.
   //
@@ -211,15 +244,20 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
             title="Target customer group"
             note="Choose among the pools the analysis produced. Selecting one is choosing a proposed pool, not authoring one — there is no screen in this product where a segment can be written from scratch or widened."
           >
+            {/* The recommendation, labelled as such. It is the one figure in this section that does
+                not move with the checkboxes — it is what Mobius proposed, kept visible so a
+                merchant can see what they are departing from. The live number is the combined
+                reach below, and the reach cap and summary read that one too. */}
             <div className="rounded-lg border border-border bg-canvas/50 px-4 py-3 mb-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-light mb-0.5">Mobius recommends</div>
                   <div className="text-[13px] font-semibold text-ink">{seg?.label ?? "Non-customers from the lookalike pool"}</div>
                   <p className="text-[12px] text-ink-secondary max-w-xl mt-0.5">{seg?.description}</p>
                 </div>
                 <div className="text-right">
                   <div className="font-num text-[28px] font-extrabold text-ink tabular-nums leading-none">{num(seg?.reach)}</div>
-                  <div className="text-[11px] text-ink-light">cardholders qualify</div>
+                  <div className="text-[11px] text-ink-light">in this pool</div>
                 </div>
               </div>
             </div>
@@ -251,7 +289,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
               </label>
             </div>
 
-            <CombinedReach cfg={cfg} seg={seg} pools={data.allocationSummary?.retention_pools ?? {}} floor={floor} rounding={rounding} />
+            <CombinedReach reach={reachSel} rounding={rounding} />
             <BasisNote>
               Counts are the pipeline's, already floored and rounded — a pool below the floor ships with no count at all, so this screen cannot render one.
               {" "}{floorBasis}
@@ -264,24 +302,51 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
             prefilled={isPrefilled("outlets")}
             changedFrom={changedFrom("outlets")}
             onReset={editable ? () => resetSection(["outlets"]) : null}
-            note="An outlet that does not clear the floor on its own is unavailable rather than shown as a small number — group it with another."
+            note="How many of the target group you have selected are reachable at each outlet. An outlet that does not clear the floor on its own is unavailable rather than shown as a small number — group it with another."
           >
             <div className="space-y-2">
-              {(seg?.per_outlet ?? []).map((o) => {
-                const suppressed = o.suppressed !== false;
+              {/* The count beside each outlet follows the target group, and is location-aware in
+                  the way that pool allows: catchment for people who have never been here, and the
+                  outlets they actually use for people who already come in. It used to be the
+                  acquisition pool's catchment figure whatever the merchant had selected. */}
+              {perOutlet.map((o) => {
+                const unavailable = o.state === "suppressed" || o.state === "not_computed";
                 const on = (cfg.outlets ?? []).includes(o.outlet_id);
+                // Selecting an outlet is choosing where the reward can be redeemed, which stays
+                // possible even when its count cannot be reported. Only a cell the floor
+                // suppressed takes the outlet off the table.
+                const locked = o.state === "suppressed";
                 return (
-                  <label key={o.outlet_id} className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 ${suppressed ? "border-dashed bg-canvas/60" : "border-border"}`}>
-                    <input type="checkbox" checked={on} disabled={!editable || suppressed}
+                  <label key={o.outlet_id} className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 ${locked ? "border-dashed bg-canvas/60" : "border-border"}`}>
+                    <input type="checkbox" checked={on} disabled={!editable || locked}
                            onChange={() => set("outlets", on ? cfg.outlets.filter((x) => x !== o.outlet_id) : [...(cfg.outlets ?? []), o.outlet_id])} />
                     <span className="flex-1 text-[13px] text-ink">{o.name} <span className="text-ink-light">· District {o.district}</span></span>
-                    {suppressed
-                      ? <span className="inline-flex items-center gap-1 text-[12px] text-ink-light"><Lock size={12} /> {o.prompt ?? "Below the reporting floor on its own — group it with another outlet."}</span>
-                      : <span className="font-num text-[13px] font-semibold text-ink tabular-nums">{cellText(o)}</span>}
+                    {o.state === "ok" && (
+                      <span className="font-num text-[13px] font-semibold text-ink tabular-nums">
+                        {num(o.count)}{o.partial && <span className="ml-1 text-[11px] font-normal text-ink-light">at least</span>}
+                      </span>
+                    )}
+                    {o.state === "suppressed" && (
+                      <span className="inline-flex items-center gap-1 text-[12px] text-ink-light">
+                        <Lock size={12} /> Below the reporting floor on its own — group it with another outlet.
+                      </span>
+                    )}
+                    {o.state === "not_computed" && (
+                      <span className="text-[12px] text-ink-light text-right max-w-[16rem] leading-snug">
+                        Per-outlet counts for {o.missing.join(", ")} are not computed yet — the outlet can still be selected.
+                      </span>
+                    )}
+                    {o.state === "none_selected" && (
+                      <span className="text-[12px] text-ink-light">choose a target group above</span>
+                    )}
                   </label>
                 );
               })}
             </div>
+            <p className="text-[11.5px] text-ink-light mt-2">
+              These overlap and do not add up to your reach: someone within reach of two outlets, or who uses both, is counted at
+              each. Ticking a second outlet widens where the reward can be redeemed, not how many people receive it.
+            </p>
           </Section>
 
           {/* ---------------------------------------------------------- 5.3 timing */}
@@ -341,17 +406,12 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                 </p>
               </div>
             )}
-            <div className="mt-3 rounded-lg border border-border bg-canvas/50 px-3 py-2.5">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-[12px] text-ink-secondary">Expected incremental value in this window</span>
-                <span className="font-num text-[16px] font-bold text-ink tabular-nums">{rangeOf(outcome, "incremental_value_sgd", sgd)}</span>
-              </div>
-              <BasisNote>
-                Recomputed live from the window: reach in window {outcome.reach_in_window === null ? `below the floor` : num(outcome.reach_in_window)} ×
-                engagement {pct(engagement.low.value, 0)}–{pct(engagement.high.value, 0)} × incremental share {pct(outcome.incremental_share, 0)} ×
-                average ticket {sgd(outcome.ticket_sgd, 2)}.
-              </BasisNote>
-            </div>
+            {/* The expected-incremental-value box is off this screen. It was a forecast built from
+                an engagement band and an incremental share — OCBC's method narrated to a merchant
+                who has no way to check any of it, which is the same objection that took the
+                incrementality block off Customer Profile. The busy-window warning above stays:
+                that one tells the merchant something about their own trade, from their own
+                transactions, and it is the warning that stops a bad window being chosen. */}
           </Section>
 
           {/* ---------------------------------------------------------- 5.4 reward */}
@@ -372,13 +432,11 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                       <span className={`text-[13px] font-semibold ${r.disabled ? "text-ink-light" : "text-ink"}`}>{r.rank}. {r.label}</span>
                       {r.disabled
                         ? <Badge tone="neutral"><Ban size={10} /> ranked and rejected — {r.rejected_reason}</Badge>
-                        : <>
-                            <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{r.new_or_returning}</Badge>
-                            <span className="text-[11.5px] text-ink-secondary">
-                              incremental share <span className="font-num font-semibold text-ink">{pct(r.expected_incremental_share, 0)}</span>
-                              {r.incremental_share_provisional && <span className="ml-1 rounded bg-canvas border border-border px-1 py-0.5 text-ink-secondary">provisional</span>}
-                            </span>
-                          </>}
+                        : /* The ranking stays; the incremental share behind it does not. The rank
+                             and the reason are what a merchant chooses on — the share is the
+                             model's working, and a percentage they cannot audit reads as precision
+                             they are being asked to take on trust. It still ranks the list. */
+                          <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{r.new_or_returning}</Badge>}
                     </div>
                     {!r.disabled && <p className="text-[12px] text-ink-secondary mt-0.5">{r.reason}</p>}
                   </div>
@@ -434,30 +492,88 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
           {/* ---------------------------------------------------------- 5.5 reach cap */}
           <Section title="Reach cap — and the two numbers it is not">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
-              <Distinction icon={Users} label="Segment" value={num(seg?.reach)} text="Who qualifies. Set by Mobius, narrowed only." />
+              <Distinction icon={Users} label="Segment" value={qualifying == null ? "—" : num(qualifying)} text="Who qualifies, for the target groups selected above. Proposed by Mobius and narrowed — never authored here." />
               <Distinction icon={Radio} label="Reach cap" value={reachCap == null ? "not capped" : num(reachCap)} text="How many of them get contacted — for when the budget will not stretch to the whole recommendation." emphasis />
               <Distinction icon={Ticket} label="Redemption limit" value={cfg.redemption_limit == null ? "off" : num(cfg.redemption_limit)} text="How many can actually claim it once contacted." />
             </div>
-            <Field label={`Contact at most — rounded to ${rounding}, never below ${floor}`}>
-              <input
-                type="range" min={floor} max={seg?.reach ?? floor} step={rounding} disabled={!editable}
-                value={reachCap ?? seg?.reach ?? floor}
-                onChange={(e) => set("reach_cap", Number(e.target.value), "reach cap moved — narrowing by another name, so the floor and the rounding apply")}
-                className="w-full accent-[#ED1C24]"
-              />
-            </Field>
-            <p className="font-num text-[13px] text-ink tabular-nums">
-              Contacting <span className="font-bold">{num(contacted)}</span> of the {num(seg?.reach)} who qualify
-              {reachCap != null && reachCap < (seg?.reach ?? 0) && <span className="text-ink-secondary"> — {num((seg?.reach ?? 0) - reachCap)} qualify and will not be contacted</span>}
-            </p>
-            {c.reach != null && seg?.reach != null && c.reach < seg.reach && (
+            {qualifying == null ? (
+              <p className="text-[12.5px] text-ink-secondary">
+                {reachSel.refused
+                  ? "The selected groups are too small to run, so there is nothing to cap. Add a pool above."
+                  : "Choose a target customer group above and the cap applies to it."}
+              </p>
+            ) : (
+              <>
+                {/* The slider's ceiling is the current selection, not the segment the pipeline
+                    proposed. A cap above the pool it caps is not a cap. */}
+                {/* The cap belongs to OCBC (FIELD_OWNERS). On the merchant's mount the slider was
+                    live but every move was refused by the reducer and logged as a rejection at the
+                    bottom of the page — a control that looks available and silently is not. It is
+                    disabled here with the reason said out loud instead. The permission itself is
+                    unchanged; this only stops the screen implying otherwise. */}
+                <Field label={`Contact at most — rounded to ${rounding}, never below ${floor}`}>
+                  <input
+                    type="range" min={floor} max={contactable} step={rounding}
+                    disabled={!editable || !FIELD_OWNERS.reach_cap.includes(actor)}
+                    value={reachCap ?? contactable}
+                    onChange={(e) => set("reach_cap", Number(e.target.value), "reach cap moved — narrowing by another name, so the floor and the rounding apply")}
+                    className="w-full accent-[#ED1C24] disabled:opacity-50"
+                  />
+                </Field>
+                {editable && !FIELD_OWNERS.reach_cap.includes(actor) && (
+                  <p className="text-[11.5px] text-ink-light -mt-1 mb-1">
+                    Your relationship manager sets the contact cap. Your own cost control is the redemption limit above, which
+                    bounds what you can spend however many people are contacted.
+                  </p>
+                )}
+                {/* Counted against who can be reached, with qualifying named beside it. Saying
+                    "N of the 550 who qualify" while the other 150 were never reachable made the
+                    cap look like it was excluding people it had nothing to do with. */}
+                <p className="font-num text-[13px] text-ink tabular-nums">
+                  Contacting <span className="font-bold">{num(contacted)}</span> of the {num(contactable)} who can be reached
+                  {qualifying != null && contactable != null && contactable < qualifying && (
+                    <span className="text-ink-secondary"> ({num(qualifying)} qualify)</span>
+                  )}
+                  {reachCap != null && contactable != null && reachCap < contactable && (
+                    <span className="text-ink-secondary"> — {num(contactable - reachCap)} reachable and will not be contacted</span>
+                  )}
+                </p>
+              </>
+            )}
+            {/* Qualifying versus contactable, for the groups actually selected.
+                This read `seg.reach` and `c.reach` directly, so it went on reporting the
+                acquisition pool's 550 and 400 whatever the merchant had picked — the third place
+                on this page to keep answering for a selection nobody had made any more.
+                Both numbers now come from the same derivation as the cap and the summary.
+
+                The removals underneath are the allocation's own, so they are only named when the
+                selection is still the pool the pipeline allocated for. A retention pool arrives
+                consent-filtered but has never been through the frequency cap, and saying
+                otherwise would be borrowing one pool's arithmetic for another's. */}
+            {qualifying != null && reachSel.contactable != null && reachSel.contactable < qualifying && (
               <div className="mt-2 rounded-lg border border-info/40 bg-info-bg/40 px-3 py-2.5">
                 <p className="text-[12.5px] text-ink-secondary">
-                  <span className="font-semibold text-ink">Of the {num(seg.reach)} who qualify, {num(c.reach)} can actually be contacted. </span>
-                  Consent filtering runs before segmentation, not after it: {num(c.allocation?.removed?.consent)} of them have offers turned off, and{" "}
-                  {num(c.allocation?.removed?.frequency_cap)} are already holding the maximum concurrent offers the portfolio frequency cap allows
-                  ({c.allocation?.frequency_cap?.offers_per_30_days} per cardholder per 30 days
-                  {c.allocation?.frequency_cap?.provisional ? ", provisional" : ""}). The cap below cannot raise that figure — it can only tighten it further.
+                  <span className="font-semibold text-ink">
+                    Of the {num(qualifying)} who qualify, {num(reachSel.contactable)} can actually be contacted.{" "}
+                  </span>
+                  {onAllocatedPool(c) ? (
+                    <>
+                      Consent filtering runs before segmentation, not after it: {num(c.allocation?.removed?.consent)} of them have offers
+                      turned off, and {num(c.allocation?.removed?.frequency_cap)} are already holding the maximum concurrent offers the
+                      portfolio frequency cap allows ({c.allocation?.frequency_cap?.offers_per_30_days} per cardholder per 30 days
+                      {c.allocation?.frequency_cap?.provisional ? ", provisional" : ""}). The cap below cannot raise that figure — it can
+                      only tighten it further.
+                    </>
+                  ) : (
+                    <>
+                      The difference is consent: cardholders with offers turned off are filtered out before a segment is formed. The cap
+                      below cannot raise this figure — it can only tighten it further.
+                    </>
+                  )}
+                  {!reachSel.contactable_exact && (
+                    <> This selection includes existing-customer pools, which are consent-filtered but have not been run against the
+                      portfolio frequency cap — so the figure above is an upper bound on what a send would reach.</>
+                  )}
                 </p>
               </div>
             )}
@@ -549,23 +665,26 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
               </Field>
             </div>
 
-            <div className="mt-4 space-y-2">
-              <div className="rounded-lg border border-border px-3 py-2.5 flex items-center gap-3 text-[13px] text-ink">
+            {/* ------------------------------------------------------- how it reaches the cardholder */}
+            {/* The push grant control is gone. Whether a cardholder receives a push is that
+                cardholder's own consent, filtered upstream in the allocator before this campaign
+                has a recipient list at all — it was never the merchant's to give, and a checkbox on
+                a merchant's screen saying "grant push notification" implied they could give it on
+                somebody else's behalf. What is left is a statement of how delivery works, which is
+                true and which the merchant does need to know when writing the copy above.
+
+                The reducer still carries `push_granted` and the RM-side flow can still set it; only
+                this merchant-facing control and its summary line are gone. */}
+            <div className="mt-4 rounded-lg border border-border px-3 py-2.5 text-[13px] text-ink">
+              <div className="flex items-center gap-3">
                 <input type="checkbox" checked readOnly disabled /> In-app offer feed <span className="text-ink-light">— always included</span>
               </div>
-              <label className="rounded-lg border border-border px-3 py-2.5 flex items-start gap-3 text-[13px] text-ink">
-                <input type="checkbox" className="mt-0.5" disabled={!editable} checked={Boolean(cfg.push_granted)}
-                       onChange={(e) => set("push_granted", e.target.checked, e.target.checked ? "push granted by OCBC" : "push not granted")} />
-                <span>
-                  Grant push notification
-                  <span className="block text-[12px] text-ink-secondary">
-                    Yours to grant, not the merchant's to set. The merchant{" "}
-                    {cfg.push_requested ? <span className="font-semibold text-ink">requested push on the set-up page</span> : "has not requested push"}. Subject to the
-                    relevance threshold and the cap of {state.caps.push_per_week} pushes per cardholder per week across every merchant; cardholders already at the
-                    cap get the feed card and no push, and the suppression is counted.
-                  </span>
-                </span>
-              </label>
+              <p className="text-[12px] text-ink-secondary mt-1.5">
+                Some cardholders will also get a phone notification. That is their own notification setting and OCBC's
+                frequency cap — no more than {state.caps.push_per_week} pushes per cardholder per week across every merchant on the
+                platform — so it is decided per person at send time, not here. Everyone in the segment gets the offer in their
+                feed either way, which is why the copy above matters more than the notification does.
+              </p>
             </div>
           </Section>
 
@@ -573,12 +692,32 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
           <Card className="p-6 border-ink/20">
             <h3 className="text-[15px] font-bold text-ink mb-3">Summary — read this back to the owner before anything happens</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-[13px]">
-              <Row k="Segment and reach" v={`${seg?.label ?? "—"} · ${num(seg?.reach)} qualify, contacting ${num(contacted)}`} />
-              <Row k="Reward" v={reward ? `${reward.label} — ${cfg.discount_pct ?? "—"}% up to ${sgd(cfg.max_reward_value_sgd, 2)}, incremental share ${pct(outcome.incremental_share, 0)}` : "not chosen"} />
+              {/* Segment and reach follow the target groups ticked above, through the same
+                  derivation the reach cap reads. This row used to print the pipeline's original
+                  recommendation whatever the merchant had since selected, which made the summary
+                  they are asked to read back to the owner the one part of the page that was out
+                  of date. Both components are shown when both are selected: swapping an
+                  acquisition pool for an existing-customer one is the change most worth seeing
+                  here, and a single total hides it. */}
+              <Row
+                k="Segment and reach"
+                v={reachSel.selected.length === 0
+                  ? "no target group selected"
+                  : reachSel.refused
+                    ? `${reachSel.label} · too small to run`
+                    : `${reachSel.label} · ${num(qualifying)} qualify, contacting ${num(contacted)}`}
+              />
+              {reachSel.prospective != null && reachSel.existing != null && (
+                <Row k="— of which" v={`${num(reachSel.prospective)} prospective, ${num(reachSel.existing)} existing customers`} />
+              )}
+              <Row k="Reward" v={reward ? `${reward.label} — ${cfg.discount_pct ?? "—"}% up to ${sgd(cfg.max_reward_value_sgd, 2)}` : "not chosen"} />
               <Row k="Window" v={`${(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} ${fmtHours(cfg.hours)}`} />
               <Row k="Dates" v={`${cfg.window_start ?? "—"} to ${cfg.window_end ?? "—"} (${durationDays ?? "—"} days)`} />
               <Row k="Outlets" v={(cfg.outlets ?? []).map((id) => seg?.per_outlet?.find((o) => o.outlet_id === id)?.name ?? id).join(", ") || "none"} />
-              <Row k="Channel" v={`In-app feed${cfg.push_granted ? " + push (granted by OCBC)" : "; push not granted"}`} />
+              {/* No push line. Whether a cardholder gets a notification is their setting and the
+                  frequency cap, decided per person at send time — not a thing the merchant is
+                  agreeing to here, so it does not belong in what they read back to the owner. */}
+              <Row k="Channel" v="In-app offer feed" />
               <Row k="Limit" v={cfg.redemption_limit == null ? "no redemption limit" : `first ${num(cfg.redemption_limit)} customers, ${PER_CUSTOMER_LIMITS[cfg.per_customer_limit]?.label ?? "no per-customer rule"}`} />
               <Row k="Maximum cost to the merchant" v={`${sgd(outcome.max_cost_sgd)} — its whole cost`} strong />
             </div>
@@ -637,27 +776,63 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
           </Card>
 
           {/* ---------------------------------------------------------- the record */}
-          <Card className="p-6">
-            <h3 className="text-[15px] font-bold text-ink mb-1">Every change, attributed and timestamped</h3>
-            <p className="text-[12.5px] text-ink-secondary mb-3">
-              This record is the reason a result can be explained in six months. It is on the page, not behind a tab.
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead><tr className="border-b border-border"><Th>When</Th><Th>By</Th><Th>Field</Th><Th>Change</Th><Th>Basis / note</Th></tr></thead>
-                <tbody>
-                  {c.changes.map((ch, i) => (
-                    <tr key={i} className="border-b border-border/60">
-                      <Td className="font-num text-ink-secondary tabular-nums whitespace-nowrap">{fmtAt(ch.at)}</Td>
-                      <Td><Badge tone={ch.by === "mobius" ? "analytics" : ch.by === "ocbc" ? "info" : "neutral"}>{ch.by}</Badge></Td>
-                      <Td className="text-ink">{ch.field.replace(/_/g, " ")}</Td>
-                      <Td className="font-num text-ink tabular-nums">{fmtVal(ch.from)} <span className="text-ink-light">→</span> {fmtVal(ch.to)}</Td>
-                      <Td className="text-ink-secondary">{ch.note}</Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* Collapsed, not hidden.
+              The record used to say of itself that it was "on the page, not behind a tab", and the
+              point behind that is worth keeping: a merchant must never have to go looking to find
+              out whether their configuration was logged. So what collapses is the rows, never the
+              fact — the header states the promise and counts the entries whether it is open or
+              shut, and a log with something in it says so before anyone clicks. */}
+          <Card className={logOpen ? "border-ink/20" : ""}>
+            <button
+              type="button"
+              onClick={() => setLogOpen((v) => !v)}
+              aria-expanded={logOpen}
+              className="w-full flex items-start gap-3 px-6 py-4 text-left rounded-xl hover:bg-canvas/50 transition-colors"
+            >
+              <ChevronRight size={16} className={`shrink-0 mt-0.5 text-ink-light transition-transform ${logOpen ? "rotate-90" : ""}`} />
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-[15px] font-bold text-ink">Every change, attributed and timestamped</span>
+                  {/* Neutral either way. An empty log on a campaign nobody has configured yet is
+                      the normal state, not a fault, and an amber badge would say otherwise. */}
+                  <Badge tone="neutral">
+                    {c.changes.length ? `${num(c.changes.length)} recorded` : "nothing recorded yet"}
+                  </Badge>
+                </span>
+                <span className="block text-[12.5px] text-ink-secondary mt-0.5">
+                  This record is the reason a result can be explained in six months.{" "}
+                  {logOpen ? "Every edit, who made it and when." : "Open it to read every edit, who made it and when."}
+                </span>
+              </span>
+            </button>
+
+            {logOpen && (
+              <div className="px-6 pb-6 pt-1 border-t border-border">
+                {c.changes.length === 0 ? (
+                  <p className="text-[12.5px] text-ink-light pt-3">
+                    Nothing has been changed yet. Every edit from here on is recorded with its field, its old and new value,
+                    who made it and when.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead><tr className="border-b border-border"><Th>When</Th><Th>By</Th><Th>Field</Th><Th>Change</Th><Th>Basis / note</Th></tr></thead>
+                      <tbody>
+                        {c.changes.map((ch, i) => (
+                          <tr key={i} className="border-b border-border/60">
+                            <Td className="font-num text-ink-secondary tabular-nums whitespace-nowrap">{fmtAt(ch.at)}</Td>
+                            <Td><Badge tone={ch.by === "mobius" ? "analytics" : ch.by === "ocbc" ? "info" : "neutral"}>{ch.by}</Badge></Td>
+                            <Td className="text-ink">{ch.field.replace(/_/g, " ")}</Td>
+                            <Td className="font-num text-ink tabular-nums">{fmtVal(ch.from)} <span className="text-ink-light">→</span> {fmtVal(ch.to)}</Td>
+                            <Td className="text-ink-secondary">{ch.note}</Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -665,17 +840,24 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
         <aside className="lg:sticky lg:top-24 self-start">
           <div className="text-[12px] font-semibold text-ink mb-2">What the cardholder sees</div>
           <PhoneFrame caption="The same component the customer view renders. If this drifts from the real card, the preview is lying — so there is only one of it.">
+            {/* Shown as delivered on the merchant's mount. With the grant control gone,
+                `push_granted` is false for every merchant-configured campaign, so keying the
+                preview to it would have printed "withheld" on every single one — a certainty
+                where the truth is "some of them, decided per cardholder at send time". The RM's
+                mount still previews the withheld state, because there it reflects a decision
+                somebody actually made. */}
             <PushNotificationCard
               headline={cfg.offer_headline}
               body={cfg.push_body}
               merchantName={c.merchant_name}
-              suppressed={!cfg.push_granted}
+              suppressed={actor !== "merchant" && !cfg.push_granted}
             />
             <RewardFeedCard offer={previewOffer} clock={state.clock} highlight />
           </PhoneFrame>
           <p className="text-[11px] text-ink-light mt-3 leading-snug">
-            Two surfaces, previewed separately because they are different artefacts: the feed card everyone gets, and the push that only goes to cardholders
-            under the weekly cap. {!cfg.push_granted && "Push is not granted, so the notification above is shown as it would be withheld."}
+            Two surfaces, previewed separately because they are different artefacts: the feed card everyone in the segment gets, and the phone
+            notification, which reaches only those cardholders whose own settings allow it and who are under the weekly cap.
+            {actor !== "merchant" && !cfg.push_granted && " Push is not granted, so the notification above is shown as it would be withheld."}
           </p>
         </aside>
       </div>
@@ -709,14 +891,9 @@ function Section({ title, note, prefilled, changedFrom, onReset, children }) {
 
 // Live combined reach across the selected pools, floored and rounded — RM §5.1. A selection that
 // lands below the floor is refused and the count is not reported, because the count is the leak.
-function CombinedReach({ cfg, seg, pools, floor, rounding }) {
-  const selected = cfg.target_segments ?? [];
-  const raw = selected.reduce((sum, name) => {
-    if (name === "Non-customers") return sum + (seg?.reach ?? 0);
-    const cell = pools[name];
-    return sum + (cell && cell.suppressed === false ? cell.count : 0);
-  }, 0);
-  const shown = selected.length === 0 ? null : floorRound(raw, floor, rounding);
+function CombinedReach({ reach, rounding }) {
+  const selected = reach.selected;
+  const shown = reach.total;
 
   return (
     <div className={`mt-3 rounded-lg border px-4 py-3 ${selected.length && shown === null ? "border-warning/50 bg-warning-bg/50" : "border-border bg-canvas/50"}`}>
@@ -731,6 +908,11 @@ function CombinedReach({ cfg, seg, pools, floor, rounding }) {
         <p className="font-num text-[13px] text-ink tabular-nums">
           Combined reach <span className="text-[20px] font-extrabold">{num(shown)}</span>{" "}
           <span className="text-ink-secondary">cardholders across {selected.length} pool{selected.length > 1 ? "s" : ""}, rounded to {rounding}</span>
+          {reach.prospective != null && reach.existing != null && (
+            <span className="block text-[12px] text-ink-secondary mt-0.5">
+              {num(reach.prospective)} prospective · {num(reach.existing)} existing customers
+            </span>
+          )}
         </p>
       )}
     </div>
@@ -801,11 +983,6 @@ function NotFound({ id }) {
   );
 }
 
-function rangeOf(outcome, key, fmt) {
-  const lo = outcome.low?.[key], hi = outcome.high?.[key];
-  if (lo == null || hi == null) return "—";
-  return lo === hi ? fmt(lo) : `${fmt(lo)} to ${fmt(hi)}`;
-}
 const fmtHours = (h) => (h && h.length === 2 ? `${String(h[0]).padStart(2, "0")}:00–${String(h[1]).padStart(2, "0")}:00` : "—");
 const fmtAt = (at) => (at ? new Date(at).toLocaleString("en-SG", { timeZone: "Asia/Singapore", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtVal = (v) => (v === null || v === undefined ? "—" : Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "yes" : "no") : String(v));

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 import { FlaskConical, Send, X, AlertTriangle, CheckCircle2, Ban } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { useDemoData, natureOf } from "../../data/DataProvider";
-import { pushPreview } from "../../state/store.js";
+import { pushPreview, cohortTagsFor } from "../../state/store.js";
 import { num } from "../../data/format";
 import { Badge, BasisNote } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame } from "../../components/RewardCard";
@@ -50,7 +50,9 @@ export function PushTriggerProvider({ children }) {
 export default function PushTrigger({ campaign, compact = false, queued = false }) {
   const open = useContext(PushDialogContext);
   const startsOn = campaign.window?.start ?? campaign.configuration?.window_start ?? null;
-  const pushable = campaign.status === "active" && !queued && campaign.reach != null && Boolean(campaign.cohort_tag);
+  // Aimed at at least one cohort, not merely allocated for one: a campaign whose target pools
+  // resolve to no tag has nobody to send to, whatever the allocation once said.
+  const pushable = campaign.status === "active" && !queued && campaign.reach != null && cohortTagsFor(campaign).length > 0;
 
   if (!pushable) {
     return (

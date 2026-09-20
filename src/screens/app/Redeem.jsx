@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, ShieldCheck, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
-import { CARDHOLDER_ID } from "./cardholder";
 import { enrich } from "./offers";
 import { formatDays, formatHours, REWARD_TYPE_LABELS, isRedeemableNow } from "../../components/RewardCard";
 

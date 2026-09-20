@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import (PUB_DIR, constants_manifest, CONSTANTS, LOGIN_MERCHANTS, STATUS_DISPLAY, CAPPED_DISPLAY, SCALE_DISCLOSURE,
-                    SCALE_POLICY, SAMPLE_CARDHOLDERS, CARDHOLDER_BASE, MIN_SEGMENT_SIZE, REACH_ROUNDING)
+                    SCALE_POLICY, SAMPLE_CARDHOLDERS, CARDHOLDER_BASE, MIN_SEGMENT_SIZE, REACH_ROUNDING, DISTRICT_ADJACENCY)
 from common import load_raw, dump_json
 from tags import build_tags
 from sme_analysis import build_profiles
@@ -81,7 +81,13 @@ def main():
     sizes["constants.json"] = dump_json(dict(constants=constants_manifest(), status_display=STATUS_DISPLAY, capped_display=CAPPED_DISPLAY, tags=tag_summary,
                                              scale_disclosure=SCALE_DISCLOSURE,
                                              scale=dict(sample_cardholders=SAMPLE_CARDHOLDERS, cardholder_base=CARDHOLDER_BASE,
-                                                        floor=MIN_SEGMENT_SIZE, rounding=REACH_ROUNDING, policy=SCALE_POLICY)),
+                                                        floor=MIN_SEGMENT_SIZE, rounding=REACH_ROUNDING, policy=SCALE_POLICY),
+                                             # The catchment rule, shipped so the cardholder app can ask the same
+                                             # "near me" question the allocator asks. One table rather than two: a
+                                             # copy hand-written in JavaScript would drift from in_catchment(), and
+                                             # the cardholder would be shown a different idea of nearby than the
+                                             # targeting engine works to.
+                                             district_adjacency={str(d): sorted(n) for d, n in DISTRICT_ADJACENCY.items()}),
                                         "constants.json")
 
     print("9. rationales.py — auto-draft narrative with inputs_hash")

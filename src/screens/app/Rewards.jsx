@@ -4,8 +4,9 @@ import { SlidersHorizontal, X, ShieldCheck, BellOff, Undo2 } from "lucide-react"
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { RewardFeedCard, REWARD_TYPE_LABELS } from "../../components/RewardCard";
-import { CARDHOLDER_ID, REDEEM_WINDOWS, EXPIRY_BUCKETS, FEED_REWARD_TYPES, SORTS } from "./cardholder";
+import { useCardholderId, REDEEM_WINDOWS, EXPIRY_BUCKETS, FEED_REWARD_TYPES, SORTS } from "./cardholder";
 import { enrich, sortOffers, matchesFilters, EMPTY_FILTERS, countFilters } from "./offers";
+import RewardChat from "./RewardChat";
 
 // ---------------------------------------------------------------------------------------------
 // Screen 2 — Rewards (customer §4).
@@ -21,6 +22,7 @@ import { enrich, sortOffers, matchesFilters, EMPTY_FILTERS, countFilters } from 
 const NATURES = ["F&B", "Retail", "Services & Lifestyle", "Other"];
 
 export default function Rewards() {
+  const cardholderId = useCardholderId();
   const navigate = useNavigate();
   const { data } = useDemoData();
   const m = useMobiusState();
@@ -30,9 +32,9 @@ export default function Rewards() {
   const triggerRef = useRef(null);
 
   const clock = m?.state?.clock;
-  const holder = m?.state?.cardholders?.[CARDHOLDER_ID];
+  const holder = m?.state?.cardholders?.[cardholderId];
   const all = useMemo(
-    () => (m ? m.allOffersFor(CARDHOLDER_ID).map((o) => enrich(o, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock })) : []),
+    () => (m ? m.allOffersFor(cardholderId).map((o) => enrich(o, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock })) : []),
     [m, data, clock]
   );
 
@@ -62,12 +64,29 @@ export default function Rewards() {
     <div className="pb-4">
       <header className="bg-navy text-white px-5 pt-5 pb-5">
         <h1 className="text-[20px] font-bold leading-tight">Your rewards</h1>
+        {/* A row of three zeros is accurate and reads as broken. A cardholder holding nothing gets
+            a sentence instead of a tally of nothings. */}
         <p className="text-[12.5px] text-white/60 mt-0.5">
           {offersOff
             ? "Offers are turned off"
-            : `${all.filter((o) => o.availableNow).length} you can use right now · ${all.filter((o) => o.status === "delivered").length} saved · ${all.length} in total`}
+            : all.length === 0
+              ? "Nothing here yet — ask below and we'll look"
+              : `${all.filter((o) => o.availableNow).length} you can use right now · ${all.filter((o) => o.status === "delivered").length} saved · ${all.length} in total`}
         </p>
       </header>
+
+      {/* ---------------------------------------------------------- the pull channel */}
+      {/* Above "why these offers", because it answers a different question and answers it first:
+          that block explains why the list below was sent to you, and this one is how you go and
+          find something nobody sent. Kept inside the Rewards tab rather than given a tab of its
+          own — a cardholder looking for a deal is already here.
+
+          Shown even when offers are turned off. That switch stops OCBC marketing at them; it was
+          never meant to stop them looking something up, and refusing to answer a direct question
+          because of a marketing preference would be the wrong reading of it. */}
+      <section className="px-4 pt-4">
+        <RewardChat cardholderId={cardholderId} holder={holder} />
+      </section>
 
       {/* ---------------------------------------------------------- 4.2 why these offers */}
       <section className="px-4 pt-4">
@@ -155,7 +174,7 @@ export default function Rewards() {
                 </p>
                 <button
                   onClick={() => [...new Set(hiddenByInterest.map(categoryOf))].forEach((c) =>
-                    m.dispatch({ type: "INTEREST", cardholder_id: CARDHOLDER_ID, category: c, direction: "clear" }))}
+                    m.dispatch({ type: "INTEREST", cardholder_id: cardholderId, category: c, direction: "clear" }))}
                   className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-brand"
                 >
                   <Undo2 size={11} /> Undo
@@ -163,7 +182,21 @@ export default function Rewards() {
               </div>
             )}
 
-            {shown.length === 0 ? (
+            {/* Two different empties, and they were one. A cardholder nobody has sent anything to
+                was being told "nothing matches those filters" and offered a Clear filters button
+                for filters they had not set — the list blaming a control for a state that has
+                nothing to do with it. Charles is exactly that cardholder, and his empty Rewards
+                tab is the moment the pull channel earns its place, so it points at the assistant
+                rather than at a button that would do nothing. */}
+            {all.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-white p-6 text-center">
+                <p className="text-[13.5px] font-semibold text-ink">Nothing has been sent to you yet.</p>
+                <p className="text-[12.5px] text-ink-secondary mt-1 max-w-xs mx-auto">
+                  Offers arrive here when a business near you is running one you're a match for. You don't have to wait for
+                  that — ask above for what you're after and we'll look for it.
+                </p>
+              </div>
+            ) : shown.length === 0 ? (
               <div className="rounded-2xl border border-border bg-white p-6 text-center">
                 <p className="text-[13.5px] font-semibold text-ink">Nothing matches those filters.</p>
                 <p className="text-[12.5px] text-ink-secondary mt-1">
