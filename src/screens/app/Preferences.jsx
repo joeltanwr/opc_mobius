@@ -4,7 +4,7 @@ import { ShieldCheck, MapPin, Bell, BellOff, ThumbsUp, ThumbsDown, Undo2 } from 
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { useToast } from "./AppFrame";
-import { CARDHOLDER_ID } from "./cardholder";
+import { useCardholderId } from "./cardholder";
 import { pct, num } from "../../data/format";
 import PersonaCard from "../../components/PersonaCard";
 
@@ -24,13 +24,14 @@ import PersonaCard from "../../components/PersonaCard";
 const TOP_N = 6;
 
 export default function Preferences() {
+  const cardholderId = useCardholderId();
   const { data } = useDemoData();
   const m = useMobiusState();
   const toast = useToast();
   if (!m) return null;
   const { state, dispatch } = m;
-  const holder = state.cardholders[CARDHOLDER_ID];
-  const persona = (data.showcasePersonas ?? []).find((p) => p.id === CARDHOLDER_ID) ?? null;
+  const holder = state.cardholders[cardholderId];
+  const persona = (data.showcasePersonas ?? []).find((p) => p.id === cardholderId) ?? null;
   const labelOf = (id) => data.taxonomy?.categories?.find((c) => c.id === id)?.label ?? id;
   const weights = Object.entries(holder.profile.category_weights).filter(([, w]) => w > 0).sort((a, b) => b[1] - a[1]);
   const top = weights.slice(0, TOP_N);
@@ -40,7 +41,7 @@ export default function Preferences() {
   // §5), and her biggest spending category is an online marketplace that sends her no offers at
   // all — putting that at the top of the list would have made the whole control look dead.
   const offerCategoryCounts = Object.values(state.offers)
-    .filter((o) => o.cardholder_id === CARDHOLDER_ID)
+    .filter((o) => o.cardholder_id === cardholderId)
     .reduce((acc, o) => {
       const c = data.merchantProfiles?.[o.merchant_id]?.category;
       if (c) acc[c] = (acc[c] ?? 0) + 1;
@@ -52,10 +53,10 @@ export default function Preferences() {
   ].slice(0, 8);
   const dayparts = Object.entries(holder.profile.daypart_availability ?? {}).sort((a, b) => b[1] - a[1]);
   const interests = holder.profile.interests ?? {};
-  const held = Object.values(state.offers).filter((o) => o.cardholder_id === CARDHOLDER_ID && o.status === "delivered").length;
+  const held = Object.values(state.offers).filter((o) => o.cardholder_id === cardholderId && o.status === "delivered").length;
 
   const setInterest = (categoryId, direction) => {
-    dispatch({ type: "INTEREST", cardholder_id: CARDHOLDER_ID, category: categoryId, direction });
+    dispatch({ type: "INTEREST", cardholder_id: cardholderId, category: categoryId, direction });
     toast(direction === "clear"
       ? `Back to normal for ${labelOf(categoryId)}.`
       : `You'll see ${direction} ${labelOf(categoryId).toLowerCase()} offers. Your rewards list has already changed.`);
@@ -144,7 +145,7 @@ export default function Preferences() {
             on={holder.consent.push}
             label="Push notifications"
             detail={`At most ${state.caps.push_per_week} a week, across every business on the platform. That is a limit we hold ourselves to, not a setting you have to find.`}
-            onChange={(v) => { dispatch({ type: "PUSH_PREF", cardholder_id: CARDHOLDER_ID, push: v }); toast(v ? "Push notifications on." : "Push off. Offers still appear in your Rewards."); }}
+            onChange={(v) => { dispatch({ type: "PUSH_PREF", cardholder_id: cardholderId, push: v }); toast(v ? "Push notifications on." : "Push off. Offers still appear in your Rewards."); }}
           />
           <p className="text-[11.5px] text-ink-light mt-2">
             With push off, offers still arrive in your Rewards list — we just don't interrupt you. You've had{" "}
@@ -159,7 +160,7 @@ export default function Preferences() {
             on={holder.consent.location}
             label="Match offers to where I usually am"
             detail="On by default, deliberately: without it you'd get offers from businesses you can't walk to, which is more offers and worse ones. It uses the districts your card is already used in — never live location."
-            onChange={(v) => { dispatch({ type: "LOCATION_PREF", cardholder_id: CARDHOLDER_ID, location: v }); toast(v ? "Offers will be matched to your area." : "Location matching off. It applies to new offers, not the ones you're holding."); }}
+            onChange={(v) => { dispatch({ type: "LOCATION_PREF", cardholder_id: cardholderId, location: v }); toast(v ? "Offers will be matched to your area." : "Location matching off. It applies to new offers, not the ones you're holding."); }}
           />
         </section>
 
@@ -174,7 +175,7 @@ export default function Preferences() {
                 business either way.
               </p>
               <button
-                onClick={() => { dispatch({ type: "OFFERS_OFF", cardholder_id: CARDHOLDER_ID }); toast("Offers are off. Your rewards list is empty."); }}
+                onClick={() => { dispatch({ type: "OFFERS_OFF", cardholder_id: cardholderId }); toast("Offers are off. Your rewards list is empty."); }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-brand bg-white px-3.5 py-2 text-[12.5px] font-semibold text-brand"
               >
                 <BellOff size={13} /> Turn offers off
@@ -187,7 +188,7 @@ export default function Preferences() {
                 turning offers back on doesn't bring those back, but you'll be eligible for new ones.
               </p>
               <button
-                onClick={() => { dispatch({ type: "OFFERS_ON", cardholder_id: CARDHOLDER_ID }); toast("Offers are back on."); }}
+                onClick={() => { dispatch({ type: "OFFERS_ON", cardholder_id: cardholderId }); toast("Offers are back on."); }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-[12.5px] font-semibold text-white"
               >
                 <Bell size={13} /> Turn offers back on

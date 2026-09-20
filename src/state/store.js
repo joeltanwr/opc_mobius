@@ -10,6 +10,9 @@
 
 import { canTransition, isTerminal } from "./ladder.js";
 import { decideNarrowing } from "./narrow.js";
+// A pure leaf module with no imports of its own, so the reducer can share the floor-and-round rule
+// with the screens instead of keeping a second copy that drifts from it.
+import { floorRound } from "../data/format.js";
 
 // Field-level permissions on the joint set-up page (merchant §7.6). The merchant proposes and
 // sets the limit, since the limit bounds its own spend; OCBC staff adjust reward, timing and
@@ -35,7 +38,10 @@ export function allowedPools(campaign) {
   const retention = Object.keys(campaign?.allocation?.retention_pools ?? {}).filter((k) => !k.startsWith("_"));
   return [...retention, "Non-customers"];
 }
-export const REQUIRED_TO_SUBMIT = ["reward_type", "max_reward_value_sgd", "days_of_week", "hours", "window_start", "window_end", "outlets", "redemption_limit"];
+// `target_segments` is on this list because it now decides who receives the offer rather than
+// only what the screen prints. A campaign submitted with no pool selected has no audience, and
+// the submit that used to accept one would have committed a send to nobody.
+export const REQUIRED_TO_SUBMIT = ["reward_type", "max_reward_value_sgd", "days_of_week", "hours", "window_start", "window_end", "outlets", "redemption_limit", "target_segments"];
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -219,11 +225,163 @@ export function isQueued(campaign, clock) {
   return String(start).slice(0, 10) > String(clock).slice(0, 10);
 }
 
+// ----------------------------------------------------------------------------------------------
+// Which cohorts a campaign is actually aimed at.
+//
+// pipeline/personas.py writes cohort_membership as "<merchant>_acquisition_cohort" for the lift
+// pool and "<merchant>_rfm:<Segment>" for each retention pool. The campaign carries the mapping
+// from a pool's display name to its tag (seed.js `cohort_tags_by_pool`) rather than the app
+// rebuilding those strings: a tag assembled by concatenation in a component is a tag that silently
+// matches nobody the day the pipeline renames one.
+//
+// Falls back to the single `cohort_tag` when a campaign has no selection — every campaign seeded
+// from campaign_results.json is in that position and keeps behaving exactly as it did.
+// ----------------------------------------------------------------------------------------------
+export function cohortTagsFor(campaign) {
+  const fallback = campaign?.cohort_tag ? [campaign.cohort_tag] : [];
+  const selected = campaign?.configuration?.target_segments ?? null;
+  const byPool = campaign?.cohort_tags_by_pool ?? null;
+  if (!selected?.length || !byPool) return fallback;
+  const tags = selected.map((name) => byPool[name]).filter(Boolean);
+  return tags.length ? tags : fallback;
+}
+
+// ----------------------------------------------------------------------------------------------
+// What the current target-group selection adds up to.
+//
+// The one derivation, read by the configuration screen while the merchant is choosing and by the
+// reducer when they submit. Two copies of this — one to draw the number and one to act on it —
+// is how a screen ends up promising a reach the send does not honour.
+//
+// Prospective and existing are kept apart as well as summed: they are different propositions, and
+// swapping one for the other is the change most worth seeing. Every count arriving here is already
+// floored and rounded by the pipeline; the total is floored and rounded again because a
+// combination is a new figure, and one that falls under the floor reports no number at all.
+// ----------------------------------------------------------------------------------------------
+export const ACQUISITION_POOL = "Non-customers";
+
+export function reachFromSelection(campaign, floorOverride = null, roundingOverride = null) {
+  const seg = campaign?.segment ?? null;
+  const pools = campaign?.allocation?.retention_pools ?? {};
+  const floor = floorOverride ?? seg?.floor ?? null;
+  const rounding = roundingOverride ?? seg?.rounding ?? null;
+  const selected = campaign?.configuration?.target_segments ?? [];
+  const existingNames = selected.filter((n) => n !== ACQUISITION_POOL);
+  const prospectiveRaw = selected.includes(ACQUISITION_POOL) ? (seg?.reach ?? 0) : 0;
+  const existingRaw = existingNames.reduce((sum, name) => {
+    const cell = pools[name];
+    return sum + (cell && cell.suppressed === false ? cell.count : 0);
+  }, 0);
+  const total = selected.length === 0 ? null : floorRound(prospectiveRaw + existingRaw, floor, rounding);
+
+  // ------------------------------------------------------------------------------------------
+  // Qualifying is not contactable, and conflating them is how a screen promises a send it cannot
+  // make. `total` above is who qualifies. This is who can actually be reached once consent and
+  // the frequency cap have been applied — the number that drives the send and the number the
+  // dashboards print as "Reach".
+  //
+  // The two pools arrive filtered to different depths, which the pipeline is explicit about:
+  //   acquisition  allocation.final_allocation is post-consent AND post-frequency-cap, so the
+  //                component contributes that figure rather than the segment it came from
+  //   retention    the pool counts are "consented, OCBC-resolvable" (allocate.py) but the
+  //                frequency cap has not been applied to them, so their contactable figure is
+  //                their count and `contactable_exact` goes false to say the filtering is shallower
+  // ------------------------------------------------------------------------------------------
+  const allocated = campaign?.allocated_reach ?? null;
+  const prospectiveContactable = prospectiveRaw ? (allocated ?? prospectiveRaw) : 0;
+  const contactable = selected.length === 0
+    ? null
+    : floorRound(prospectiveContactable + existingRaw, floor, rounding);
+
+  return {
+    selected,
+    contactable,
+    // False when the figure includes a retention pool, whose count the frequency cap has not been
+    // run against. The screen says so rather than presenting it as the same kind of number.
+    contactable_exact: existingNames.length === 0,
+    existing_names: existingNames,
+    prospective: prospectiveRaw ? floorRound(prospectiveRaw, floor, rounding) : null,
+    existing: existingRaw ? floorRound(existingRaw, floor, rounding) : null,
+    total,
+    // Picked something, and the something is too small to report. Distinct from "nothing picked
+    // yet", which is not a refusal and must not be worded as one.
+    refused: selected.length > 0 && total === null,
+    label: selected.length === 0
+      ? null
+      : selected.includes(ACQUISITION_POOL) && existingNames.length
+        ? `${seg?.label ?? ACQUISITION_POOL} + ${existingNames.join(", ")}`
+        : selected.includes(ACQUISITION_POOL)
+          ? (seg?.label ?? ACQUISITION_POOL)
+          : existingNames.join(", "),
+  };
+}
+
+// ----------------------------------------------------------------------------------------------
+// The same selection, counted at each outlet.
+//
+// Two measures, because the two kinds of pool answer different questions about a location:
+//   acquisition   catchment — segment.per_outlet, how many of a pool who have never been here are
+//                 within reach of this one (lift.py / allocate.py, in_catchment)
+//   retention     observed — allocation.retention_pools_per_outlet, how many of a pool who already
+//                 come in use this outlet
+// Inferring catchment for somebody whose transactions we hold, or claiming observation for
+// somebody who has never walked in, would each be the wrong question.
+//
+// Counts overlap by construction: a cardholder within reach of two outlets, or who uses both, is
+// counted at both. They do not sum to the pool and the screen must not invite the addition.
+//
+// A suppressed component contributes nothing, so a total carrying one is a lower bound — the same
+// convention the combined reach uses, and it errs toward under-reporting, which is the safe
+// direction for a floor. `partial` says when that has happened so the screen can mark it.
+// ----------------------------------------------------------------------------------------------
+export function perOutletFromSelection(campaign, floorOverride = null, roundingOverride = null) {
+  const seg = campaign?.segment ?? null;
+  const outlets = seg?.per_outlet ?? [];
+  if (!outlets.length) return [];
+  const floor = floorOverride ?? seg?.floor ?? null;
+  const rounding = roundingOverride ?? seg?.rounding ?? null;
+  const selected = campaign?.configuration?.target_segments ?? [];
+  const byPool = campaign?.allocation?.retention_pools_per_outlet ?? null;
+  const existingNames = selected.filter((n) => n !== ACQUISITION_POOL);
+  // Retention pools are selected but the pipeline has not written their per-outlet counts yet.
+  // Reported as unknown rather than filled in from the acquisition pool, which is a different
+  // group of people and would put a real number under the wrong name.
+  const missingPools = byPool ? existingNames.filter((n) => !byPool[n]) : existingNames;
+
+  return outlets.map((o) => {
+    const base = { outlet_id: o.outlet_id, name: o.name, district: o.district };
+    if (!selected.length) return { ...base, count: null, state: "none_selected" };
+    let raw = 0, partial = false;
+    if (selected.includes(ACQUISITION_POOL)) {
+      if (o.suppressed === false && typeof o.count === "number") raw += o.count;
+      else partial = true;
+    }
+    for (const name of existingNames) {
+      const row = (byPool?.[name] ?? []).find((r) => r.outlet_id === o.outlet_id);
+      if (row && row.suppressed === false && typeof row.count === "number") raw += row.count;
+      else partial = true;
+    }
+    if (missingPools.length) return { ...base, count: null, state: "not_computed", missing: missingPools };
+    const count = floorRound(raw, floor, rounding);
+    return { ...base, count, partial, state: count == null ? "suppressed" : "ok" };
+  });
+}
+
+// Is this campaign still aimed at the pool the pipeline actually allocated for? The allocation's
+// own figures — the push suppression expectation above all — describe that pool and no other, so
+// a campaign aimed elsewhere must not borrow them.
+export function onAllocatedPool(campaign) {
+  if (!campaign?.cohort_tag) return true;
+  return cohortTagsFor(campaign).includes(campaign.cohort_tag);
+}
+
 // The named cardholders in a campaign's cohort. Six showcase personas out of an allocation of
 // several hundred: they are the ones whose own feeds move on screen.
 export function cohortNamed(state, campaign) {
+  const tags = cohortTagsFor(campaign);
+  if (!tags.length) return [];
   return Object.values(state.cardholders)
-    .filter((ch) => (ch.cohort_membership ?? []).some((m) => m === campaign.cohort_tag))
+    .filter((ch) => (ch.cohort_membership ?? []).some((m) => tags.includes(m)))
     .map((ch) => ch.id);
 }
 
@@ -253,7 +411,12 @@ export function pushPreview(state, campaignId, { cohort = false, recipients = []
     const cap = campaign.reach_cap ?? campaign.reach;
     const already = campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered;
     rest = cap == null ? 0 : Math.max(0, cap - already - deliverable);
-    const expected = Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed - namedSuppressed);
+    // The allocation's suppression expectation describes the pool the pipeline allocated for. A
+    // campaign the merchant has aimed elsewhere does not get to borrow it — the named suppressions
+    // above are still counted exactly, and the anonymous remainder simply carries no expectation.
+    const expected = onAllocatedPool(campaign)
+      ? Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed - namedSuppressed)
+      : 0;
     restSuppressed = Math.min(rest, expected);
   }
   const delivered = deliverable + rest;
@@ -291,6 +454,14 @@ export function reduce(state, event) {
         const missing = REQUIRED_TO_SUBMIT.filter((f) => cfg[f] == null || (Array.isArray(cfg[f]) && cfg[f].length === 0) || cfg[f] === "");
         if (missing.length) return reject(state, event, `cannot submit: missing ${missing.join(", ")}`);
         if (!(Number(cfg.redemption_limit) > 0)) return reject(state, event, "cannot submit: redemption limit must be above zero");
+        // A selection can be non-empty and still reach nobody reportable — every pool in it below
+        // the floor, which is exactly the case the floor exists to refuse. Caught here rather than
+        // left to commit a campaign aimed at a cohort with no reportable size, and refused without
+        // naming the size it would have been, because naming it is the leak the floor closes.
+        const selected = reachFromSelection({ ...c, configuration: cfg });
+        if (selected.refused) {
+          return reject(state, event, "cannot submit: the selected target groups are below the reporting floor");
+        }
       }
       const next = clone(state);
       const campaign = next.campaigns[event.campaign_id];
@@ -309,10 +480,38 @@ export function reduce(state, event) {
       if (event.to === "active") {
         campaign.live_since = event.at;
         const cfg = campaign.configuration ?? {};
-        // The reach cap the RM set on the configuration page is the cap the reducer enforces. It
-        // only ever tightens the allocation: a cap above it would be reaching people the allocator
-        // did not allocate, which is widening a segment by the back door.
-        if (cfg.reach_cap != null) campaign.reach_cap = Math.min(Number(cfg.reach_cap), campaign.reach ?? Number(cfg.reach_cap));
+        // ------------------------------------------------------------------------------------
+        // The target groups become the campaign's audience here, at submit.
+        //
+        // Until this moment the selection is a draft and `reach` is the pipeline's recommended
+        // allocation. Submitting is what commits it: reach becomes what the selected pools add up
+        // to, by the same derivation the configuration screen has been drawing all along, so the
+        // number the merchant read back to the owner is the number the send honours. Without this
+        // the selector moved every figure on the screen and changed nobody's feed.
+        //
+        // Only when the selection resolves to a figure. A campaign submitted with no pools
+        // selected keeps the allocation it was given rather than silently losing its audience.
+        // ------------------------------------------------------------------------------------
+        // `reach` is the contactable figure, not the qualifying one — it is what PUSH_COHORT
+        // delivers against and what the dashboards print. Committing the qualifying total here
+        // would have had the RM's Reach column reading 550 for a send that reaches 400, and would
+        // have over-delivered outright the moment a campaign had no reach cap to clamp it.
+        // Qualifying is kept alongside it, because the configuration screen has to be able to say
+        // how many were left out and why.
+        const sel = reachFromSelection(campaign);
+        if (sel.total != null) {
+          campaign.qualifying_reach = sel.total;
+          campaign.reach = sel.contactable ?? sel.total;
+          campaign.target_pools = [...sel.selected];
+        }
+        // The reach cap only ever tightens: a cap above the pool would be reaching people the
+        // allocator did not allocate, which is widening a segment by the back door. Clamped
+        // against the committed reach whether the cap came from this event's configuration or was
+        // left over from a wider selection the merchant has since changed.
+        if (cfg.reach_cap != null) campaign.reach_cap = Number(cfg.reach_cap);
+        if (campaign.reach != null && campaign.reach_cap != null) {
+          campaign.reach_cap = Math.min(campaign.reach_cap, campaign.reach);
+        }
         campaign.window = event.window ?? (cfg.window_start && cfg.window_end ? { start: cfg.window_start, end: cfg.window_end } : campaign.window);
         campaign.configuration = { ...cfg, push_granted: event.push_granted ?? cfg.push_granted ?? false,
                                    channel: { feed: true, push_requested: Boolean(cfg.push_requested), push_granted: Boolean(event.push_granted ?? cfg.push_granted) } };
@@ -665,7 +864,11 @@ export function reduce(state, event) {
       const last = campaign.pushes.at(-1);
       // Everyone in the allocation who is not a named persona: counted in aggregate, never listed.
       const cohortSize = Math.max(0, (campaign.reach_cap ?? campaign.reach) - (campaign.counters.feed_delivered - campaign.counters.seeded.feed_delivered));
-      const expectedSuppressed = Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed);
+      // Same rule as the preview: an expectation computed for the acquisition allocation says
+      // nothing about a send aimed at a retention pool, so it is not applied to one.
+      const expectedSuppressed = onAllocatedPool(campaign)
+        ? Math.max(0, (campaign.allocation?.push_suppressed_expected ?? 0) - campaign.counters.pushes_suppressed)
+        : 0;
       const restDelivered = Math.max(0, cohortSize);
       const restSuppressed = Math.min(restDelivered, expectedSuppressed);
       const restSent = restDelivered - restSuppressed;

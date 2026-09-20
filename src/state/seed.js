@@ -200,13 +200,46 @@ export function buildSeed(data) {
       recommended: top ? { reward_type: top.type, label: top.label, reason: top.reason, new_or_returning: top.new_or_returning,
                            window: gap?.window ?? null, days_of_week: gap ? gap.weekdays : null, hours: gap?.hours ?? null,
                            expected_incremental_share: top.expected_incremental_share, provisional: top.incremental_share_provisional } : null,
+      // `reach` is the contactable population — the pipeline's allocation after consent and the
+      // portfolio frequency cap have taken their bites out of the segment. It is what the send
+      // actually delivers to, which is why `allocated_reach` keeps an unmodifiable copy: the
+      // merchant's target-group selection rewrites `reach` at submit, and the acquisition pool's
+      // own post-filter figure still has to be readable afterwards to explain the difference
+      // between who qualifies and who can be reached.
       reach: num(alloc.final_allocation?.count), reach_cap: num(alloc.final_allocation?.count),
+      allocated_reach: num(alloc.final_allocation?.count),
       allocation: { push_eligible: alloc.push.eligible, push_suppressed_expected: alloc.push.suppressed_count, cap_per_week: alloc.push.cap_per_week,
                     cap_provisional: alloc.push.cap_provisional, week: alloc.push.week, note: alloc.push.note,
                     removed: alloc.removed, frequency_cap: alloc.frequency_cap, retention_pools: alloc.retention_pools,
+                    // Per-outlet counts for each retention pool, so the configuration screen can
+                    // count whichever target group is selected at each location. Absent until the
+                    // pipeline has been re-run; the screen says so rather than showing the
+                    // acquisition pool's numbers under a retention pool's name.
+                    retention_pools_per_outlet: alloc.retention_pools_per_outlet ?? null,
                     ranking_rule: alloc.ranking_rule },
       counters: counters(),
+      // ------------------------------------------------------------------------------------
+      // The cohort the pipeline allocated for, and the tag for every pool the merchant could
+      // aim at instead.
+      //
+      // pipeline/personas.py writes cohort_membership as "<merchant>_acquisition_cohort" and
+      // "<merchant>_rfm:<Segment>". That prefix is a fact about the dataset, so it is written
+      // once here — where the acquisition tag already lived — rather than rebuilt by string
+      // concatenation in the reducer or a component, either of which would go on matching
+      // nobody, silently, the day the pipeline renames a pool.
+      //
+      // `cohort_tag` stays the allocated pool: it is what the allocation's own figures describe,
+      // and onAllocatedPool() uses it to refuse lending them to a campaign aimed elsewhere.
+      // ------------------------------------------------------------------------------------
       cohort_tag: "soujourner_acquisition_cohort",
+      cohort_tags_by_pool: {
+        "Non-customers": "soujourner_acquisition_cohort",
+        ...Object.fromEntries(
+          Object.keys(alloc.retention_pools ?? {})
+            .filter((k) => !k.startsWith("_"))
+            .map((name) => [name, `soujourner_rfm:${name}`])
+        ),
+      },
       prefill: { fields: Object.fromEntries(Object.entries(prefillFields).filter(([, v]) => v != null)), basis: prefillBasis },
       segment: seg ? {
         segment_id: seg.segment_id, label: seg.label, description: seg.description, candidate_name: seg.candidate_name,

@@ -4,7 +4,7 @@ import { Home, Gift, UserRound, Smartphone, RotateCcw } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { MockDataBadge, ScaleDisclosure } from "../../components/ui";
 import PersonaSwitcher from "../../components/PersonaSwitcher";
-import { CARDHOLDER_ID } from "./cardholder";
+import { INDIVIDUAL_CARDHOLDERS, CardholderProvider, getCardholderId, setCardholderId } from "./cardholder";
 
 // ---------------------------------------------------------------------------------------------
 // The cardholder's app — customer prompt §9.
@@ -51,6 +51,9 @@ export default function AppFrame() {
   const navigate = useNavigate();
   const m = useMobiusState();
   const [toast, setToast] = useState(null);
+  // Which phone the individual view is showing. Initialised from the module-level value so a hop
+  // out to the RM view and back does not land the presenter on the wrong cardholder mid-story.
+  const [cardholderId, setHolderId] = useState(getCardholderId);
   const timer = useRef(null);
   const seq = useRef(0);
 
@@ -85,14 +88,15 @@ export default function AppFrame() {
   }, [navigate, consolidated]);
 
   if (!m) return null;
-  const holder = m.state.cardholders[CARDHOLDER_ID];
+  const holder = m.state.cardholders[cardholderId];
   // The badge counts rewards available to redeem — the same thing the Rewards quick action on the
   // home screen counts. Two badges on the same word showing two different numbers is the kind of
   // detail that makes a prototype feel untrustworthy for no benefit.
-  const unread = Object.values(m.state.offers).filter((o) => o.cardholder_id === CARDHOLDER_ID && o.status === "delivered").length;
+  const unread = Object.values(m.state.offers).filter((o) => o.cardholder_id === cardholderId && o.status === "delivered").length;
 
   return (
     <ToastContext.Provider value={show}>
+    <CardholderProvider value={cardholderId}>
       <div className="min-h-full flex flex-col bg-canvas">
         {/* ---------------------------------------------------------- prototype chrome */}
         <header className="sticky top-0 z-40 border-b border-border bg-navy text-white/85">
@@ -125,6 +129,34 @@ export default function AppFrame() {
                 );
               })}
             </div>
+
+            {/* Whose phone. Individual view only — the consolidated view shows four at once, so
+                there is nothing to choose between there.
+
+                Two cardholders because the build now has two distribution channels, and one
+                persona cannot show both: Bernice is reached by the campaign without asking, and
+                Charles is the one the targeting engine excluded, who holds nothing until he
+                searches. Swapping between them is how the push/pull distinction gets demonstrated
+                rather than asserted. */}
+            {!consolidated && (
+              <div className="flex items-center gap-1 text-[12px]" role="group" aria-label="Cardholder">
+                {INDIVIDUAL_CARDHOLDERS.map((p) => {
+                  const active = p.id === cardholderId;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      aria-pressed={active}
+                      title={p.note}
+                      onClick={() => { setCardholderId(p.id); setHolderId(p.id); }}
+                      className={`rounded-md px-2 py-1 font-medium ${active ? "bg-white/15 text-white" : "text-white/60 hover:text-white"}`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* The app's own screens. Hidden in the consolidated view, which has no screens of its
                 own to offer — four home screens are the whole of it. */}
@@ -209,6 +241,7 @@ export default function AppFrame() {
           )}
         </div>
       </div>
+    </CardholderProvider>
     </ToastContext.Provider>
   );
 }

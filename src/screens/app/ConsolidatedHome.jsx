@@ -2,6 +2,7 @@ import React from "react";
 import { Bell, BellOff, FlaskConical } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { CONSOLIDATED_CARDHOLDERS, DEMO_CAMPAIGN_ID } from "../../data/constants";
+import { cohortTagsFor } from "../../state/store.js";
 import { num } from "../../data/format";
 import { Badge } from "../../components/ui";
 import BankingHome from "./BankingHome";
@@ -33,12 +34,15 @@ export default function ConsolidatedHome() {
   const { state } = m;
   const campaign = state.campaigns[DEMO_CAMPAIGN_ID] ?? null;
 
-  // In scope is not a property of this screen. It is cohort membership against the campaign's own
-  // tag — the same test cohortNamed() applies in the state module before a single card is written.
-  const tag = campaign?.cohort_tag ?? null;
+  // In scope is not a property of this screen. It is cohort membership against the tags the
+  // campaign is currently aimed at — the same test cohortNamed() applies in the state module
+  // before a single card is written, through the same resolver, so a tile cannot disagree with
+  // the send. Aimed at, not allocated for: the merchant may have pointed the campaign at a
+  // retention pool instead, and showing who that reaches is the whole job of this screen.
+  const tags = cohortTagsFor(campaign);
   const tiles = CONSOLIDATED_CARDHOLDERS.map((entry) => {
     const holder = state.cardholders[entry.id] ?? null;
-    const inScope = Boolean(tag) && (holder?.cohort_membership ?? []).includes(tag);
+    const inScope = tags.some((t) => (holder?.cohort_membership ?? []).includes(t));
     const offer = Object.values(state.offers).find(
       (o) => o.cardholder_id === entry.id && o.campaign_id === DEMO_CAMPAIGN_ID
     ) ?? null;

@@ -8,8 +8,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
-import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued } from "./store.js";
+import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued,
+         cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool } from "./store.js";
 import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
+import { INTENTS, isFindable, searchPull } from "../screens/app/chatbot.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -372,6 +374,161 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         q.campaigns[DEMO].status === "active" && isQueued(q.campaigns[DEMO], clockDay) === true,
         { start: q.campaigns[DEMO].window?.start, clock: clockDay });
   check("submit: audit clean after a direct submit", audit(q).length === 0, audit(q));
+}
+
+// ---------------------------------------------------------------- the target groups decide the audience
+// The selector used to move every figure on the configuration screen and change nobody's feed.
+// These prove the wiring: the pools a merchant picks resolve to cohort tags, those tags decide
+// which cardholders the send reaches, and the reach committed at submit is what the selection adds
+// up to rather than what the pipeline originally recommended.
+{
+  const base = reduce(seed, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  const pick = (st, pools) => reduce(st, { type: "CONFIGURE", campaign_id: DEMO, field: "target_segments", value: pools, by: "merchant", at: at(2), seq: 2 });
+
+  check("target groups: the prefilled selection is the recommended acquisition pool",
+        base.campaigns[DEMO].configuration.target_segments.join() === "Non-customers",
+        base.campaigns[DEMO].configuration.target_segments);
+  check("target groups: the acquisition pool resolves to the tag the pipeline writes on personas",
+        cohortTagsFor(base.campaigns[DEMO]).join() === "soujourner_acquisition_cohort",
+        cohortTagsFor(base.campaigns[DEMO]));
+  check("target groups: the acquisition pool reaches Bernice and Edwin, not Alvin",
+        cohortNamed(base, base.campaigns[DEMO]).sort().join() === "bernice,edwin",
+        cohortNamed(base, base.campaigns[DEMO]));
+
+  const champions = pick(base, ["Champions"]);
+  check("target groups: selecting Champions re-points the send at Alvin and away from the acquisition pair",
+        cohortTagsFor(champions.campaigns[DEMO]).join() === "soujourner_rfm:Champions"
+        && cohortNamed(champions, champions.campaigns[DEMO]).join() === "alvin",
+        cohortNamed(champions, champions.campaigns[DEMO]));
+
+  const both = pick(base, ["Non-customers", "Champions"]);
+  check("target groups: selecting both pools reaches all three, with no cardholder counted twice",
+        cohortNamed(both, both.campaigns[DEMO]).sort().join() === "alvin,bernice,edwin",
+        cohortNamed(both, both.campaigns[DEMO]));
+
+  // Reach follows the selection through the same derivation the screen draws from.
+  const pools = data.allocationSummary.retention_pools;
+  check("target groups: Champions alone reaches the Champions pool's own count",
+        reachFromSelection(champions.campaigns[DEMO]).total === pools["Champions"].count,
+        { got: reachFromSelection(champions.campaigns[DEMO]).total, expected: pools["Champions"].count });
+  check("target groups: both pools sum, and the two components stay separately reportable",
+        reachFromSelection(both.campaigns[DEMO]).total === seed.campaigns[DEMO].segment.reach + pools["Champions"].count
+        && reachFromSelection(both.campaigns[DEMO]).prospective === seed.campaigns[DEMO].segment.reach
+        && reachFromSelection(both.campaigns[DEMO]).existing === pools["Champions"].count,
+        reachFromSelection(both.campaigns[DEMO]));
+
+  // Submitting commits it: the number the merchant read back is the number the send honours.
+  let live = reduce(champions, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(3), seq: 3, configuration: CONFIG });
+  check("target groups: submit commits the selection's reach onto the campaign",
+        live.campaigns[DEMO].status === "active"
+        && live.campaigns[DEMO].reach === pools["Champions"].count
+        && live.campaigns[DEMO].target_pools.join() === "Champions",
+        { reach: live.campaigns[DEMO].reach, pools: live.campaigns[DEMO].target_pools });
+  check("target groups: a cap left over from a wider selection is clamped to the committed reach",
+        live.campaigns[DEMO].reach_cap <= live.campaigns[DEMO].reach,
+        { cap: live.campaigns[DEMO].reach_cap, reach: live.campaigns[DEMO].reach });
+
+  live = reduce(live, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
+  check("target groups: the send reaches the selected pool's cardholder and not the deselected ones",
+        Boolean(live.offers[offerId(DEMO, "alvin")])
+        && !live.offers[offerId(DEMO, "bernice")] && !live.offers[offerId(DEMO, "edwin")],
+        Object.keys(live.offers).filter((k) => k.startsWith(DEMO)));
+  check("target groups: a campaign aimed off its allocated pool does not borrow the allocation's suppression expectation",
+        onAllocatedPool(live.campaigns[DEMO]) === false && live.campaigns[DEMO].pushes.at(-1).aggregate.suppressed === 0,
+        live.campaigns[DEMO].pushes.at(-1).aggregate);
+
+  // ------------------------------------------------------------------ per-outlet, per selection
+  // The count beside each outlet follows the selected pool, and the two kinds of pool are counted
+  // by different measures: catchment for people who have never been in, the outlets they actually
+  // use for people who already come in.
+  const acqOutlets = perOutletFromSelection(base.campaigns[DEMO]);
+  check("outlets: the acquisition pool reports its own catchment count at each outlet",
+        acqOutlets.length === seed.campaigns[DEMO].segment.per_outlet.length
+        && acqOutlets.filter((o) => o.state === "ok").every((o, i) => o.count === seed.campaigns[DEMO].segment.per_outlet.filter((p) => p.suppressed === false)[i].count),
+        acqOutlets);
+  check("outlets: an outlet below the floor on its own is suppressed, not shown as a small number",
+        acqOutlets.some((o) => o.state === "suppressed") && acqOutlets.every((o) => o.state !== "ok" || o.count >= seed.campaigns[DEMO].segment.floor),
+        acqOutlets.map((o) => ({ id: o.outlet_id, state: o.state, count: o.count })));
+  check("outlets: nothing selected reports no count rather than the recommendation's",
+        perOutletFromSelection(pick(base, []).campaigns[DEMO]).every((o) => o.state === "none_selected"));
+
+  // The retention per-outlet table is pipeline output that may not be written yet. Until it is,
+  // a retention selection must say the count is unknown — never borrow the acquisition figure,
+  // which is a different group of people standing in different places.
+  const champOutlets = perOutletFromSelection(champions.campaigns[DEMO]);
+  const hasPerOutlet = Boolean(seed.campaigns[DEMO].allocation?.retention_pools_per_outlet);
+  check("outlets: a retention pool is counted from its own per-outlet table, or reported as not computed",
+        hasPerOutlet
+          ? champOutlets.every((o) => ["ok", "suppressed"].includes(o.state))
+          : champOutlets.every((o) => o.state === "not_computed" && o.missing.includes("Champions")),
+        { hasPerOutlet, states: champOutlets.map((o) => o.state) });
+  check("outlets: a not-computed count never reports a number",
+        champOutlets.every((o) => o.state !== "not_computed" || o.count === null), champOutlets);
+
+  // ------------------------------------------------------------------ qualifying vs contactable
+  // Two different populations that a screen kept calling one number. Qualifying is the segment;
+  // contactable is what survives consent and the frequency cap, and it is what the send delivers
+  // to and what the dashboards print as Reach. Committing the qualifying figure into `reach` would
+  // have had the RM's column read 550 for a send that reaches 400.
+  const acq = reachFromSelection(base.campaigns[DEMO]);
+  check("reach: qualifying is the segment, contactable is the pipeline's allocation after consent and the cap",
+        acq.total === seed.campaigns[DEMO].segment.reach
+        && acq.contactable === data.allocationSummary.final_allocation.count
+        && acq.contactable < acq.total && acq.contactable_exact === true,
+        { qualifying: acq.total, contactable: acq.contactable });
+
+  let acqLive = reduce(base, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(4), seq: 4, configuration: CONFIG });
+  check("reach: submit commits contactable as reach, and keeps qualifying beside it",
+        acqLive.campaigns[DEMO].reach === data.allocationSummary.final_allocation.count
+        && acqLive.campaigns[DEMO].qualifying_reach === seed.campaigns[DEMO].segment.reach,
+        { reach: acqLive.campaigns[DEMO].reach, qualifying: acqLive.campaigns[DEMO].qualifying_reach });
+
+  const mixed = reachFromSelection(pick(base, ["Non-customers", "Champions"]).campaigns[DEMO]);
+  check("reach: a retention pool contributes its own count and marks the figure as not frequency-capped",
+        mixed.contactable === data.allocationSummary.final_allocation.count + pools["Champions"].count
+        && mixed.contactable_exact === false,
+        { contactable: mixed.contactable, exact: mixed.contactable_exact });
+
+  // Nothing selected is no audience, and the submit check says so by name.
+  const none = reduce(pick(base, []), { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(5), seq: 5, configuration: CONFIG });
+  check("target groups: submitting with no pool selected is refused, naming the field",
+        none.ledger.at(-1).type === "REJECTED" && /target_segments/.test(none.ledger.at(-1).reason),
+        none.ledger.at(-1));
+}
+
+// ---------------------------------------------------------------- the pull channel finds what push already sent
+// The chatbot searches live campaigns. Firing the allocator delivers the whole allocation, which
+// trips the reach cap and takes the campaign out of `active` in the same event — so a search that
+// asked only for `active` lost the demo's own programme at the exact moment it was pushed. These
+// pin the rule that replaced it: reach-capped is still findable, redemption-capped is not.
+{
+  let f = atCap(seed, "edwin");
+  f = reduce(f, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  f = reduce(f, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: CONFIG });
+  check("pull: the campaign is findable while it is live", isFindable(f.campaigns[DEMO]));
+
+  f = reduce(f, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(3), seq: 3 });
+  check("pull: firing the allocator caps the campaign on reach — this is what broke the search",
+        f.campaigns[DEMO].status === "capped" && f.campaigns[DEMO].capped.why === "reach cap reached",
+        { status: f.campaigns[DEMO].status, why: f.campaigns[DEMO].capped?.why });
+  check("pull: a reach-capped campaign is still findable — the cap bounds contact, not redemption",
+        isFindable(f.campaigns[DEMO]));
+
+  const coffee = INTENTS.find((i) => i.id === "coffee");
+  const found = searchPull({
+    intent: coffee, campaigns: f.campaigns, profiles: data.merchantProfiles,
+    holderProfile: (data.showcasePersonas.find((p) => p.id === "charles") ?? {}).profile,
+    clock: f.clock, adjacency: data.constants.district_adjacency ?? null,
+  });
+  check("pull: Charles finds the pushed Soujourner programme he was never targeted for",
+        found.results.some((r) => r.campaign.id === DEMO),
+        { results: found.results.map((r) => r.merchant?.name), funnel: { open: found.open, in_category: found.in_category } });
+
+  // The other cap closes every delivered card, so nothing can be claimed and nothing should show.
+  const redeemed = { ...f, campaigns: { ...f.campaigns,
+    [DEMO]: { ...f.campaigns[DEMO], capped: { ...f.campaigns[DEMO].capped, why: "redemption limit reached" } } } };
+  check("pull: a campaign capped because it is fully redeemed is not findable",
+        !isFindable(redeemed.campaigns[DEMO]));
 }
 
 // ---------------------------------------------------------------- push to the whole cohort → reach cap fires
