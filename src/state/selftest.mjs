@@ -11,6 +11,7 @@ import { STATUSES, ladderAudit } from "./ladder.js";
 import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued,
          cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool } from "./store.js";
 import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
+import { expectedOutcome } from "./expected.js";
 import { INTENTS, isFindable, searchPull } from "../screens/app/chatbot.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
@@ -120,6 +121,29 @@ check("event 1: pipeline suppressed_count agrees with the seeded personas at the
 s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], by: "rm", at: at(7), seq: 7 });
 check("event 1: a repeat push to a holder of the card is counted as already_holding, not delivered twice",
       s.campaigns[DEMO].pushes[1].already_holding === 1 && s.campaigns[DEMO].pushes[1].delivered === 0);
+
+// ----------------------------------------------------------------------------------------------
+// The redemption limit counts CLAIMS, and a send reserves none of it.
+//
+// "Available to the first N customers" is a promise about who gets there first, not about who was
+// contacted. Allocating and notifying a cardholder hands them the chance to claim; it does not
+// spend one of the N. If delivery ever consumed the limit, three things break at once: the
+// merchant's "maximum cost" stops being its real exposure (it would be paying for cards nobody
+// redeemed), a generous allocation would close the programme before a single customer bought
+// anything, and the pull channel could never work at all — a cardholder who came looking would
+// find the counter already spent by people who were merely contacted.
+//
+// This is the assertion that pins it. CONFIG's limit is 2 and three cards have been delivered by
+// now; if the send reserved anything the campaign would already have capped. It is still active,
+// its redemption count is still zero, and only feed_delivered has moved.
+// ----------------------------------------------------------------------------------------------
+check("the send reserves nothing: 3 cards delivered against a limit of 2 and the counter is still zero",
+      s.campaigns[DEMO].counters.redemptions === beforePush.campaigns[DEMO].counters.redemptions
+      && s.campaigns[DEMO].counters.redemptions === 0
+      && s.campaigns[DEMO].counters.feed_delivered === beforePush.campaigns[DEMO].counters.feed_delivered + 3
+      && s.campaigns[DEMO].status === "active",
+      { limit: s.campaigns[DEMO].configuration.redemption_limit, delivered: s.campaigns[DEMO].counters.feed_delivered,
+        redemptions: s.campaigns[DEMO].counters.redemptions, status: s.campaigns[DEMO].status });
 
 // ---------------------------------------------------------------- event 2: redemption propagates
 const wBefore = s.cardholders.bernice.profile.category_weights[s.campaigns[DEMO].merchant_category];
@@ -529,6 +553,38 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     [DEMO]: { ...f.campaigns[DEMO], capped: { ...f.campaigns[DEMO].capped, why: "redemption limit reached" } } } };
   check("pull: a campaign capped because it is fully redeemed is not findable",
         !isFindable(redeemed.campaigns[DEMO]));
+}
+
+// ---------------------------------------------------------------- maximum cost counts claims, not sends
+// The figure the merchant signs off on (merchant §7.5, RewardSetup and RewardConfiguration both
+// render it as "Maximum cost to the merchant — its whole cost"). It is the redemption limit times
+// the most one reward can be worth, and that is only the merchant's true exposure because the
+// limit is spent by claims: N people can actually redeem, so N × max value is what it can cost.
+//
+// The two assertions below are the pair that keeps it honest. The first is the arithmetic. The
+// second is the property underneath it — firing the whole allocation at the cohort, which is the
+// largest send the demo can make, moves the delivery counter and leaves the redemption counter
+// alone. A send that reserved limit would make the same max-cost figure an overstatement of what
+// the merchant can be charged and an understatement of how fast the programme closes.
+{
+  const segment = { reach: 900, floor: 250, constraints: {},
+                    narrowing: { dimensions: { daypart: [{ id: "afternoon", hours: [12, 17] }] } } };
+  const cfg = { ...CONFIG, max_reward_value_sgd: 5 };   // limit 2 × S$5
+  const out = expectedOutcome({ segment, configuration: cfg, profile: { trading_summary: { avg_ticket_sgd: 6 } },
+                                ranked: [], engagement: { low: { value: 0.1 }, high: { value: 0.2 } } });
+  check("cost: maximum cost is the redemption limit × the maximum value of one reward",
+        out.max_cost_sgd === cfg.redemption_limit * cfg.max_reward_value_sgd,
+        { max_cost_sgd: out.max_cost_sgd, limit: cfg.redemption_limit, max_value: cfg.max_reward_value_sgd });
+
+  let g = atCap(seed, "edwin");
+  g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  g = reduce(g, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: CONFIG });
+  const beforeCohort = g.campaigns[DEMO].counters.redemptions;
+  g = reduce(g, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(3), seq: 3 });
+  const after = g.campaigns[DEMO].counters;
+  check("cost: firing the whole allocation moves deliveries and reserves none of the redemption limit",
+        after.redemptions === beforeCohort && after.redemptions === 0 && after.feed_delivered > 0,
+        { delivered: after.feed_delivered, redemptions: after.redemptions, limit: CONFIG.redemption_limit });
 }
 
 // ---------------------------------------------------------------- push to the whole cohort → reach cap fires
