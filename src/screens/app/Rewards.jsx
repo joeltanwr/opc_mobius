@@ -166,6 +166,15 @@ export default function Rewards() {
 
           {/* ------------------------------------------------------ 4.1 the list */}
           <section className="px-4 pt-3 space-y-3">
+            {/* Names the channel the list came from. The assistant above answers "what is near
+                me"; this answers "what did OCBC pick for me", and on a phone the two are only a
+                scroll apart, so each says which it is. */}
+            {all.length > 0 && (
+              <div className="flex items-baseline justify-between gap-2 pt-0.5">
+                <h2 className="text-[13px] font-bold text-ink">Just for you</h2>
+                <p className="text-[11px] text-ink-light">Matched to you and sent — not a public list</p>
+              </div>
+            )}
             {hiddenByInterest.length > 0 && (
               <div className="rounded-lg border border-dashed border-border bg-white px-3 py-2 flex items-center gap-2">
                 <p className="flex-1 text-[11.5px] text-ink-secondary">
@@ -213,6 +222,9 @@ export default function Rewards() {
                   offer={o}
                   clock={clock}
                   highlight={o.source === "live" && ["delivered", "claimed"].includes(o.status)}
+                  // Everything in this list was allocated to her: the pipeline matched her to it,
+                  // or the RM pushed it during the demo. Nothing found by searching lands here.
+                  origin="matched"
                   availableNow={o.availableNow}
                   onDetails={() => navigate(`/app/rewards/${encodeURIComponent(o.id)}`)}
                   // Claiming takes one of the merchant's N and is allowed whenever the card is

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, ShieldCheck, HelpCircle, Clock, MapPin, CalendarX2 } from "lucide-react";
+import { ChevronLeft, ShieldCheck, HelpCircle, Clock, MapPin, CalendarX2, Sparkles } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { useCardholderId } from "./cardholder";
@@ -45,7 +45,12 @@ export default function RewardDetail() {
         <button onClick={() => navigate("/app/rewards")} className="flex items-center gap-1 text-[12.5px] text-white/70 hover:text-white mb-3">
           <ChevronLeft size={14} /> Rewards
         </button>
-        <p className="text-[12px] text-white/60">{o.company}{o.categoryLabel ? ` · ${o.categoryLabel}` : ""}</p>
+        {/* Carried through from the list, or the label disappears at the moment the cardholder
+            is deciding whether to claim — which is exactly when "was this meant for me" matters. */}
+        <p className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-white/80">
+          <Sparkles size={11} className="shrink-0" /> Just for you
+        </p>
+        <p className="text-[12px] text-white/60 mt-1">{o.company}{o.categoryLabel ? ` · ${o.categoryLabel}` : ""}</p>
         <h1 className="text-[19px] font-bold leading-tight mt-0.5">{offer.offer_headline}</h1>
       </header>
 

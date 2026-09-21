@@ -209,7 +209,7 @@ function PullResult({ result, onOpen }) {
 
   return (
     <div>
-      <RewardFeedCard offer={offer} clock={m.state.clock} />
+      <RewardFeedCard offer={offer} clock={m.state.clock} origin="found" />
       <p className="text-[10.5px] text-ink-light mt-1 px-1 flex items-center gap-1">
         <MapPin size={10} className="shrink-0" />
         {result.near.length} outlet{result.near.length === 1 ? "" : "s"} in your area

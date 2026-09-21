@@ -1,5 +1,5 @@
 import React from "react";
-import { Coffee, ShoppingBag, Sparkles, Tag, Bell, ChevronLeft, Clock, MapPin, ShieldCheck } from "lucide-react";
+import { Coffee, ShoppingBag, Sparkles, Tag, Bell, ChevronLeft, Clock, MapPin, ShieldCheck, Search } from "lucide-react";
 import { num } from "../data/format";
 
 // ---------------------------------------------------------------------------------------------
@@ -82,19 +82,40 @@ const STATUS_TONE = {
   withdrawn: { label: "Withdrawn", cls: "bg-canvas text-ink-light border-border" },
 };
 
+// ---------------------------------------------------------------------------------------------
+// Which channel put this card in front of the cardholder — the one distinction the two reward
+// surfaces must never blur.
+//
+//   matched  OCBC picked THEM. The allocator matched this cardholder to this programme and sent
+//            it, so it is genuinely theirs and nobody else with the same phone sees the same list.
+//   found    THEY picked it. A search returned every live programme near them that fits what they
+//            asked for, whether or not the allocator would ever have chosen them for it.
+//
+// "Just for you" belongs to the first and would be a lie on the second, which is the whole reason
+// the label exists: a cardholder who cannot tell the two apart cannot tell targeting from a
+// directory, and the privacy argument rests on them being different things.
+//
+// Unset renders nothing, so the RM's configuration preview and the push preview are untouched.
+// ---------------------------------------------------------------------------------------------
+const ORIGIN_LABEL = {
+  matched: { text: "Just for you", icon: Sparkles, cls: "text-brand", title: "Matched to you by OCBC and sent to your feed" },
+  found: { text: "Found by you", icon: Search, cls: "text-ink-light", title: "You searched for this — it is open to anyone nearby" },
+};
+
 /**
  * The feed card, exactly as the cardholder sees it in the OCBC app's Rewards list.
  *
  * @param offer     {company, nature, reward_type, offer_headline, offer_terms, days_of_week, hours,
  *                   expires_at, status}
  * @param clock     the demo clock, for days remaining
+ * @param origin    "matched" (push) or "found" (pull) — omit for previews, which show neither
  * @param onClaim   fired by the Claim button, which locks one of the merchant's N in for this
  *                  cardholder. Omitted where the card should keep the old single-step Redeem.
  * @param onRedeem  fired by the Redeem button. Omitted in the RM's preview, where the card is a
  *                  rendering of what will be sent and nothing on it should be operable.
  * @param onDetails fired by View details.
  */
-export function RewardFeedCard({ offer, clock, highlight = false, onClaim, onRedeem, onDetails, availableNow = null }) {
+export function RewardFeedCard({ offer, clock, highlight = false, origin = null, onClaim, onRedeem, onDetails, availableNow = null }) {
   const days = daysRemaining(offer.expires_at, clock);
   const base = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
   // "Available" is reserved for a card that can be used at this moment. One the cardholder holds
@@ -105,8 +126,19 @@ export function RewardFeedCard({ offer, clock, highlight = false, onClaim, onRed
   const Icon = NATURE_ICON[offer.nature] ?? Tag;
   const window = [formatDays(offer.days_of_week), formatHours(offer.hours)].filter(Boolean).join(" ");
 
+  const origins = ORIGIN_LABEL[origin] ?? null;
+  const OriginIcon = origins?.icon;
+
   return (
     <div className={`rounded-2xl border bg-white p-4 shadow-card ${highlight ? "border-brand/50" : "border-border"}`}>
+      {/* Above everything, on its own line: read first, and never competing with the status pill
+          on the right of the header row, which answers a different question. */}
+      {origins && (
+        <div className="flex items-center gap-1 mb-2" title={origins.title}>
+          <OriginIcon size={11} className={`${origins.cls} shrink-0`} />
+          <span className={`text-[10.5px] font-bold uppercase tracking-wide ${origins.cls}`}>{origins.text}</span>
+        </div>
+      )}
       <div className="flex items-start gap-2.5 mb-2.5">
         <div className="h-9 w-9 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
           <Icon size={16} className="text-brand" />
