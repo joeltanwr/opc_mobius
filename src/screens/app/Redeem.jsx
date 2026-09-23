@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, ShieldCheck, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { enrich } from "./offers";
@@ -83,14 +83,7 @@ export default function Redeem() {
               <Row label="Terms" value={offer.offer_terms ?? "—"} last />
             </section>
 
-            {/* -------------------------------------------------- the quiet line (customer §2) */}
-            <p className="flex items-start gap-2 text-[11.5px] text-ink-light leading-snug px-1">
-              <ShieldCheck size={13} className="shrink-0 mt-0.5" />
-              <span>
-                {offer.merchant_name} sees that a redemption happened, not who you are. OCBC sent you this offer; the business never receives
-                your name, your contact details, or the fact that you were chosen for it.
-              </span>
-            </p>
+            {/* The quiet line (customer §2) is said once, on the reward's detail view — not again here (round 7). */}
 
             <Link to="/app/rewards" className="block w-full rounded-lg bg-ink py-2.5 text-center text-[13px] font-semibold text-white">
               Back to my rewards

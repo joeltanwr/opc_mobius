@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine } from "recharts";
 import { sgd, pct } from "../data/format";
-import { BasisNote } from "./ui";
+import { BasisNote, InfoTip } from "./ui";
 
 // ----------------------------------------------------------------------------------------------
 // Weekly sales before and after a reward programme launched.
@@ -79,7 +79,7 @@ export function buildBeforeAfter(rows, launchDate, durationWeeks) {
   };
 }
 
-export function WeeklyBeforeAfter({ title, subtitle, series, basis, emptyNote }) {
+export function WeeklyBeforeAfter({ title, subtitle, info, series, basis, emptyNote }) {
   const fmtWeek = (w) => new Date(`${w}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
   if (!series) {
@@ -94,7 +94,10 @@ export function WeeklyBeforeAfter({ title, subtitle, series, basis, emptyNote })
   const up = (series.change ?? 0) >= 0;
   return (
     <div className="rounded-lg border border-border bg-white p-4">
-      <div className="text-[13px] font-semibold text-ink">{title}</div>
+      <div className="text-[13px] font-semibold text-ink">
+        {title}
+        {info && <InfoTip title="What these charts show" className="ml-1">{info}</InfoTip>}
+      </div>
       {subtitle && <div className="text-[11.5px] text-ink-light mt-0.5 leading-snug">{subtitle}</div>}
 
       {/* The headline the merchant actually reads. The bars underneath are the evidence for it. */}
@@ -196,6 +199,7 @@ export default function ProgrammeCharts({ profile, launchDate, durationWeeks, ho
       <WeeklyBeforeAfter
         title="Weekly sales — before and after launch"
         subtitle="All trade at your terminals, every hour of every day."
+        info="These compare trade either side of launch; seasons, weather and everything else moved too. They are not what the programme added."
         series={overall}
         emptyNote="Weekly sales need the daily acquiring series, which is not loaded for this merchant in the demo."
         basis="merchant_profiles.json series.daily — your own acquiring records, summed into Monday-start weeks. Equal spans either side of launch."
@@ -203,7 +207,7 @@ export default function ProgrammeCharts({ profile, launchDate, durationWeeks, ho
 
       <WeeklyBeforeAfter
         title={`Sales in the targeted window — ${weekdayLabel ? `${weekdayLabel} ` : ""}${hoursLabel}`}
-        subtitle="Only the hours this programme was aimed at, so the trough it targeted can be seen filling or not."
+        subtitle="Only the hours this programme targeted."
         series={windowed}
         emptyNote={
           !byDaypart
@@ -216,19 +220,10 @@ export default function ProgrammeCharts({ profile, launchDate, durationWeeks, ho
       />
     </div>
 
-    {/* The one sentence that keeps these charts honest.
-        Before-and-after is not incrementality, and on this dataset the difference is stark rather
-        than academic: the campaign that made money reads +0.4% on overall weekly sales, and the
-        one that lost money reads -16%, because a trough-hour offer moves a small slice of a week
-        and the rest of the week moves for its own reasons. A merchant who reads these percentages
-        as the result of the programme will draw the wrong conclusion from both. The controlled
-        figure is incremental sales in the result below; this is context for it, not a rival to it. */}
-    <p className="text-[11.5px] text-ink-secondary leading-snug">
-      These compare your trade either side of the launch date. They are <span className="font-semibold text-ink">not</span> the
-      measure of what the programme added — seasons, weather and everything else you do moved in the same weeks. What the
-      programme itself caused is measured against a held-out group of comparable cardholders who were not sent the offer, and
-      appears as incremental sales {measured ? "in the result below" : "once the window closes"}.
-    </p>
+    {/* Before-and-after is not incrementality, and on this dataset the difference is stark: the
+        campaign that made money reads +0.4% on overall weekly sales and the one that lost money
+        reads -16%. That caveat now sits behind the first chart's ⓘ; the control-group sentence that
+        followed it is off the merchant's screen (round 7 — OCBC's method, not the merchant's trade). */}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { Gauge, Layers, OctagonX, ShieldCheck, Undo2 } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { portfolioView } from "../../state/store.js";
 import { num, pctOf } from "../../data/format";
-import { Card, BasisNote } from "../../components/ui";
+import { Card, BasisNote, InfoTip } from "../../components/ui";
 import { Provisional } from "./rmCommon";
 
 // ---------------------------------------------------------------------------------------------
@@ -38,8 +38,10 @@ export default function ExposurePanel() {
             <h2 className="text-[16px] font-bold text-ink">Portfolio exposure — this week</h2>
           </div>
           <p className="text-[12.5px] text-ink-secondary mt-1 max-w-2xl">
-            Across every live campaign in the book, not this one. Approving campaigns one at a time cannot see this, which
-            is the reason the panel exists. Week of {p.week}.
+            Every live campaign in the book · week of {p.week}
+            <InfoTip title="Why this panel exists" className="ml-1">
+              No merchant sees this panel. Approving campaigns one at a time can't see cumulative exposure; this is where it shows.
+            </InfoTip>
           </p>
         </div>
         <div className="text-right">
@@ -63,14 +65,11 @@ export default function ExposurePanel() {
         </div>
         <p className="mt-2.5 font-num text-[13px] text-ink tabular-nums">
           {num(v.contacted)} contacted of a {num(v.ceiling)} weekly ceiling
-          <Provisional title={p.ceiling_basis} />
+          {/* One ⓘ for the ceiling: the provisional tag's own, carrying the arithmetic. */}
+          <Provisional
+            title={`Ceiling = ${pctOf((p.ceiling_share_of_consented_base ?? 0) * 100, 2)} of the ${num(p.consented_base)} cardholders with offers on. The share is fixed; the headcount follows the base on screen.`}
+          />
           <span className="text-ink-secondary"> — {num(Math.max(0, v.ceiling_headroom))} left{v.ceiling_headroom < 0 ? ` (${num(-v.ceiling_headroom)} over)` : ""}.</span>
-        </p>
-        <p className="text-[12px] text-ink-secondary mt-1">
-          The ceiling is <span className="font-num font-semibold text-ink">{pctOf((p.ceiling_share_of_consented_base ?? 0) * 100, 2)}</span> of the{" "}
-          <span className="font-num font-semibold text-ink">{num(p.consented_base)}</span> cardholders on this panel who have offers turned on
-          {" "}= <span className="font-num font-semibold text-ink">{num(v.ceiling)}</span>. The share is the constant; the headcount is computed against
-          whichever base is on screen, so it reads in the same units as the week's contacts.
         </p>
         <BasisNote>{p.note} {p.ceiling_basis}</BasisNote>
       </div>
@@ -79,18 +78,18 @@ export default function ExposurePanel() {
         <Figure
           label="Share of the consented base reached"
           value={pctOf(p.share_of_consented_base_reached_pct, 2)}
-          sub={`${num(p.seeded_contacted_this_week)} of ${num(p.consented_base)} consented cardholders, as the pipeline counted the week`}
+          sub={`${num(p.seeded_contacted_this_week)} of ${num(p.consented_base)} consented cardholders`}
         />
         <Figure
           label="Eligible for two or more campaigns at once"
           value={num(p.concurrent_2plus)}
-          sub="Concentration is the risk the per-campaign gate cannot see: each of those campaigns passed its own review."
+          info="Concentration is the risk the per-campaign gate cannot see: each of those campaigns passed its own review."
           tone="warning"
         />
         <Figure
           label="Campaigns live in the book"
           value={num(Object.values(state.campaigns).filter((c) => c.status === "active").length)}
-          sub={`Pipeline counted ${num(p.campaigns_live)} at the start of the week; this figure moves as campaigns go live here.`}
+          sub={`${num(p.campaigns_live)} at the start of the week`}
         />
       </div>
       <BasisNote>{p.concurrent_basis}</BasisNote>
@@ -121,13 +120,16 @@ export default function ExposurePanel() {
   );
 }
 
-function Figure({ label, value, sub, tone = "default" }) {
+function Figure({ label, value, sub, info, tone = "default" }) {
   const toneClass = { default: "text-ink", warning: "text-warning" }[tone];
   return (
     <div className="rounded-xl border border-border bg-white px-4 py-3">
       <div className={`font-num text-[24px] font-bold leading-none tabular-nums ${toneClass}`}>{value}</div>
-      <div className="text-[12px] font-medium text-ink mt-1.5">{label}</div>
-      <div className="text-[11.5px] text-ink-light mt-1 leading-snug">{sub}</div>
+      <div className="text-[12px] font-medium text-ink mt-1.5">
+        {label}
+        {info && <InfoTip title={`About ${label.toLowerCase()}`} className="ml-1">{info}</InfoTip>}
+      </div>
+      {sub && <div className="text-[11.5px] text-ink-light mt-1 leading-snug">{sub}</div>}
     </div>
   );
 }
@@ -148,9 +150,11 @@ function Throttle({ view, portfolio, dispatch }) {
         {engaged && <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[10.5px] font-bold text-white">ENGAGED</span>}
       </div>
       <p className="text-[12px] text-ink-secondary leading-snug">
-        The control that binds. A send that will not fit inside it is refused whole — the allocator ranks by propensity in the
-        pipeline, but this layer holds aggregate figures only, so it will not silently pick who to drop. It tightens the ceiling
-        and can never raise it.
+        The control that binds.
+        <InfoTip title="How the throttle works" className="ml-1">
+          A send that won't fit is refused whole — this layer holds aggregates, so it never picks who to drop. It can tighten the
+          ceiling, never raise it.
+        </InfoTip>
       </p>
 
       {engaged ? (
@@ -230,8 +234,10 @@ function KillSwitch({ view, dispatch }) {
         <h3 className="text-[13.5px] font-bold text-ink">Kill switch</h3>
       </div>
       <p className="text-[12px] text-ink-secondary leading-snug">
-        Stops every send across the whole portfolio. Two steps and a typed word on purpose: this is not a button that belongs
-        beside routine actions, and nothing about it should be reachable by accident.
+        Stops every send across the whole portfolio.
+        <InfoTip title="Why two steps" className="ml-1">
+          Two steps and a typed word, on purpose — it should never be reachable by accident.
+        </InfoTip>
       </p>
       {!arming ? (
         <button

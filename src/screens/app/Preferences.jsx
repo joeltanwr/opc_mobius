@@ -1,12 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { ShieldCheck, MapPin, Bell, BellOff, ThumbsUp, ThumbsDown, Undo2 } from "lucide-react";
+import { MapPin, Bell, BellOff, ThumbsUp, ThumbsDown, Undo2 } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { useToast } from "./AppFrame";
 import { useCardholderId } from "./cardholder";
 import { pct, num } from "../../data/format";
 import PersonaCard from "../../components/PersonaCard";
+import { InfoTip } from "../../components/ui";
 
 // ---------------------------------------------------------------------------------------------
 // Screen 3 — spending profile and preferences (customer §5).
@@ -74,8 +74,10 @@ export default function Preferences() {
         <section className="rounded-2xl border border-border bg-white p-4">
           <h2 className="text-[13.5px] font-bold text-ink">What your card says about you</h2>
           <p className="text-[12px] text-ink-secondary mt-0.5 mb-3">
-            Your own spending, shown back to you. This is the only screen in the system where anyone sees it at this level of
-            detail — because it's yours.
+            Your own spending, shown back to you.
+            <InfoTip title="Why you see this" className="ml-1">
+              This is the only screen where anyone sees it at this level of detail — because it's yours.
+            </InfoTip>
           </p>
           <ul className="space-y-1.5">
             {top.map(([id, w]) => (
@@ -92,8 +94,8 @@ export default function Preferences() {
           </ul>
           <p className="text-[11.5px] text-ink-light mt-3">
             You usually spend in the {dayparts[0]?.[0]} ({pct(dayparts[0]?.[1] ?? 0, 0)} of the time), around District{" "}
-            {holder.profile.work_district ?? holder.profile.home_district} and District {holder.profile.home_district}. That is what
-            "nearby" means when we say an offer is nearby.
+            {holder.profile.work_district ?? holder.profile.home_district} and District {holder.profile.home_district}.
+            <InfoTip title="What nearby means" className="ml-1">That's what "nearby" means on an offer.</InfoTip>
           </p>
           {holder.profile.last_redemption && (
             <p className="text-[11.5px] text-ink-secondary mt-2 rounded-lg border border-border bg-canvas px-3 py-2">
@@ -144,12 +146,15 @@ export default function Preferences() {
           <Toggle
             on={holder.consent.push}
             label="Push notifications"
-            detail={`At most ${state.caps.push_per_week} a week, across every business on the platform. That is a limit we hold ourselves to, not a setting you have to find.`}
+            detail={<>
+              At most {state.caps.push_per_week} a week, across every business on the platform.
+              <InfoTip title="About the limit" className="ml-1">It's a limit we hold ourselves to, not a setting you have to find.</InfoTip>
+            </>}
             onChange={(v) => { dispatch({ type: "PUSH_PREF", cardholder_id: cardholderId, push: v }); toast(v ? "Push notifications on." : "Push off. Offers still appear in your Rewards."); }}
           />
           <p className="text-[11.5px] text-ink-light mt-2">
-            With push off, offers still arrive in your Rewards list — we just don't interrupt you. You've had{" "}
-            <span className="font-num">{num(holder.pushes_this_week)}</span> of {state.caps.push_per_week} this week.
+            You've had <span className="font-num">{num(holder.pushes_this_week)}</span> of {state.caps.push_per_week} this week.
+            <InfoTip title="With push off" className="ml-1">With push off, offers still arrive in your Rewards list; we just don't interrupt you.</InfoTip>
           </p>
         </section>
 
@@ -159,7 +164,12 @@ export default function Preferences() {
           <Toggle
             on={holder.consent.location}
             label="Match offers to where I usually am"
-            detail="On by default, deliberately: without it you'd get offers from businesses you can't walk to, which is more offers and worse ones. It uses the districts your card is already used in — never live location."
+            detail={<>
+              Uses the districts your card is used in — never live location.
+              <InfoTip title="Why it's on by default" className="ml-1">
+                On by default: without it you'd get offers from businesses you can't walk to — more offers, and worse ones.
+              </InfoTip>
+            </>}
             onChange={(v) => { dispatch({ type: "LOCATION_PREF", cardholder_id: cardholderId, location: v }); toast(v ? "Offers will be matched to your area." : "Location matching off. It applies to new offers, not the ones you're holding."); }}
           />
         </section>
@@ -170,9 +180,10 @@ export default function Preferences() {
           {holder.consent.offers ? (
             <>
               <p className="text-[12.5px] text-ink-secondary leading-snug">
-                You're in. Turning this off takes you out of every future segment, empties your rewards list and withdraws the{" "}
-                <span className="font-num">{num(held)}</span> reward{held === 1 ? "" : "s"} you're holding. Nothing is shared with any
-                business either way.
+                You're in. Turning off withdraws the <span className="font-num">{num(held)}</span> reward{held === 1 ? "" : "s"} you're holding.
+                <InfoTip title="What turning off does" className="ml-1">
+                  It also takes you out of every future segment. Nothing is shared with any business either way.
+                </InfoTip>
               </p>
               <button
                 onClick={() => { dispatch({ type: "OFFERS_OFF", cardholder_id: cardholderId }); toast("Offers are off. Your rewards list is empty."); }}
@@ -200,15 +211,13 @@ export default function Preferences() {
         {/* ---------------------------------------------------------- who this is */}
         {persona && (
           <section>
-            <p className="text-[11.5px] font-semibold text-ink-secondary mb-1.5">Who is holding this phone</p>
-            <PersonaCard persona={persona} emphasis />
-            <p className="flex items-start gap-2 text-[11px] text-ink-light leading-snug mt-2 px-1">
-              <ShieldCheck size={12} className="shrink-0 mt-0.5" />
-              <span>
-                Her name, age and pattern are on her own screen because they are hers. Every business in this system sees a cohort
-                and a count — never this card. <Link to="/rm" className="underline">The bank's own screens</Link> don't show it either.
-              </span>
+            <p className="text-[11.5px] font-semibold text-ink-secondary mb-1.5">
+              Who is holding this phone
+              <InfoTip title="Who sees this card" className="ml-1">
+                Her details are on her own screen because they're hers. Businesses see a cohort and a count; the bank's screens don't show this card either.
+              </InfoTip>
             </p>
+            <PersonaCard persona={persona} emphasis />
           </section>
         )}
       </div>

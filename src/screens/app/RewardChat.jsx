@@ -6,6 +6,7 @@ import { RewardFeedCard } from "../../components/RewardCard";
 import { INTENTS, FALLBACK, matchIntent, searchPull } from "./chatbot";
 import { enrich } from "./offers";
 import { useTrace } from "../../components/SystemTrace";
+import { InfoTip } from "../../components/ui";
 import { formatDays, formatHours } from "../../components/RewardCard";
 
 // The programme's own window, in the words the feed card uses for it.
@@ -84,9 +85,13 @@ export default function RewardChat({ cardholderId, holder }) {
             <Sparkles size={13} className="text-brand" />
           </span>
           <h2 className="text-[13.5px] font-bold text-ink">Ask for a reward</h2>
+          <InfoTip title="How the assistant works" align="right" width="w-64">
+            Scripted for this prototype: it understands the asks above, not anything typed. Results are real — live programmes matched
+            on category and your area.
+          </InfoTip>
         </div>
         <p className="text-[12px] text-ink-secondary mt-1 leading-snug">
-          Tell me what you're after and I'll check what's running near you — whether or not it was sent to you.
+          Tell me what you're after — I'll check what's near you, sent or not.
         </p>
       </div>
 
@@ -166,10 +171,6 @@ export default function RewardChat({ cardholderId, holder }) {
             <Send size={14} />
           </button>
         </form>
-        <p className="text-[10.5px] text-ink-light mt-2 leading-snug">
-          Scripted assistant for this prototype — it understands the few asks above rather than anything typed. What it finds is
-          real: every result is a live programme in the demo dataset, matched on category and your area.
-        </p>
       </div>
     </section>
   );

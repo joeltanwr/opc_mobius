@@ -111,11 +111,21 @@ export function SuppressedCard({ reason, label }) {
 // The one sentence about the whole dataset's scale, read from the pipeline manifest. Both chromes
 // — the merchant/RM shell and the cardholder app's prototype bar — render this component, so the
 // sentence has one source and one rendering however many interfaces the build grows.
+//
+// The first sentence (the two headcounts) stays on screen; the rest — how caps are converted
+// between the two scales — sits behind the ⓘ. Split here rather than in the pipeline, so the
+// shipped string and validate.py's check on it are unchanged.
 export function ScaleDisclosure({ className = "" }) {
   const { data } = useDemoData();
   const line = data?.constants?.scale_disclosure;
   if (!line) return null;
-  return <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>{line}</p>;
+  const [lead, ...rest] = line.split(/(?<=\.)\s+(?=[A-Z])/);
+  return (
+    <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>
+      {lead}
+      {rest.length > 0 && <InfoTip up title="About the sample" className="ml-1">{rest.join(" ")}</InfoTip>}
+    </p>
+  );
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -144,7 +154,8 @@ const INFO_TONES = {
   },
 };
 
-export function InfoTip({ children, label = null, title = "What this means", tone = "light", align = "left", width = "w-72", className = "" }) {
+// `up` opens the panel above the icon, for an ⓘ that sits at the bottom of the page (the footer).
+export function InfoTip({ children, label = null, title = "What this means", tone = "light", align = "left", width = "w-72", up = false, className = "" }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef(null);
   const t = INFO_TONES[tone] ?? INFO_TONES.light;
@@ -180,7 +191,7 @@ export function InfoTip({ children, label = null, title = "What this means", ton
       {open && (
         <span
           role="note"
-          className={`absolute top-full mt-1.5 z-50 block ${align === "right" ? "right-0" : "left-0"} ${width} max-w-[min(90vw,40rem)] ${t.panel}`}
+          className={`absolute ${up ? "bottom-full mb-1.5" : "top-full mt-1.5"} z-50 block ${align === "right" ? "right-0" : "left-0"} ${width} max-w-[min(90vw,40rem)] ${t.panel}`}
         >
           {children}
         </span>

@@ -6,6 +6,7 @@ import { useMobiusState } from "../../state/StateProvider";
 import { useToast } from "./AppFrame";
 import { useCardholderId } from "./cardholder";
 import { enrich } from "./offers";
+import { InfoTip } from "../../components/ui";
 
 // ---------------------------------------------------------------------------------------------
 // Screen 1 — banking home (customer §3).
@@ -157,7 +158,7 @@ export default function BankingHome({ cardholderId: cardholderIdProp, compact = 
             <div className="flex-1">
               <h2 className="text-[13px] font-semibold text-ink">Log in to see your balances</h2>
               <p className="text-[12px] text-ink-secondary mt-0.5">
-                Your rewards are here without logging in. Balances and transactions are not.
+                Rewards work without logging in; balances don't.
               </p>
             </div>
           </div>
@@ -166,7 +167,7 @@ export default function BankingHome({ cardholderId: cardholderIdProp, compact = 
             Log in
           </button>
           <p className="text-[11px] text-ink-light mt-2">
-            No password is collected anywhere in this prototype. There is no field to type one into.
+            <InfoTip title="About logging in">No password is collected anywhere in this prototype. There is no field to type one into.</InfoTip>
           </p>
         </section>
       </div>

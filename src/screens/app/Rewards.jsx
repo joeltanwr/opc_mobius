@@ -7,6 +7,7 @@ import { RewardFeedCard, REWARD_TYPE_LABELS } from "../../components/RewardCard"
 import { useCardholderId, REDEEM_WINDOWS, EXPIRY_BUCKETS, FEED_REWARD_TYPES, SORTS } from "./cardholder";
 import { enrich, sortOffers, matchesFilters, EMPTY_FILTERS, countFilters } from "./offers";
 import RewardChat from "./RewardChat";
+import { InfoTip } from "../../components/ui";
 
 // ---------------------------------------------------------------------------------------------
 // Screen 2 — Rewards (customer §4).
@@ -95,11 +96,13 @@ export default function Rewards() {
           <div className="flex items-start gap-2">
             <ShieldCheck size={15} className="text-ink-light shrink-0 mt-0.5" />
             <div className="text-[12.5px] text-ink-secondary leading-snug space-y-1.5">
-              <p>These come from how you use your own OCBC card — the kinds of places you buy from, and roughly when.</p>
-              <p>You turned offers on, and you can turn them off at any time.</p>
+              {/* Customer §4.2's three facts — own card activity, opted in, name never shared — stay on
+                  screen as one line; the detail behind each is the ⓘ. */}
               <p>
-                The businesses never get your name, your number or your card. OCBC sends you the offer; they only ever see that
-                somebody redeemed one.
+                From your own card use. You opted in. Businesses never see your name.
+                <InfoTip title="Why these offers" align="right" width="w-64" className="ml-1">
+                  Offers match the kinds of places you buy from, and roughly when. OCBC sends the offer; businesses only see that someone redeemed.
+                </InfoTip>
               </p>
               <Link to="/app/profile" className="inline-block font-semibold text-brand hover:underline">See and change what you're shown →</Link>
             </div>

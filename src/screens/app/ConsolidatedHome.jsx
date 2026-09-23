@@ -6,7 +6,7 @@ import { cohortTagsFor } from "../../state/store.js";
 import { heldOffer, verdictFor } from "../../state/trace.js";
 import { TraceChip, useTrace } from "../../components/SystemTrace";
 import { num } from "../../data/format";
-import { Badge } from "../../components/ui";
+import { Badge, InfoTip } from "../../components/ui";
 import BankingHome from "./BankingHome";
 
 // ---------------------------------------------------------------------------------------------
@@ -74,9 +74,10 @@ export default function ConsolidatedHome() {
             <h2 className="text-[18px] font-bold text-ink mt-2">Four cardholders, one campaign</h2>
             <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
               {campaign
-                ? <>The same home screen, for four different people, reading the same state. Fire the allocator for{" "}
-                   <span className="font-semibold text-ink">{campaign.merchant_name}</span> from the RM view and watch which of
-                   them hears about it. Nobody here is picked by this screen: it shows what the allocator decided.</>
+                ? <>Fire the allocator from the RM view; watch who hears about it.
+                   <InfoTip title="What this screen is" className="ml-1">
+                     Four real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
+                   </InfoTip></>
                 : "The demo campaign is not loaded, so there is nothing to allocate."}
             </p>
           </div>
@@ -88,10 +89,6 @@ export default function ConsolidatedHome() {
             <div className="text-[11px] text-ink-light mt-1">{num(expected)} in the target cohort</div>
           </div>
         </div>
-        <p className="text-[11.5px] text-ink-light mt-3">
-          A presentation device, not part of the cardholder product. Each tile is the real home screen; only this page's
-          framing around them is made for the pitch.
-        </p>
       </div>
 
       {/* ------------------------------------------------------------------ the four screens */}

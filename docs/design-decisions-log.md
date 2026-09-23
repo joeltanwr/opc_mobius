@@ -71,6 +71,13 @@ Rounds 1–6 were not written into this file. Their standing decisions (disconne
 - **Kept as-is:** the Overview tagline and subtext; the not-eligible message (shortened only if longer than one line); chatbot replies.
 - **Scope:** screens users can currently reach. Disconnected screens and `BasisNote` strings (already hidden by `SHOW_BASIS_NOTES`) stay untouched, so their flags still restore them intact. The System Trace is exempt; it has its own budget.
 - **Process:** nothing changes until a per-screen before/after table (changed / moved to ⓘ / deleted) has been approved.
+- **Applied (approved by Joel, 2026-09-23):** about 100 strings across 13 screens, per the approved table. Customer Profile's subtitle reads "Who your customers are, where the gap is, and the reward that fits" (Joel's wording). The recommendations on the open items were accepted:
+  - the footer's sample-units line is split, first sentence visible and the rest behind an ⓘ;
+  - the merchant's "Incremental sales / transactions" labels are renamed "Sales added / Added transactions";
+  - "Demo · rewind" on Customer Profile goes behind `DEMO_LAYER`;
+  - the footer privacy dialog and the Overview dataset line are kept.
+- **Pipeline text stays unchanged in `public/data`.** Where the approved short line replaced pipeline text (the Withheld notes, the age-band rounding note), the component builds it from the figures already on screen, with the floor read from the manifest.
+- **Not in the table, so not changed:** the kill-switch "halted" paragraph and the RM "Provisional" pill's other uses. Apply the same rules to them in a later pass if wanted.
 
 ## Still open / not yet decided
 - Exact numeric thresholds (portfolio-level frequency cap in `portfolio-allocator`, push cap, auto-approve reach/cost threshold) — need a stated basis before going in the deck, not just round numbers.

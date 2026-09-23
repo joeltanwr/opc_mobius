@@ -1,6 +1,5 @@
 import React from "react";
-import { HelpCircle } from "lucide-react";
-import { Badge } from "../../components/ui";
+import { Badge, InfoTip } from "../../components/ui";
 import { num, sgd } from "../../data/format";
 import { CONSTANTS } from "../../data/constants";
 
@@ -58,12 +57,13 @@ export function StatusPill({ campaign, statusKey, display, note }) {
 }
 
 // A figure the pipeline shipped with provisional: true. The pill is small and grey on purpose —
-// a threshold nobody has calibrated should be legible as such without shouting.
+// a threshold nobody has calibrated should be legible as such without shouting. Its basis sits
+// behind the app's one ⓘ rather than a hover title, which a projector cannot show.
 export function Provisional({ title }) {
   return (
-    <span title={title} className="ml-1 inline-flex items-center gap-0.5 rounded bg-canvas border border-border px-1 py-0.5 text-[10.5px] font-medium text-ink-secondary align-middle">
-      provisional
-      <HelpCircle size={9} className="text-ink-light" />
+    <span className="ml-1 inline-flex items-center gap-0.5 align-middle">
+      <span className="rounded bg-canvas border border-border px-1 py-0.5 text-[10.5px] font-medium text-ink-secondary">provisional</span>
+      {title && <InfoTip title="Why provisional">{title}</InfoTip>}
     </span>
   );
 }
