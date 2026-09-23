@@ -45,6 +45,7 @@ CONSTANTS = {
     "DORMANT_PERCENTILE": C(10, "retailer-transaction-data-analysis Step 1 — distribution cutoff"),
     "MIN_SEGMENT_SIZE": C(250, "Brief §2 — privacy floor for every cell shown to a merchant or RM"),
     "REACH_ROUNDING": C(50, "Brief §2 — reach rounded to nearest 50; with the floor this closes sequential differencing"),
+    "MIN_BREAKDOWN_SIZE": C(50, "Round 8 (Joel) — display floor for two breakdowns of a merchant's own customers only: RFM segments and age bands on Customer Profile. At 250 most cells read 'below threshold'. Everything targetable keeps MIN_SEGMENT_SIZE (reach, narrowing, outlets, retention pools, redeemer profiles), so the floor-plus-rounding defence against differencing is unchanged; rounding to 50 still applies here, and a band under 50 is still withheld."),
     "NARROW_MAX_REFINEMENTS": C(5, "Merchant prompt §7.1 — narrowing cap per campaign; applied narrowings and floor refusals both count, a refusal is still a query"),
     "NARROW_PROTECTED_TERMS": C({"nationality": ["nationality", "national", "foreigner", "foreigners", "expat", "expats", "citizen", "citizens", "pr", "singaporean", "singaporeans", "malaysian", "chinese national", "indian national", "filipino", "indonesian"],
                                  "race": ["race", "ethnic", "ethnicity", "chinese", "malay", "indian", "eurasian", "caucasian", "asian"],
@@ -101,6 +102,7 @@ GATE_MIN_OCBC_TXNS = CONSTANTS["GATE_MIN_OCBC_TXNS"].value
 DORMANT_TXN_PER_MONTH = CONSTANTS["DORMANT_TXN_PER_MONTH"].value
 DORMANT_PERCENTILE = CONSTANTS["DORMANT_PERCENTILE"].value
 MIN_SEGMENT_SIZE = CONSTANTS["MIN_SEGMENT_SIZE"].value
+MIN_BREAKDOWN_SIZE = CONSTANTS["MIN_BREAKDOWN_SIZE"].value
 REACH_ROUNDING = CONSTANTS["REACH_ROUNDING"].value
 NARROW_MAX_REFINEMENTS = CONSTANTS["NARROW_MAX_REFINEMENTS"].value
 NARROW_PROTECTED_TERMS = CONSTANTS["NARROW_PROTECTED_TERMS"].value
@@ -248,10 +250,14 @@ def round_reach(n):
     return int(round(n / REACH_ROUNDING) * REACH_ROUNDING)
 
 
-def cell(n, label=None):
-    """A privacy-floored count cell: {count: rounded} or {suppressed: true} with no count."""
+def cell(n, label=None, floor=None):
+    """A privacy-floored count cell: {count: rounded} or {suppressed: true} with no count.
+
+    `floor` defaults to MIN_SEGMENT_SIZE. Only the Customer Profile breakdowns of a merchant's own
+    customers (RFM segments, age bands) pass MIN_BREAKDOWN_SIZE — see its basis.
+    """
     n = int(n)
-    if n < MIN_SEGMENT_SIZE:
+    if n < (MIN_SEGMENT_SIZE if floor is None else floor):
         out = {"suppressed": True, "reason": "below minimum segment size"}
     else:
         out = {"suppressed": False, "count": round_reach(n)}
@@ -361,6 +367,7 @@ SCALE_POLICY = dict(
     per_cardholder_rates=["PUSH_CAP_PER_WEEK", "FREQ_CAP_OFFERS", "NARROW_MAX_REFINEMENTS", "DORMANT_TXN_PER_MONTH"],
     absolute_by_design={
         "MIN_SEGMENT_SIZE": "A privacy floor in cardholders. As a share it would shrink with the sample and stop closing the differencing attack.",
+        "MIN_BREAKDOWN_SIZE": "A display floor in cardholders for the merchant's own-customer breakdowns. Absolute for the same reason as MIN_SEGMENT_SIZE: a share would shrink with the sample.",
         "REACH_ROUNDING": "Rounding granularity in cardholders, paired with the floor for the same reason.",
         "GATE_MIN_OCBC_TXNS": "Evidence threshold on the merchant's own transactions, not a cap on the cardholder base.",
         "LIFT_MIN_SUPPORT": "Evidence threshold on how many cardholders a merchant pair shares, not a cap on reach.",

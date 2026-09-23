@@ -150,9 +150,14 @@ def main(rerun=True):
             if "suppressed" in obj and isinstance(obj["suppressed"], bool):
                 if obj["suppressed"] and "count" in obj:
                     floor_bad.append((fn, path, "suppressed but carries a count"))
-                if not obj["suppressed"] and (obj.get("count") is None or obj["count"] < cfg.MIN_SEGMENT_SIZE or obj["count"] % cfg.REACH_ROUNDING):
+                # Round 8: Customer Profile's RFM segments and age bands carry the lower breakdown
+                # floor (MIN_BREAKDOWN_SIZE); every other cell, targetable ones above all, keeps 250.
+                breakdown = fn == "merchant_profiles.json" and (".age_bands." in path or ".rfm.segments." in path)
+                floor = cfg.MIN_BREAKDOWN_SIZE if breakdown else cfg.MIN_SEGMENT_SIZE
+                if not obj["suppressed"] and (obj.get("count") is None or obj["count"] < floor or obj["count"] % cfg.REACH_ROUNDING):
                     floor_bad.append((fn, path, obj.get("count")))
-    check("no shipped cell below the 250 floor unless suppressed; every shipped count rounded to 50", not floor_bad, str(floor_bad[:5]))
+    check("no shipped cell below its floor unless suppressed (250; 50 for Customer Profile's RFM and age bands); every shipped count rounded to 50",
+          not floor_bad, str(floor_bad[:5]))
 
     total_bytes = sum(os.path.getsize(os.path.join(PUB, f)) for f in os.listdir(PUB) if f.endswith(".json"))
     check("public/data < 600 KB", total_bytes < 600 * 1024, f"{total_bytes / 1024:.1f} KB")

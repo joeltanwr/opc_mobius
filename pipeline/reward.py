@@ -6,6 +6,7 @@ six ranked reward types with RFM targets. Writes reward_recommendations.json (de
 from config import (ELIG_MIN_BALANCE_SGD, ELIG_MAX_SCORE_BAND, REWARD_TYPES, REWARD_RANKINGS, ACQUISITION_RANKINGS,
                     REWARD_TARGET_SEGMENTS, REWARD_REASONS, INCREMENTAL_SHARE, CONSTANTS, LOGIN_MERCHANTS, MIN_SEGMENT_SIZE)
 from deposits import eligibility_inputs
+from config import cell
 
 RANK_POINTS = [60, 50, 40, 30, 20, 10]
 
@@ -38,13 +39,22 @@ def _gap_type(gap, gate_passed):
     return "none", "No daypart gap detected. Ranking shown for growth beyond the existing base (acquisition), flagged as such."
 
 
-def _segment_cell(profile, name):
+def _segment_cell(profile, name, rfm_frame=None):
+    """An RFM segment as a *target pool*: floored at MIN_SEGMENT_SIZE, the targeting floor.
+
+    Customer Profile's RFM chart ships under the lower MIN_BREAKDOWN_SIZE (round 8), which is a
+    display floor for a breakdown of the merchant's own customers. A segment offered as somebody to
+    target is a different thing and keeps 250 — counted from the per-customer frame, never from the
+    display cell, so the floor bonus in the score cannot drift with the chart.
+    """
     if not profile.get("rfm"):
         return {"suppressed": True, "reason": "no RFM available (gate not passed)"}
+    if rfm_frame is not None:
+        return cell(int((rfm_frame["segment"] == name).sum()))
     return profile["rfm"]["segments"].get(name, {"suppressed": True, "reason": "not scored"})
 
 
-def recommend(raw, mid, profile, gap, segments):
+def recommend(raw, mid, profile, gap, segments, rfm_frame=None):
     elig = eligibility(raw, mid)
     out = dict(merchant_id=mid, name=profile["name"], eligibility=elig)
     if not elig["passed"]:
@@ -62,7 +72,7 @@ def recommend(raw, mid, profile, gap, segments):
     ranked = []
     for i, t in enumerate(ranking):
         targets = REWARD_TARGET_SEGMENTS[t]
-        target_cells = [dict(segment=n, reach=_segment_cell(profile, n)) for n in targets]
+        target_cells = [dict(segment=n, reach=_segment_cell(profile, n, rfm_frame)) for n in targets]
         # For an acquisition-type mechanic the honest pool is non-customers, whose reach is a count only.
         acquisition_pool = t in ("discount", "voucher", "bundle_1for1") and gtype in ("off_peak", "new_outlet", "none")
         pool_key = "non_customers" if acquisition_pool else (targets[0] if targets else "Champions")
@@ -87,13 +97,13 @@ def recommend(raw, mid, profile, gap, segments):
     return out
 
 
-def build_recommendations(raw, profiles, gaps_by_merchant, segments):
+def build_recommendations(raw, profiles, gaps_by_merchant, segments, rfm_by_merchant=None):
     from common import key_merchants
     keys = set(key_merchants(raw))
     out = {}
     for mid in profiles:
         if mid in keys:
-            out[mid] = recommend(raw, mid, profiles[mid], gaps_by_merchant.get(mid), segments)
+            out[mid] = recommend(raw, mid, profiles[mid], gaps_by_merchant.get(mid), segments, (rfm_by_merchant or {}).get(mid))
         else:
             out[mid] = dict(merchant_id=mid, name=profiles[mid]["name"], eligibility=eligibility(raw, mid), ranked=None, acquisition=None, light=True)
     return out

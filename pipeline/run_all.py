@@ -50,7 +50,7 @@ def main():
     affinity, segments, cohorts = build_affinity_and_segments(raw, tags, gaps_by_merchant, profiles)
 
     print("4. reward.py — eligibility + ranked reward types")
-    recommendations = build_recommendations(raw, profiles, gaps_by_merchant, segments)
+    recommendations = build_recommendations(raw, profiles, gaps_by_merchant, segments, rfm_by_merchant)
 
     print("5. priority.py — RM caseload score")
     priority = build_priority(raw)

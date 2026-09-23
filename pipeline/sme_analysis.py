@@ -17,7 +17,8 @@ import pandas as pd
 from config import (DERIVED_DIR, DEMO_DATE, PERIOD_START, LOGIN_MERCHANTS, HERO_ACQUIRING_MERCHANTS, GATE_MIN_OCBC_TXNS,
                     GAP_SLOT_RATIO, GAP_MIN_WEEKS, GAP_HIGH_CONF_WEEKS, GAP_TRAILING_WEEKS, GAP_COLD_START_WEEKS,
                     GAP_PEER_RATIO, GAP_MIN_SLOT_BASELINE, GAP_MIN_VOLUME_12W, RECENT_REPEATER_DAYS, TRAILING_MONTHS, DAYPARTS, DAYPART_HOURS, WEEKDAY_NAMES,
-                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, composition_shares, observation, round_reach)
+                    AGE_BANDS, RFM_SEGMENTS, DISTRICT_ADJACENCY, cell, composition_shares, observation, round_reach,
+                    MIN_BREAKDOWN_SIZE, REACH_ROUNDING)
 from common import daypart_of_hour, pct, key_merchants
 
 # Trailing 12 complete weeks (Mon–Sun) before the demo clock.
@@ -383,8 +384,9 @@ def analyse_merchant(raw, mid, tags):
     # Age bands — OCBC-resolvable customers only, floor + rounding.
     resolvable = src[src["card_id"].notna()]["card_id"].unique()
     ages = raw["cardholder_by_id"].loc[resolvable, "age_band"].value_counts() if len(resolvable) else pd.Series(dtype=int)
-    profile["age_bands"] = {b: cell(int(ages.get(b, 0))) for b in AGE_BANDS}
-    profile["age_bands_basis"] = "OCBC cardholders who transacted here; bands under 250 suppressed, others rounded to 50"
+    profile["age_bands"] = {b: cell(int(ages.get(b, 0)), floor=MIN_BREAKDOWN_SIZE) for b in AGE_BANDS}
+    profile["age_bands_basis"] = (f"OCBC cardholders who transacted here; bands under {MIN_BREAKDOWN_SIZE} suppressed, "
+                                  f"others rounded to {REACH_ROUNDING}")
 
     # Card mix — only meaningful where OCBC acquires, and a composition breakdown either way, so
     # the floor lands on the population behind the percentages rather than on the percentages.
@@ -457,7 +459,7 @@ def analyse_merchant(raw, mid, tags):
             used = src.dropna(subset=["outlet_id"]).groupby("cust")["outlet_id"].agg(lambda s: sorted(set(s)))
             rfm["outlets"] = [list(used.get(cust, [])) for cust in rfm.index]
         counts = rfm["segment"].value_counts()
-        seg_cells = {name: cell(int(counts.get(name, 0))) for name, _, _ in RFM_SEGMENTS}
+        seg_cells = {name: cell(int(counts.get(name, 0)), floor=MIN_BREAKDOWN_SIZE) for name, _, _ in RFM_SEGMENTS}
         lapsed = int(sum(counts.get(s, 0) for s in ("At Risk", "Can't Lose Them", "Hibernating", "Lost")))
         profile["rfm"] = dict(segments=seg_cells, lapsed_total=cell(lapsed),
                               lapsed_definition="At Risk + Can't Lose Them + Hibernating + Lost",

@@ -40,6 +40,8 @@ Anything in `docs/archive/` is superseded. Don't build from it.
 - **Data period:** 2025-10-01 to 2026-09-30.
 - **Segment floor 250**, reach rounded to the nearest 50, refused narrowings never report their
   count. Floor and rounding together close the differencing attack; either alone does not.
+  Exception (round 8): Customer Profile's RFM and age-band breakdowns display at 50
+  (`MIN_BREAKDOWN_SIZE`). Anything targetable keeps 250.
 - **Cardholder base 800,000.** Never ">1 million".
 - **Acquisition targeting uses merchant-pair lift; retention uses RFM.**
 - Primary merchant is **Soujourner Coffee**; the logged-in cardholder is **Bernice**; the

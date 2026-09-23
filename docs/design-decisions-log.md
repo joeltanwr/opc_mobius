@@ -97,6 +97,10 @@ Round 7's trace said *what* each stage decided in one line. It did not say *why*
 - **Pull detail:**
   - The strip becomes Tagging (the cardholder's home, work and catchment districts) → Intent Agent (the phrase matched and the categories it maps to, marked "not a language model") → Search Agent (live → in dates → in category → near you → open now) → Delivery (every result, its nearby outlets and open-now, plus the ranking rule).
   - Lift, Reward and Allocation are shown as skipped.
+- **Breakdown floor 50 (decided by Joel):** Customer Profile's RFM segments and age bands now display at a floor of 50 (`MIN_BREAKDOWN_SIZE`, `pipeline/config.py`), still rounded to 50. At 250, most of those cells read "below threshold".
+  - **Scope:** these are breakdowns of the merchant's own customers. Everything a merchant could *target* or difference keeps the 250 floor: segment reach, narrowing, per-outlet counts, retention pools, the reward cards' target segments, and redeemer profiles.
+  - **Recommendation unchanged:** `reward.py` floors its target pools at 250 from the per-customer RFM frame, never from the display cell, so no reward score or ranking moved (`reward_recommendations.json` is byte-identical).
+  - **Never-cut item holds:** the suppressed demographic band still renders. Soujourner has three empty bands, and Tanjong Kopi's 18–24, 55–64 and 65+ are under 50.
 - **Consolidated chip #4 (Charles)** now points to the Lift Agent. The price-band filter that excluded him runs in `lift.py`, and round 7 had no Lift stage.
 
 ## Still open / not yet decided
