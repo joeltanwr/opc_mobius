@@ -45,7 +45,7 @@ Rounds 1–6 were not written into this file. Their standing decisions (disconne
 
 ### System Trace (demo layer)
 - **What:** a drawer showing the recommender's stages in pipeline order: Customer Tagging → SME Analysis → Eligibility Gate → Reward Recommender → Allocator [Consent → Freq Cap] → Delivery [Push | Pull]. It also has one fixed control node, "RM review — prod queue · bypassed in demo". That node makes the removed RM approval step visible on screen instead of leaving it for the talk track.
-- **Where:** RM view and both cardholder modes (Consolidated, Individual). **Never the merchant view.** Dark, monospace, badged "DEMO LAYER · simulated trace", so nobody mistakes it for OCBC product UI. Expanded by default on screens ≥1024px. It takes width from the page rather than covering it.
+- **Where:** RM view and both cardholder modes (Consolidated, Individual). **Never the merchant view.** *(Reversed in round 8: merchant and cardholder views, not RM.)* Dark, monospace, badged "DEMO LAYER · simulated trace", so nobody mistakes it for OCBC product UI. Expanded by default on screens ≥1024px. It takes width from the page rather than covering it.
 - **Toggle:** sits immediately left of the persona switcher. Reset stays in the footer, where it is in all three views; moving it into two headers would break the "same control, same place" rule.
 - **One flag:** `DEMO_LAYER` in `constants.js` gates the trace, the Consolidated view and the reset buttons together. It is on by default, and nothing behind it is deleted.
 - **Word budget:** one line of output per stage, numbers over sentences. Explanations sit behind an ⓘ, at most two sentences.
@@ -79,8 +79,32 @@ Rounds 1–6 were not written into this file. Their standing decisions (disconne
 - **Pipeline text stays unchanged in `public/data`.** Where the approved short line replaced pipeline text (the Withheld notes, the age-band rounding note), the component builds it from the figures already on screen, with the floor read from the manifest.
 - **Not in the table, so not changed:** the kill-switch "halted" paragraph and the RM "Provisional" pill's other uses. Apply the same rules to them in a later pass if wanted.
 
+## Round 8 — the System Trace explains the recommender (2026-09-23)
+Round 7's trace said *what* each stage decided in one line. It did not say *why*, and it did not move when the merchant clicked anything. This round makes it explain the mechanism.
+
+- **Merchant view gets the trace; the RM view loses it** (decided by Joel). It is still demo layer only; a real merchant never sees it. The RM's screens recommend nothing: the allocator is rules, and its figures are already in the push dialog. A per-view flag, `TRACE_VIEWS` in `constants.js`, switches it; nothing is deleted.
+- **Each stage is named as an agent** (Tagging, SME Analysis, Eligibility, Lift, Reward, Allocation, Delivery; for pull, Intent and Search). Each shows the module it runs (`lift.py`, `reward.py` …), the skill it implements, and a visible tag:
+  - "rules · precomputed" for pipeline modules, which ran when `public/data` was built;
+  - "scripted · live" for the chatbot matcher.
+  "Agent" is the demo's word. The tag keeps the answer to "is that an LLM?" true on screen. Nothing in the app calls a model.
+- **Opened, a stage shows its figures and its rule.** Every figure is still read from state or `public/data`; none is typed in.
+  - **Lift Agent:** names the lift source (Brew & Co. — decided by Joel, round 7's anonymity dropped for the demo layer). Shows P(you | them) 51.5% = 773 of 1,502, P(you) 17.3%, lift 2.98×, the runners-up, and the filter chain 1,502 → −773 already yours → −87 price band → −104 daypart → 538 → 550 after rounding.
+  - **Reward Agent:** shows the full score table, incremental share included (decided by Joel, for the demo layer only). The order comes from the skill's table for the gap type; score = rank points + round(30 × incremental share) + 10 if the pool clears the floor. The formula sits in `constants.js REWARD_SCORE`, and `selftest.mjs` rebuilds every shipped score for all 69 merchants from it.
+  - **Reward Agent mismatch:** flags when the chosen reward is ranked for one kind of customer and the selected pool is the other. Example: Cashback is ranked for returning customers but aimed at lookalikes.
+- **The trace follows clicks.**
+  - Customer Profile's account switcher: Ah Huat stops at the failing gate, Boba Lane shows the category-catchment fallback.
+  - Every Reward Configuration choice opens and flashes the stage that choice touched. Reward type opens the Reward Agent; pools and outlets open the Lift Agent; the window opens the SME Analysis Agent (inside or outside the trough); the reach cap opens the Allocation Agent. It reads the last entry in the change log the page already keeps.
+- **Pull detail:**
+  - The strip becomes Tagging (the cardholder's home, work and catchment districts) → Intent Agent (the phrase matched and the categories it maps to, marked "not a language model") → Search Agent (live → in dates → in category → near you → open now) → Delivery (every result, its nearby outlets and open-now, plus the ranking rule).
+  - Lift, Reward and Allocation are shown as skipped.
+- **Breakdown floor 50 (decided by Joel):** Customer Profile's RFM segments and age bands now display at a floor of 50 (`MIN_BREAKDOWN_SIZE`, `pipeline/config.py`), still rounded to 50. At 250, most of those cells read "below threshold".
+  - **Scope:** these are breakdowns of the merchant's own customers. Everything a merchant could *target* or difference keeps the 250 floor: segment reach, narrowing, per-outlet counts, retention pools, the reward cards' target segments, and redeemer profiles.
+  - **Recommendation unchanged:** `reward.py` floors its target pools at 250 from the per-customer RFM frame, never from the display cell, so no reward score or ranking moved (`reward_recommendations.json` is byte-identical).
+  - **Never-cut item holds:** the suppressed demographic band still renders. Soujourner has three empty bands, and Tanjong Kopi's 18–24, 55–64 and 65+ are under 50.
+- **Consolidated chip #4 (Charles)** now points to the Lift Agent. The price-band filter that excluded him runs in `lift.py`, and round 7 had no Lift stage.
+
 ## Still open / not yet decided
 - Exact numeric thresholds (portfolio-level frequency cap in `portfolio-allocator`, push cap, auto-approve reach/cost threshold) — need a stated basis before going in the deck, not just round numbers.
-- **System Trace default state.** It currently starts expanded on screens ≥1024px. Docked, it narrows every RM and cardholder screen by 400px and drops the Consolidated view to 2×2. Decide whether the live pitch and the video start with it open or collapsed.
+- **System Trace default state.** It currently starts expanded on screens ≥1024px. Docked, it narrows every merchant and cardholder screen by 400px and drops the Consolidated view to 2×2. Decide whether the live pitch and the video start with it open or collapsed.
 - **Final trace numbers once Soujourner Coffee's values are locked.** The trace reads whatever the pipeline ships, so a re-run moves the figures automatically: 538 / 423 / 396 / 400, the −43.6% gap, S$45,477 against S$30,000, and 399 sent · 1 suppressed. The talk track and video need re-checking against the locked set. The demand-gap narrative says 44% where the figure is 43.6%.
 - **Lock the chatbot demo query.** The intents are scripted (`src/screens/app/chatbot.js`). The Pull count depends on live programmes and the asking phone's districts (today, Bernice asking for coffee gets 3 near D4/D2). Fix the exact phrasing and which phone asks before recording.
