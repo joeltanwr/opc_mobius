@@ -293,12 +293,86 @@ export const QUEUED_DISPLAY = "In queue";
 // rule the RM's dialog and the reducer use. This screen has no targeting logic of its own, which
 // is the whole reason it is worth showing.
 // ----------------------------------------------------------------------------------------------
+// `chip` is the System Trace verdict label for the tile. It names the person, never the verdict:
+// the tick or cross beside it is worked out from state (state/trace.js verdictFor), so a
+// cardholder who turns offers off, or a campaign re-aimed at another pool, flips the mark without
+// anybody editing this list.
 export const CONSOLIDATED_CARDHOLDERS = [
-  { id: "edwin", caption: "In segment · existing customer" },
-  { id: "bernice", caption: "Lookalike · not yet a customer" },
-  { id: "alvin", caption: "Champion · outside this segment" },
-  { id: "charles", caption: "No match · not a customer" },
+  { id: "edwin", caption: "In segment · existing customer", chip: "In segment · existing" },
+  { id: "bernice", caption: "Lookalike · not yet a customer", chip: "Lookalike" },
+  { id: "alvin", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
+  { id: "charles", caption: "No match · not a customer", chip: "No lookalike match" },
 ];
+
+// ----------------------------------------------------------------------------------------------
+// DEMO LAYER — one switch for everything that exists for the pitch rather than for a user.
+//
+// Three things sit behind it: the consolidated cardholder view (its toggle and its route), the
+// reset control in every chrome, and the System Trace drawer in the RM and cardholder views. On
+// by default, so flipping it changes nothing today; off, the build shows only the three products
+// themselves. Nothing behind it is deleted or commented out — same convention as the EXTRA_SCREENS
+// flags above.
+// ----------------------------------------------------------------------------------------------
+export const DEMO_LAYER = true;
+
+// ----------------------------------------------------------------------------------------------
+// The System Trace — names and explanations for each stage of the recommender, and nothing else.
+//
+// No figure lives here. Every number the drawer prints is read from shared state or the loaded
+// dataset by state/trace.js at render time, so the trace cannot disagree with the screen beside
+// it. What is here is words: the stage names, the fixed control node, and the ⓘ text, each held
+// to two sentences. Where an explanation needs a number (a cap, the rounding), trace.js reads it
+// from state and appends it rather than a digit being typed into a sentence below.
+//
+// The strip runs in pipeline order. `sub` stages render inside their parent (Allocator is
+// Consent → Freq Cap; Delivery is Push | Pull).
+// ----------------------------------------------------------------------------------------------
+export const TRACE = {
+  badge: "DEMO LAYER · simulated trace",
+  title: "System Trace",
+  skipped: "segment match skipped · customer-initiated",
+  nodes: {
+    tagging: {
+      label: "Customer Tagging",
+      info: "Every active cardholder is tagged from their own card spend: category, spending frequency, local or foreign. Dormant cardholders are left out.",
+    },
+    sme: {
+      label: "SME Analysis",
+      info: "Compares each weekday slot with the merchant's own baseline to find a recurring quiet window. Also scores the merchant's existing customers into RFM segments.",
+    },
+    gate: {
+      label: "Eligibility Gate",
+      info: "Average balance must be strictly above the threshold, and the internal or external transaction score at the maximum band or better. Fail either and nothing is recommended.",
+    },
+    recommender: {
+      label: "Reward Recommender",
+      info: "Ranks all six reward types against the gap and maps the pick to a target pool. Acquisition targets lookalikes from merchant-pair lift; retention targets RFM segments.",
+    },
+    review: {
+      label: "RM review",
+      line: "prod queue · bypassed in demo",
+      info: "In production every campaign waits in an RM queue before it is allocated. The demo skips the queue so the allocator can be fired live.",
+    },
+    allocator: {
+      label: "Allocator",
+      info: "Takes the candidate pool, removes anyone who opted out, then anyone already at the frequency cap. The last figure is the reach every dashboard shows, rounded.",
+    },
+    consent: {
+      label: "Consent",
+      info: "Cardholders with offers turned off are removed before anything else is decided. Turning offers off in the app moves this count live.",
+    },
+    cap: {
+      label: "Freq Cap",
+      info: "Anyone already holding the portfolio maximum of concurrent offers is left out, whichever merchant sent them.",
+    },
+    delivery: {
+      label: "Delivery",
+      info: "Push is OCBC reaching out: a feed card plus a notification, capped per week. Pull is the cardholder asking, so segment matching is skipped and only live programmes nearby come back.",
+    },
+    push: { label: "Push" },
+    pull: { label: "Pull" },
+  },
+};
 
 // ----------------------------------------------------------------------------------------------
 // Edwin's weekly push cap, lifted for the demo.

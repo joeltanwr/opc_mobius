@@ -3,13 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
-import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles, Info } from "lucide-react";
+import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
-import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY } from "../data/constants";
+import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
-import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard } from "../components/ui";
+import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard, InfoTip } from "../components/ui";
 
 // Merchant view Tab 3 — "Target customer" (merchant prompt §6). The merchant understands its
 // customer base and is persuaded to apply.
@@ -92,7 +92,6 @@ export default function TargetCustomer() {
   return (
     <div className="max-w-container mx-auto px-6 py-10">
       <div className="flex flex-wrap items-center gap-3 mb-3">
-        <Badge tone="neutral">Tab 3 · Target customer</Badge>
         <Badge tone="info">{profile.data_source.label}</Badge>
         <AccountSwitch value={merchantId} onChange={setMerchantId} profiles={data.merchantProfiles} />
       </div>
@@ -100,7 +99,12 @@ export default function TargetCustomer() {
       <SectionTitle
         eyebrow={`Screen ${screenNum("target-customer")} · Customer profile`}
         title={`${profile.name} — ${category?.label ?? profile.category}, District ${profile.district}`}
-        subtitle="Who your customers are, where the gap is, and which reward fits it. Every figure here is an aggregate of your own transactions; no cardholder identity reaches this screen at any point."
+        subtitle={<>
+          Who your customers are, where the gap is, and the reward that fits
+          <InfoTip title="Where these figures come from" className="ml-1">
+            Every figure is an aggregate of your own transactions. No cardholder identity reaches this screen.
+          </InfoTip>
+        </>}
       />
 
       {/* The eligibility panel is deliberately not rendered. The gate still decides — it runs in
@@ -252,9 +256,11 @@ function ThinHistory({ profile, data, gap, rounding }) {
       </div>
       <p className="text-[13px] text-ink-secondary max-w-3xl">{profile.gate.message}</p>
       <p className="text-[12.5px] text-ink-secondary mt-2 max-w-3xl">
-        {num(profile.gate.ocbc_txn_count)} OCBC-card transactions against a {num(profile.gate.threshold)} threshold, over{" "}
-        {profile.data_source.history_weeks} weeks of acquiring. Rather than draw a trend line through that, the profile
-        degrades to what is actually known — the benchmark for your category.
+        {num(profile.gate.ocbc_txn_count)} OCBC-card transactions of {num(profile.gate.threshold)} needed ·{" "}
+        {profile.data_source.history_weeks} weeks of acquiring
+        <InfoTip title="Why a benchmark" className="ml-1">
+          Below the threshold, the profile shows your category's benchmark instead of a trend line.
+        </InfoTip>
       </p>
       {peer ? (
         <>
@@ -262,11 +268,13 @@ function ThinHistory({ profile, data, gap, rounding }) {
             <StatTile label="Merchants in the benchmark" value={num(peer.merchants)} sub={`${profile.category.replace(/_/g, " ")}, across ${peer.districts} districts`} />
             <StatTile label="Their average ticket" value={sgd(peer.ticket, 2)} sub="Weighted by transaction count" />
             <StatTile label="Their transactions, period" value={num(peer.txns)} />
-            <StatTile label="Their unique cardholders" value={num(peer.cardholders)} sub={`Rounded to ${rounding}`} />
+            <StatTile label="Their unique cardholders" value={num(peer.cardholders)} />
           </div>
           <p className="text-[12px] text-ink-light mt-3 max-w-3xl">
-            Rolled up across districts on purpose. A district row covering one merchant is that merchant, so it is never
-            shown as a benchmark — including your own.
+            Category benchmark
+            <InfoTip title="How the benchmark is built" className="ml-1">
+              Rolled up across districts: a district row covering one merchant is that merchant, so it's never shown.
+            </InfoTip>
           </p>
         </>
       ) : (
@@ -276,9 +284,10 @@ function ThinHistory({ profile, data, gap, rounding }) {
       )}
       {gap && (
         <p className="text-[12.5px] text-ink-secondary mt-4 max-w-3xl">
-          Gap detection returns <span className="font-medium text-ink">{gap.type.replace(/_/g, " ")}</span> at confidence{" "}
-          <span className="font-medium text-ink">{gap.confidence}</span>. A negative finding is a finding: there is no
-          off-peak trough to target here yet, because there is not yet a pattern to compare against.
+          Gap detection: <span className="font-medium text-ink">{gap.type.replace(/_/g, " ")}</span> — no pattern to compare against yet.
+          <InfoTip title="A negative finding" className="ml-1">
+            A negative finding is a finding: there's no off-peak trough to target yet.
+          </InfoTip>
         </p>
       )}
       <BasisNote>merchant_profiles.json gate · benchmarks.json (category × district).</BasisNote>
@@ -402,11 +411,13 @@ function RecencyFrequencyValue({ profile }) {
 
   return (
     <>
-      <h3 className="text-[17px] font-bold text-ink mt-8 mb-1">Recency, frequency and value</h3>
-      <p className="text-[13px] text-ink-secondary mb-3 max-w-3xl">
-        These three are the inputs to the RFM segmentation further down this page, in that order — how recently a
-        customer bought, how often they come back, and how much of your revenue they carry.
-      </p>
+      <h3 className="text-[17px] font-bold text-ink mt-8 mb-3">
+        Recency, frequency and value
+        <InfoTip title="How these feed RFM" className="ml-1">
+          These three feed the RFM segmentation below: how recently customers bought, how often they return, and how much
+          revenue they carry.
+        </InfoTip>
+      </h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5">
@@ -417,8 +428,8 @@ function RecencyFrequencyValue({ profile }) {
           </div>
           <ShareBars rows={recency} />
           <p className="text-[13px] text-ink mt-3">
-            <span className="font-semibold">{pctOf(r.days_since_last.lapsed_share_pct, 1)} of your customers are lapsed</span> —{" "}
-            {r.days_since_last.lapsed_definition}. That share is the pool a win-back reward draws from.
+            <span className="font-semibold">{pctOf(r.days_since_last.lapsed_share_pct, 1)} lapsed</span> — {r.days_since_last.lapsed_definition}.
+            <InfoTip title="Why lapsed matters" className="ml-1">That share is the pool a win-back reward draws from.</InfoTip>
           </p>
           <BasisNote>merchant_profiles.json rfv.days_since_last, across every customer at your terminals.</BasisNote>
         </Card>
@@ -430,8 +441,10 @@ function RecencyFrequencyValue({ profile }) {
             <span className="text-[13px] text-ink-secondary">days between purchases</span>
           </div>
           <p className="text-[12px] text-ink-secondary mb-3">
-            {r.avg_days_between_purchases.qualifier}. Averaging one-time customers into this number would make it
-            meaningless, so they are excluded.
+            {r.avg_days_between_purchases.qualifier}
+            <InfoTip title="Why repeat customers only" className="ml-1">
+              One-time customers are excluded; averaging them in would make this number meaningless.
+            </InfoTip>
           </p>
           <div className="mb-1 text-[12px] font-medium text-ink-secondary">One-time versus repeat</div>
           <SplitBar
@@ -440,9 +453,8 @@ function RecencyFrequencyValue({ profile }) {
             leftShare={repeatShare}
           />
           <p className="text-[12.5px] text-ink-secondary mt-2">
-            By customer, repeat buyers are {pctOf(repeatShare, 1)} of the base; by transaction they are{" "}
-            {pctOf(repeatTxnShare, 1)}. The gap between those two figures is the point — your trade is carried by the
-            people who come back.
+            Repeat buyers: {pctOf(repeatShare, 1)} of customers, {pctOf(repeatTxnShare, 1)} of transactions.
+            <InfoTip title="What the gap means" className="ml-1">Your trade is carried by the people who come back.</InfoTip>
           </p>
           <div className="mt-3 mb-1 text-[12px] font-medium text-ink-secondary">Visits, repeat customers only</div>
           <ShareBars rows={freq} />
@@ -487,12 +499,13 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
         <h4 className="text-[14px] font-semibold text-ink mb-1">Hourly transaction intensity</h4>
         {trough ? (
           <p className="text-[13px] text-ink-secondary mb-3 max-w-3xl">
-            Peak is <span className="font-semibold text-ink">{String(hourly.peak_hour).padStart(2, "0")}:00</span>. The trough a
-            campaign would target is <span className="font-semibold text-brand">{trough.window}</span> —{" "}
-            {pctOf(Math.abs(trough.magnitude_vs_own_baseline_pct), 1)} below your own baseline for that weekday and
-            daypart, at {trough.confidence} confidence. It is measured against your own pattern for that slot, not
-            against your quietest hour of the day: late evening is quieter still, and it is quiet for a reason a reward
-            will not fix.
+            Peak <span className="font-semibold text-ink">{String(hourly.peak_hour).padStart(2, "0")}:00</span> · trough{" "}
+            <span className="font-semibold text-brand">{trough.window}</span>,{" "}
+            {pctOf(Math.abs(trough.magnitude_vs_own_baseline_pct), 1)} below your baseline ({trough.confidence} confidence).
+            <InfoTip title="How the trough is measured" className="ml-1">
+              Measured against your own pattern for that weekday and daypart, not your quietest hour. Late evening is quieter
+              still, for a reason a reward won't fix.
+            </InfoTip>
           </p>
         ) : (
           <p className="text-[13px] text-ink-secondary mb-3">
@@ -527,7 +540,9 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h4 className="text-[14px] font-semibold text-ink mb-1">Age bands</h4>
-          <p className="text-[12px] text-ink-secondary mb-3">{profile.age_bands_basis}</p>
+          {/* The pipeline's line carries the floor-and-rounding note after a semicolon; the cells already
+              say "Below reporting threshold", so only the population is printed (round 7). */}
+          <p className="text-[12px] text-ink-secondary mb-3">{String(profile.age_bands_basis ?? "").split(";")[0]}</p>
           <div className="space-y-1.5">
             {AGE_BANDS.map((band) => {
               const count = cellCount(profile.age_bands[band]);
@@ -558,7 +573,10 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
         </Card>
 
         <Card className={`p-5 ${cardMix.reduced ? "border-warning/40" : ""}`}>
-          <h4 className="text-[14px] font-semibold text-ink mb-1">Card mix</h4>
+          <h4 className="text-[14px] font-semibold text-ink mb-1">
+            Card mix
+            {cardMix.cash_note && <InfoTip title="About cash" className="ml-1">{cardMix.cash_note}</InfoTip>}
+          </h4>
           <p className="text-[12px] text-ink-secondary mb-3">{cardMix.label}</p>
           {cardMix.all_suppressed ? (
             <SuppressedCard label="Card mix" reason={cardMix.note} />
@@ -577,11 +595,12 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
           )}
           {cardMix.reduced && (
             <p className="text-[12.5px] text-ink mt-3 rounded-lg bg-warning-bg/50 border border-warning/30 px-3 py-2">
-              OCBC does not acquire your terminals, so this panel shows OCBC-issued cards only — every other tender is
-              invisible to us here. Moving acquiring to OCBC completes the picture. It is not needed to run a campaign.
+              OCBC-issued cards only — OCBC doesn't acquire your terminals.
+              <InfoTip title="What's missing" className="ml-1">
+                Other tenders are invisible to us here. Moving acquiring to OCBC completes the picture; it isn't needed to run a campaign.
+              </InfoTip>
             </p>
           )}
-          <p className="text-[12px] text-ink-light mt-3">{cardMix.cash_note}</p>
           <BasisNote>
             {cardMix.note} This is acquiring data, not issuing data: it says what tapped at your terminals, and nothing
             about where those cardholders spend elsewhere.
@@ -611,7 +630,13 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
           to the recommendation below. It is an internal computation now, not a panel. */}
 
       <div className="mb-6">
-        <BlockHeading n={1} title="Demand gap" />
+        <BlockHeading
+          n={1}
+          title="Demand gap"
+          info={(gap?.other_flagged_slots ?? []).length > 0
+            ? `${gap.other_flagged_slots.length} other slots were flagged; none reached usable confidence, so ${gap.window ? "no second window is" : "no window is"} proposed.`
+            : null}
+        />
         {gap ? (
           <>
             {/* Only off-peak gaps carry a window, a magnitude and a structural finding. A peer-only
@@ -627,12 +652,6 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
               />
             </div>
             <p className="text-[13px] text-ink mt-3 max-w-3xl">{gap.message}</p>
-            {(gap.other_flagged_slots ?? []).length > 0 && (
-              <p className="text-[12.5px] text-ink-secondary mt-2 max-w-3xl">
-                <span className="font-medium text-ink">{gap.other_flagged_slots.length} other slots</span> were flagged and
-                none reached usable confidence, so {gap.window ? "none is proposed as a second window" : "no window is proposed"}.
-              </p>
-            )}
           </>
         ) : (
           <p className="text-[13px] text-ink-light">No demand gap of any type was detected for this merchant.</p>
@@ -660,7 +679,6 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
 // The denominator is every customer scored, so the visible bars deliberately do not sum to 100%
 // when a segment is suppressed. That is the honest total, and the residual is the suppression.
 function RfmDistribution({ rfm, hasRecommendation }) {
-  const [openGlossary, setOpenGlossary] = useState(false);
   const scored = rfm.customers_scored || 0;
   const rows = useMemo(
     () =>
@@ -681,19 +699,8 @@ function RfmDistribution({ rfm, hasRecommendation }) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <p className="text-[12.5px] text-ink-secondary">Share of your scored customers, by segment</p>
-        <button
-          type="button"
-          onClick={() => setOpenGlossary((v) => !v)}
-          aria-expanded={openGlossary}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1 text-[12px] font-medium text-ink-secondary hover:text-ink hover:bg-canvas"
-        >
-          <Info size={13} />
-          What the segments mean
-        </button>
-      </div>
-
-      {openGlossary && (
-        <div className="mb-3 rounded-lg border border-border bg-canvas/60 p-4">
+        {/* The app's one ⓘ (components/ui.jsx InfoTip) started here; this is still its widest use. */}
+        <InfoTip label="What the segments mean" align="right" width="w-[36rem]">
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
             {rows.map((r) => (
               <div key={r.segment} className="flex gap-2 text-[12.5px]">
@@ -702,8 +709,8 @@ function RfmDistribution({ rfm, hasRecommendation }) {
               </div>
             ))}
           </dl>
-        </div>
-      )}
+        </InfoTip>
+      </div>
 
       <ResponsiveContainer width="100%" height={240}>
         <BarChart data={rows} margin={{ left: -12, right: 12, top: 8, bottom: 28 }}>
@@ -727,8 +734,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
       {suppressed.length > 0 && (
         <p className="flex items-center gap-1.5 text-[12px] text-ink-light mt-1">
           <Lock size={11} />
-          {suppressed.map((r) => r.segment).join(", ")} {suppressed.length === 1 ? "is" : "are"} below the reporting
-          threshold and {suppressed.length === 1 ? "carries" : "carry"} no share.
+          Below threshold: {suppressed.map((r) => r.segment).join(", ")}.
         </p>
       )}
 
@@ -821,13 +827,12 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
                 {liveReach != null ? num(liveReach) : cellText(acquisition.reach)}
               </div>
               <div className="text-[13px] text-ink-secondary mt-1 max-w-sm">
-                OCBC cardholders who spend at comparable merchants and have never transacted with you, reachable after
-                consent and the portfolio frequency cap.
+                Spend at comparable merchants; never transacted with you.
+                <InfoTip title="What you see about prospects" className="ml-1">
+                  Counted after consent and the frequency cap. You get a count and a description only — no age split, spend or map
+                  for people who've never walked in.
+                </InfoTip>
               </div>
-            </div>
-            <div className="text-[12.5px] text-ink-secondary max-w-md">
-              A count and a plain-language description, and nothing else. There is no age split, no spend distribution
-              and no map for people who have never walked in — the interface has no screen where that could appear.
             </div>
           </div>
           <BasisNote>
@@ -979,11 +984,11 @@ function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, disp
           <div className="flex-1">
             <p className="text-[15px] font-semibold text-ink">
               {gate?.message ?? "You are not eligible for the reward programme."}
+              <InfoTip title="What happens now" className="ml-1">
+                Your trading summary stays available. Your relationship manager can talk through what would change the outcome.
+              </InfoTip>
             </p>
-            <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
-              Your trading summary above is your own data and stays available. Nothing has been configured and nothing
-              has been sent. Your relationship manager can talk through what would change the outcome.
-            </p>
+
             <BasisNote>
               reward_recommendations.json eligibility (pipeline/reward.py Step 1) — the same gate, applied to every
               merchant, and refused here as a logged event rather than a hidden branch.
@@ -1030,10 +1035,10 @@ function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, disp
           <div className="flex-1">
             <p className="text-[15px] font-semibold text-ink">OCBC has received your application.</p>
             <p className="text-[13px] text-ink-secondary mt-1 max-w-2xl">
-              {campaign.rm_message ?? "A relationship manager will be in touch within the week."} Nothing has been
-              configured and nothing has been sent. It shows on your dashboard as{" "}
-              <span className="font-semibold text-ink">{display(campaign.status)}</span> — awaiting that contact, not
-              awaiting review, because there is nothing to review yet.
+              {campaign.rm_message ?? "A relationship manager will be in touch within the week."}
+              <InfoTip title="What happens next" className="ml-1">
+                Nothing is configured or sent yet. Your dashboard shows {display(campaign.status)} — awaiting that contact, not a review.
+              </InfoTip>
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
@@ -1048,12 +1053,12 @@ function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, disp
               {/* The application is seeded so the RM's queue is populated on a cold load. This puts
                   the handoff back in front of the presenter so it can still be performed live —
                   and it is the only way to see the Set-up tab lock again mid-demo. */}
-              <button
+              {DEMO_LAYER && <button
                 onClick={rewind}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-ink-light px-3 py-1.5 text-[12px] font-semibold text-ink-secondary hover:text-ink"
               >
                 Demo · rewind to before the application
-              </button>
+              </button>}
             </div>
           </div>
         </div>
@@ -1064,11 +1069,12 @@ function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, disp
 
 // ------------------------------------------------------------------------------------- fragments
 
-function BlockHeading({ n, title }) {
+function BlockHeading({ n, title, info = null }) {
   return (
     <div className="flex items-center gap-2 mb-2">
       <span className="h-5 w-5 rounded-full bg-analytics/10 text-analytics font-num text-[11px] font-bold flex items-center justify-center">{n}</span>
       <h4 className="text-[14px] font-bold text-ink">{title}</h4>
+      {info && <InfoTip title={`About ${title.toLowerCase()}`}>{info}</InfoTip>}
     </div>
   );
 }

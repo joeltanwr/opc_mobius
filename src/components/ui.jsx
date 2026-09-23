@@ -1,5 +1,5 @@
-import React from "react";
-import { Lock, AlertTriangle } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Lock, AlertTriangle, Info } from "lucide-react";
 import { CONSTANTS, SHOW_BASIS_NOTES } from "../data/constants";
 import { usePrivacyRules, useDemoData } from "../data/DataProvider";
 
@@ -111,11 +111,93 @@ export function SuppressedCard({ reason, label }) {
 // The one sentence about the whole dataset's scale, read from the pipeline manifest. Both chromes
 // — the merchant/RM shell and the cardholder app's prototype bar — render this component, so the
 // sentence has one source and one rendering however many interfaces the build grows.
+//
+// The first sentence (the two headcounts) stays on screen; the rest — how caps are converted
+// between the two scales — sits behind the ⓘ. Split here rather than in the pipeline, so the
+// shipped string and validate.py's check on it are unchanged.
 export function ScaleDisclosure({ className = "" }) {
   const { data } = useDemoData();
   const line = data?.constants?.scale_disclosure;
   if (!line) return null;
-  return <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>{line}</p>;
+  const [lead, ...rest] = line.split(/(?<=\.)\s+(?=[A-Z])/);
+  return (
+    <p className={`text-[12px] text-ink-light max-w-xl leading-snug ${className}`}>
+      {lead}
+      {rest.length > 0 && <InfoTip up title="About the sample" className="ml-1">{rest.join(" ")}</InfoTip>}
+    </p>
+  );
+}
+
+// ----------------------------------------------------------------------------------------------
+// The one ⓘ in the build.
+//
+// Grown out of the RFM segment glossary on Customer Profile — same Info icon, same click to open,
+// same click again (or Escape, or a click elsewhere) to close — so every explanation that comes
+// off a screen lands behind a control that already looks like this everywhere else. Two shapes,
+// one component: bare icon beside the thing it explains, or icon with a short label where the
+// label is the affordance (the glossary's "What the segments mean"). `tone="dark"` is for the
+// System Trace drawer and nothing else.
+//
+// Click, not hover: a projector has no hover, and a presenter needs the panel to stay put while
+// they talk to it.
+// ----------------------------------------------------------------------------------------------
+const INFO_TONES = {
+  light: {
+    icon: "inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-light hover:text-ink hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-brand/30",
+    labelled: "inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1 text-[12px] font-medium text-ink-secondary hover:text-ink hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-brand/30",
+    panel: "rounded-lg border border-border bg-white p-3 text-[12.5px] font-normal normal-case tracking-normal leading-snug text-ink-secondary shadow-card-hover",
+  },
+  dark: {
+    icon: "inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-500 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-300/50",
+    labelled: "inline-flex items-center gap-1.5 rounded border border-slate-600 px-2 py-0.5 text-[11px] text-slate-300 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-300/50",
+    panel: "rounded-md border border-slate-600 bg-[#111A2E] p-2.5 font-mono text-[11.5px] font-normal normal-case tracking-normal leading-snug text-slate-300 shadow-lg",
+  },
+};
+
+// `up` opens the panel above the icon, for an ⓘ that sits at the bottom of the page (the footer).
+export function InfoTip({ children, label = null, title = "What this means", tone = "light", align = "left", width = "w-72", up = false, className = "" }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef(null);
+  const t = INFO_TONES[tone] ?? INFO_TONES.light;
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e) {
+      if (wrap.current && !wrap.current.contains(e.target)) setOpen(false);
+    }
+    function onKeyDown(e) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <span ref={wrap} className={`relative inline-flex align-middle ${className}`}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-label={label ? undefined : title}
+        onClick={() => setOpen((v) => !v)}
+        className={label ? t.labelled : t.icon}
+      >
+        <Info size={label ? 13 : 14} />
+        {label}
+      </button>
+      {open && (
+        <span
+          role="note"
+          className={`absolute ${up ? "bottom-full mb-1.5" : "top-full mt-1.5"} z-50 block ${align === "right" ? "right-0" : "left-0"} ${width} max-w-[min(90vw,40rem)] ${t.panel}`}
+        >
+          {children}
+        </span>
+      )}
+    </span>
+  );
 }
 
 // The provenance line under a figure. Hidden by default (SHOW_BASIS_NOTES in constants.js) — the

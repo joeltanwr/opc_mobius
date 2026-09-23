@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Bell, BellOff, FlaskConical } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
-import { CONSOLIDATED_CARDHOLDERS, DEMO_CAMPAIGN_ID } from "../../data/constants";
+import { CONSOLIDATED_CARDHOLDERS, DEMO_CAMPAIGN_ID, DEMO_LAYER } from "../../data/constants";
 import { cohortTagsFor } from "../../state/store.js";
+import { heldOffer, verdictFor } from "../../state/trace.js";
+import { TraceChip, useTrace } from "../../components/SystemTrace";
 import { num } from "../../data/format";
-import { Badge } from "../../components/ui";
+import { Badge, InfoTip } from "../../components/ui";
 import BankingHome from "./BankingHome";
 
 // ---------------------------------------------------------------------------------------------
@@ -30,6 +32,10 @@ import BankingHome from "./BankingHome";
 
 export default function ConsolidatedHome() {
   const m = useMobiusState();
+  const trace = useTrace();
+  const { setHighlight } = trace;
+  // A highlighted stage belongs to this screen's chips; leaving the screen puts it out.
+  useEffect(() => () => setHighlight(null), [setHighlight]);
   if (!m) return null;
   const { state } = m;
   const campaign = state.campaigns[DEMO_CAMPAIGN_ID] ?? null;
@@ -40,14 +46,20 @@ export default function ConsolidatedHome() {
   // the send. Aimed at, not allocated for: the merchant may have pointed the campaign at a
   // retention pool instead, and showing who that reaches is the whole job of this screen.
   const tags = cohortTagsFor(campaign);
-  const tiles = CONSOLIDATED_CARDHOLDERS.map((entry) => {
+  //
+  // Holding, not merely ever sent: a card withdrawn because its cardholder turned offers off has
+  // left their feed, so the tile, the count above it and the System Trace all stop counting it
+  // (state/trace.js heldOffer — one rule for the three of them).
+  const tiles = CONSOLIDATED_CARDHOLDERS.map((entry, i) => {
     const holder = state.cardholders[entry.id] ?? null;
     const inScope = tags.some((t) => (holder?.cohort_membership ?? []).includes(t));
-    const offer = Object.values(state.offers).find(
-      (o) => o.cardholder_id === entry.id && o.campaign_id === DEMO_CAMPAIGN_ID
-    ) ?? null;
-    return { ...entry, holder, inScope, offer };
+    const offer = heldOffer(state, DEMO_CAMPAIGN_ID, entry.id);
+    const chip = campaign && holder ? { n: i + 1, ...verdictFor(state, campaign, entry.id, entry.chip) } : null;
+    return { ...entry, holder, inScope, offer, chip };
   });
+  // Four phones in a row need the full width; with the trace docked beside them they go two by two
+  // until the screen is wide enough for both.
+  const docked = DEMO_LAYER && trace.open;
 
   const reached = tiles.filter((t) => t.offer).length;
   const expected = tiles.filter((t) => t.inScope).length;
@@ -62,9 +74,10 @@ export default function ConsolidatedHome() {
             <h2 className="text-[18px] font-bold text-ink mt-2">Four cardholders, one campaign</h2>
             <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
               {campaign
-                ? <>The same home screen, for four different people, reading the same state. Fire the allocator for{" "}
-                   <span className="font-semibold text-ink">{campaign.merchant_name}</span> from the RM view and watch which of
-                   them hears about it. Nobody here is picked by this screen: it shows what the allocator decided.</>
+                ? <>Fire the allocator from the RM view; watch who hears about it.
+                   <InfoTip title="What this screen is" className="ml-1">
+                     Four real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
+                   </InfoTip></>
                 : "The demo campaign is not loaded, so there is nothing to allocate."}
             </p>
           </div>
@@ -76,14 +89,10 @@ export default function ConsolidatedHome() {
             <div className="text-[11px] text-ink-light mt-1">{num(expected)} in the target cohort</div>
           </div>
         </div>
-        <p className="text-[11.5px] text-ink-light mt-3">
-          A presentation device, not part of the cardholder product. Each tile is the real home screen; only this page's
-          framing around them is made for the pitch.
-        </p>
       </div>
 
       {/* ------------------------------------------------------------------ the four screens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-4" : "xl:grid-cols-4"} gap-4 items-start`}>
         {tiles.map((t) => <Tile key={t.id} tile={t} />)}
       </div>
     </div>
@@ -91,7 +100,7 @@ export default function ConsolidatedHome() {
 }
 
 function Tile({ tile }) {
-  const { holder, caption, inScope, offer } = tile;
+  const { holder, caption, inScope, offer, chip } = tile;
   if (!holder) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-canvas/60 p-4 text-[12.5px] text-ink-light">
@@ -116,10 +125,12 @@ function Tile({ tile }) {
           </span>
         ) : (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10.5px] font-semibold text-ink-light">
-            <BellOff size={10} /> {inScope ? "Waiting" : "Not targeted"}
+            <BellOff size={10} /> {inScope ? (holder.consent.offers ? "Waiting" : "Offers off") : "Not targeted"}
           </span>
         )}
       </div>
+      {/* Demo layer: the verdict and, on tap, the System Trace stage that reached it. */}
+      <div className="px-0.5 -mt-1.5 mb-2 empty:hidden"><TraceChip chip={chip} /></div>
 
       {/* A smaller bezel than the individual view's, because four of those do not fit a slide and
           the point here is the contrast between the screens, not the hardware around them. */}

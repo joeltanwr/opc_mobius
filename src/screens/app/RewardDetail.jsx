@@ -7,6 +7,7 @@ import { useCardholderId } from "./cardholder";
 import { enrich, whyThisOffer } from "./offers";
 import { formatDays, formatHours, REWARD_TYPE_LABELS } from "../../components/RewardCard";
 import { num } from "../../data/format";
+import { InfoTip } from "../../components/ui";
 
 // The detail view of one reward (customer §4.1 "View details", §2 the quiet line). This is where
 // "why am I seeing this?" is answered, because it is where the question gets asked.
@@ -75,12 +76,13 @@ export default function RewardDetail() {
         <section className="rounded-2xl border border-border bg-white p-4">
           <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-ink mb-1.5">
             <HelpCircle size={14} className="text-ink-light" /> Why you're seeing this
+            <InfoTip title="How this was decided" align="right" width="w-64">
+              Nobody looked at you individually, and nothing you'd be uncomfortable being asked about is used.
+            </InfoTip>
           </h2>
           <p className="text-[12.5px] text-ink-secondary leading-snug">{why}</p>
-          <p className="text-[12.5px] text-ink-secondary leading-snug mt-2">
-            Nobody looked at you individually to decide this, and no part of it uses anything you'd be uncomfortable being asked about.
-            You can change what you're shown, or stop it entirely, on{" "}
-            <Link to="/app/profile" className="font-semibold text-brand hover:underline">your profile</Link>.
+          <p className="text-[12.5px] leading-snug mt-2">
+            <Link to="/app/profile" className="font-semibold text-brand hover:underline">Change or stop this on your profile →</Link>
           </p>
         </section>
 
@@ -98,7 +100,7 @@ export default function RewardDetail() {
               Claim this reward
             </button>
             <p className="text-center text-[11.5px] text-ink-light">
-              Claiming holds one for you. You redeem it at the counter {window ? window.toLowerCase() : "inside the window above"}.
+              Claim now; redeem at the counter {window || "inside the window above"}.
             </p>
           </div>
         ) : offer.status === "claimed" ? (

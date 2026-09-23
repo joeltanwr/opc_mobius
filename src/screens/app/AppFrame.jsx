@@ -4,6 +4,8 @@ import { Home, Gift, UserRound, Smartphone, RotateCcw } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { MockDataBadge, ScaleDisclosure } from "../../components/ui";
 import PersonaSwitcher from "../../components/PersonaSwitcher";
+import SystemTrace, { TraceToggle } from "../../components/SystemTrace";
+import { DEMO_LAYER } from "../../data/constants";
 import { INDIVIDUAL_CARDHOLDERS, CardholderProvider, getCardholderId, setCardholderId } from "./cardholder";
 
 // ---------------------------------------------------------------------------------------------
@@ -56,6 +58,7 @@ export default function AppFrame() {
   const [cardholderId, setHolderId] = useState(getCardholderId);
   const timer = useRef(null);
   const seq = useRef(0);
+  const header = useRef(null);
 
   // A counter, not a timestamp: nothing in this app reads a wall clock, and two toasts raised in
   // the same millisecond would have collided on the key anyway.
@@ -99,7 +102,7 @@ export default function AppFrame() {
     <CardholderProvider value={cardholderId}>
       <div className="min-h-full flex flex-col bg-canvas">
         {/* ---------------------------------------------------------- prototype chrome */}
-        <header className="sticky top-0 z-40 border-b border-border bg-navy text-white/85">
+        <header ref={header} className="sticky top-0 z-40 border-b border-border bg-navy text-white/85">
           <div className="max-w-container mx-auto px-4 sm:px-6 flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
             <div className="flex items-center gap-2 shrink-0">
               <Smartphone size={14} />
@@ -110,7 +113,9 @@ export default function AppFrame() {
             </div>
 
             {/* The demo-mode toggle. Segmented rather than a dropdown: there are two of them, both
-                fit, and a presenter mid-pitch should not have to open anything. */}
+                fit, and a presenter mid-pitch should not have to open anything. Demo layer: with
+                DEMO_LAYER off there is only the individual phone, and nothing to toggle. */}
+            {DEMO_LAYER && (
             <div className="flex items-center gap-1 rounded-lg bg-white/10 p-0.5" role="group" aria-label="Cardholder view mode">
               {MODES.map((mode) => {
                 const active = mode.key === (consolidated ? "consolidated" : "individual");
@@ -129,6 +134,7 @@ export default function AppFrame() {
                 );
               })}
             </div>
+            )}
 
             {/* Whose phone. Individual view only — the consolidated view shows four at once, so
                 there is nothing to choose between there.
@@ -179,6 +185,7 @@ export default function AppFrame() {
             )}
             <div className="ml-auto flex items-center gap-3 shrink-0">
               <MockDataBadge />
+              <TraceToggle />
               <PersonaSwitcher tone="dark" />
             </div>
           </div>
@@ -189,48 +196,58 @@ export default function AppFrame() {
             is rendered wide and unframed here rather than inside a device that would be a fifth
             frame around four. The bottom nav goes with the single phone for the same reason: it
             is the app's navigation, and there is no one app on that screen to navigate. */}
-        {consolidated ? (
-          <main className="flex-1">
-            <div key={location.pathname} className="screen-enter">
-              <Outlet context={{ toast: show }} />
-            </div>
-          </main>
-        ) : (
-          <main className="flex-1 flex justify-center px-0 sm:px-6 py-0 sm:py-8">
-            <div className="w-full max-w-[420px] sm:rounded-[36px] sm:border-8 sm:border-ink sm:shadow-card-hover overflow-hidden bg-white">
-              <div className="sm:rounded-[28px] overflow-hidden flex flex-col min-h-[100dvh] sm:min-h-[760px]">
-                <div key={location.pathname} className="flex-1 screen-enter">
+        {/* The System Trace docks to the right of either layout, outside the device, in the
+            prototype layer — the same layer the consolidated view's captions live in. The footer
+            sits inside the page column so the sticky drawer is not shoved up by it. */}
+        <div className="flex flex-1">
+          <div className="flex min-w-0 flex-1 flex-col">
+            {consolidated ? (
+              <main className="flex-1 min-w-0">
+                <div key={location.pathname} className="screen-enter">
                   <Outlet context={{ toast: show }} />
                 </div>
-                <BottomNav unread={unread} />
-              </div>
-            </div>
-          </main>
-        )}
-
-        <footer className="border-t border-border bg-white">
-          <div className="max-w-container mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between">
-            <ScaleDisclosure />
-            {!consolidated && (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-light">
-                <span className="kbd">1</span>–<span className="kbd">{NAV.length}</span><span>jump to screen</span>
-              </div>
+              </main>
+            ) : (
+              <main className="flex-1 min-w-0 flex justify-center px-0 sm:px-6 py-0 sm:py-8">
+                <div className="w-full max-w-[420px] sm:rounded-[36px] sm:border-8 sm:border-ink sm:shadow-card-hover overflow-hidden bg-white">
+                  <div className="sm:rounded-[28px] overflow-hidden flex flex-col min-h-[100dvh] sm:min-h-[760px]">
+                    <div key={location.pathname} className="flex-1 screen-enter">
+                      <Outlet context={{ toast: show }} />
+                    </div>
+                    <BottomNav unread={unread} />
+                  </div>
+                </div>
+              </main>
             )}
-            {/* The same reset as the merchant and RM chromes: one shared event log, so the control
-                has to be reachable from whichever view the presenter happens to be standing in. */}
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
-                  m?.resetDemoData?.();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
-            >
-              <RotateCcw size={11} /> Reset demo data
-            </button>
+
+            <footer className="border-t border-border bg-white">
+              <div className="max-w-container mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between">
+                <ScaleDisclosure />
+                {!consolidated && (
+                  <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-light">
+                    <span className="kbd">1</span>–<span className="kbd">{NAV.length}</span><span>jump to screen</span>
+                  </div>
+                )}
+                {/* The same reset as the merchant and RM chromes: one shared event log, so the control
+                    has to be reachable from whichever view the presenter happens to be standing in. */}
+                {DEMO_LAYER && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
+                      m?.resetDemoData?.();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
+                >
+                  <RotateCcw size={11} /> Reset demo data
+                </button>
+                )}
+              </div>
+            </footer>
           </div>
-        </footer>
+          <SystemTrace view={consolidated ? "consolidated" : "individual"} cardholderId={consolidated ? null : cardholderId} stickyRef={header} />
+        </div>
 
         {/* ---------------------------------------------------------- toast, live region */}
         <div aria-live="polite" className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 pointer-events-none">

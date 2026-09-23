@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { CheckCircle2, XCircle, Lock, ShieldCheck, ChevronRight, Radio } from "lucide-react";
-import { useDemoData, merchantById } from "../data/DataProvider";
+import { CheckCircle2, XCircle, Lock, ChevronRight, Radio } from "lucide-react";
+import { useDemoData, merchantById, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { HERO_MERCHANT_ID, screenNum, SHOW_BASIS_NOTES } from "../data/constants";
 import { sgd, num, pctOf, cellText, cellCount } from "../data/format";
-import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
+import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../components/ui";
 import ProgrammeCharts, { buildBeforeAfter } from "../components/BeforeAfterCharts";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -74,9 +74,9 @@ export default function CampaignResults() {
           because it is the only one with a result to read. */}
       <Section
         title="Live / In queue reward programmes"
-        note="Programmes you have submitted that have not finished. Open one to see how it is doing."
+        note="Submitted and not yet finished."
         count={ongoing.length}
-        empty="Nothing running. A programme appears here as soon as you submit one on Reward Configuration."
+        empty="Nothing running. Submit one on Reward Configuration."
       >
         {ongoing.map((c) => (
           <OngoingProgramme
@@ -94,7 +94,7 @@ export default function CampaignResults() {
       {/* ------------------------------------------------------------------ completed */}
       <Section
         title="Completed reward programmes"
-        note="Finished and measured. One of these lost money, and it stays on the list."
+        note="Finished and measured."
         count={measured.length}
         empty="No programme has finished yet."
       >
@@ -250,11 +250,11 @@ function PreLaunch({ campaign, queued, start, end, reachOf }) {
       <div className="rounded-lg border border-border bg-canvas/50 px-4 py-3 mb-4">
         <p className="text-[13px] font-semibold text-ink">
           {queued ? `Starts ${start ?? "on a date not yet set"}.` : "Launched today — no trading week after launch yet."}
-        </p>
-        <p className="text-[12.5px] text-ink-secondary mt-0.5 max-w-3xl">
-          {queued
-            ? "Nothing has been sent and nothing can be redeemed until the window opens. The before-and-after charts appear once it has run for a week."
-            : "The before-and-after charts compare whole weeks either side of launch, so they appear once the first full week has been traded."}
+          <InfoTip title="When the charts appear" className="ml-1">
+            {queued
+              ? "Nothing has been sent and nothing can be redeemed until the window opens. The before-and-after charts appear once it has run for a week."
+              : "The before-and-after charts compare whole weeks either side of launch, so they appear once the first full week has been traded."}
+          </InfoTip>
         </p>
       </div>
       <h4 className="text-[13px] font-bold text-ink mb-2">What was set up</h4>
@@ -349,6 +349,7 @@ function LiveCampaign({ campaign, display, reachOf }) {
 }
 
 function CampaignDetail({ campaign, rationale, merchantName }) {
+  const { floor } = usePrivacyRules();
   const c = campaign;
   const cleared = c.cost.net_sign === "positive";
 
@@ -383,12 +384,12 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
           />
           <ResultLine label="Average redeemed ticket" value={sgd(c.redemption.avg_ticket_sgd, 2)} />
           <ResultLine
-            label="Incremental transactions"
+            label="Added transactions"
             value={num(c.incremental.incremental_transactions, 1)}
             tone={cleared ? "success" : "warning"}
           />
           <ResultLine
-            label="Incremental sales"
+            label="Sales added"
             value={sgd(c.incremental.incremental_sales_sgd)}
             tone={cleared ? "success" : "warning"}
           />
@@ -431,8 +432,10 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
         {c.configuration.changes_from_recommendation.length > 0 && (
           <div className="mt-3 rounded-lg border border-warning/40 bg-warning-bg/40 px-3 py-2.5">
             <div className="text-[12.5px] font-semibold text-ink mb-1.5">
-              Changed from the Mobius recommendation — every edit attributed and timestamped, which is why this
-              result can still be explained
+              Changed from the Mobius recommendation
+              <InfoTip title="Why edits are recorded" className="ml-1">
+                Every edit is attributed and timestamped, so this result can still be explained.
+              </InfoTip>
             </div>
             <ul className="space-y-1.5">
               {c.configuration.changes_from_recommendation.map((change, i) => (
@@ -454,14 +457,19 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-[14px] font-bold text-ink mb-1">Who redeemed</h4>
+          <h4 className="text-[14px] font-bold text-ink mb-1">
+            Who redeemed
+            <InfoTip title="About the floor" className="ml-1">
+              The {floor} floor applies to breakdowns of people: age bands, RFM segments, card mix.
+            </InfoTip>
+          </h4>
           <div className="grid grid-cols-2 gap-3 mb-3">
             <MiniFigure label="New to the business" value={num(c.redeemer_profile.new_to_business)} />
             <MiniFigure label="Already returning" value={num(c.redeemer_profile.returning)} />
           </div>
           {SHOW_BASIS_NOTES && <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>}
-          <CompositionBlock title="Age bands" composition={c.redeemer_profile.age_bands} />
-          <CompositionBlock title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} />
+          <CompositionBlock title="Age bands" composition={c.redeemer_profile.age_bands} redeemers={c.redemption.redeemers} floor={floor} />
+          <CompositionBlock title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} redeemers={c.redemption.redeemers} floor={floor} />
         </div>
 
         <div>
@@ -478,10 +486,6 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
           </div>
           <BasisNote>{c.repeat.basis}</BasisNote>
 
-          <div className="mt-4 rounded-lg border border-border bg-canvas/50 px-3 py-2.5 flex items-start gap-2">
-            <ShieldCheck size={14} className="text-ink-light shrink-0 mt-0.5" />
-            <p className="text-[11.5px] text-ink-secondary">{c.floor_policy.note}</p>
-          </div>
         </div>
       </div>
 
@@ -518,8 +522,7 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
           <CheckCircle2 size={20} className="text-success shrink-0" />
           <p className="text-[13px] text-ink-secondary">
             <span className="font-semibold text-ink">{merchantName} opened an OCBC operating account</span> on{" "}
-            {new Date(c.operating_account.date).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })} —
-            the flywheel closing, not just the campaign.
+            {new Date(c.operating_account.date).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}.
           </p>
         </div>
       )}
@@ -529,7 +532,9 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
 
 // A composition breakdown as the pipeline ships it: floored cells, the population it declined to
 // break down, and the copy naming that population. Never a bare column of suppressed rows.
-function CompositionBlock({ title, composition }) {
+// A withheld breakdown says so in one line built from the figures beside it. The pipeline's longer
+// note still ships, and still renders for any breakdown that is not all withheld.
+function CompositionBlock({ title, composition, redeemers, floor }) {
   if (!composition) return null;
   const entries = Object.entries(composition.cells);
   const shown = entries.filter(([, cellValue]) => cellCount(cellValue) !== null);
@@ -556,7 +561,9 @@ function CompositionBlock({ title, composition }) {
           ))}
         </ul>
       )}
-      <p className="text-[11.5px] text-ink-light leading-snug">{composition.note}</p>
+      <p className="text-[11.5px] text-ink-light leading-snug">
+        {composition.all_suppressed ? `Withheld — ${num(redeemers)} redeemers, below the ${num(floor)} floor.` : composition.note}
+      </p>
     </div>
   );
 }

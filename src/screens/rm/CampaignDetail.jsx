@@ -1,12 +1,12 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, XCircle, Lock, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Lock, Sparkles, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { useDemoData, merchantById } from "../../data/DataProvider";
+import { useDemoData, merchantById, usePrivacyRules } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num, pct, pctOf, cellText, cellCount } from "../../data/format";
-import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
-import { SHOW_BASIS_NOTES } from "../../data/constants";
+import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
+import { SHOW_BASIS_NOTES, ALL_RM_SCREENS } from "../../data/constants";
 import { PER_CUSTOMER_LIMITS } from "../../state/store.js";
 import PushTrigger, { PushTriggerProvider } from "./PushTrigger";
 import { StatusPill, Th, Td, daysBetween } from "./rmCommon";
@@ -30,7 +30,7 @@ export default function RMCampaignDetail() {
   const { data } = useDemoData();
   const m = useMobiusState();
   if (!m) return null;
-  const { state, display, displayOf, isQueued, reachOf } = m;
+  const { state, display, isQueued, reachOf } = m;
   const c = state.campaigns[campaignId];
   if (!c) return <NotFound id={campaignId} />;
 
@@ -63,7 +63,7 @@ export default function RMCampaignDetail() {
       </Link>
 
       <SectionTitle
-        eyebrow={`Screen 4 · ${live ? "Ongoing" : "Completed"} programme · ${displayOf(c)}`}
+        eyebrow={`Screen ${ALL_RM_SCREENS.find((sc) => sc.key === "rm-campaign")?.num ?? ""} · ${live ? "Ongoing" : "Completed"} programme`}
         title={c.name}
         subtitle={`${c.merchant_name}${c.window ? ` · ${c.window.start} to ${c.window.end}` : ""}`}
         right={
@@ -89,20 +89,23 @@ export default function RMCampaignDetail() {
 
       {/* ------------------------------------------------------------------ 6.2 statistics */}
       <Card className="p-6 mb-5">
-        <h2 className="text-[15px] font-bold text-ink mb-1">Campaign statistics</h2>
-        <p className="text-[12.5px] text-ink-secondary mb-4">
-          The same figures the merchant sees on its own dashboard, measured against a held-out control group from the same segment — never against the
-          merchant's own pre-campaign trade.
-        </p>
+        <h2 className="text-[15px] font-bold text-ink mb-4">
+          Campaign statistics
+          <InfoTip title="How these are measured" className="ml-1">
+            Same figures as the merchant's dashboard. Measured against a held-out control group from the same segment, never the
+            merchant's own pre-campaign trade.
+          </InfoTip>
+        </h2>
 
         {live || hasLiveCounters ? (
           <>
             {c.frozen && (
               <div className="mb-3 rounded-lg border border-border bg-canvas/60 px-4 py-3">
                 <p className="text-[12.5px] text-ink-secondary">
-                  <span className="font-semibold text-ink">Results frozen — {c.frozen.why}, {fmtAt(c.frozen.at)}. </span>
-                  The figures below are the ones at the freeze. Cards already in a cardholder's feed stay valid until they expire: a reward somebody is
-                  holding is never revoked, so redemptions can still arrive, and they are counted here rather than folded into frozen results.
+                  <span className="font-semibold text-ink">Results frozen — {c.frozen.why}, {fmtAt(c.frozen.at)}.</span>
+                  <InfoTip title="After a freeze" className="ml-1">
+                    Cards already delivered stay valid, so redemptions can still arrive. They're counted apart from the frozen results.
+                  </InfoTip>
                   {c.post_freeze.redemptions > 0 && (
                     <> <span className="font-num font-semibold text-ink tabular-nums">{num(c.post_freeze.redemptions)}</span> redemption
                     {c.post_freeze.redemptions === 1 ? " has" : "s have"} arrived since the freeze.</>
@@ -117,10 +120,11 @@ export default function RMCampaignDetail() {
               <Figure label="Redemptions" value={num(c.counters.redemptions + c.post_freeze.redemptions)} />
             </div>
             <p className="text-[12.5px] text-ink-secondary mt-3">
-              Incremental sales, net contribution and the redeemer profile are not shown {c.frozen ? "for this campaign" : "while the campaign is running"}:
-              they need the control comparison, which is measured once the window has closed and the control arm has been observed over the same period
-              {c.frozen ? ` — this one froze on ${String(c.frozen.at).slice(0, 10)}, before its window ended` : ""}. A redemption count on its own is
-              popularity, not incremental trade, and showing it as a result would teach exactly the wrong lesson.
+              Incremental sales and net contribution: measured after the window closes.
+              <InfoTip title="Why not yet" className="ml-1">
+                They need the control comparison over the same period{c.frozen ? ", and this campaign froze before its window ended" : ""}. A
+                redemption count alone is popularity, not incremental trade.
+              </InfoTip>
             </p>
             {c.pushes.length > 0 && (
               <div className="mt-4 overflow-x-auto">
@@ -152,8 +156,10 @@ export default function RMCampaignDetail() {
               <Figure label="Pushed" value={num(r.pushed ?? c.counters.pushes_sent)} />
             </div>
             <p className="text-[12.5px] text-ink-secondary">
-              <span className="font-semibold text-ink">Not measured. </span>{r.note ?? "No transaction-level acquiring data is loaded for this merchant in the demo, so incremental sales and net contribution are not computed."}
-              {" "}Dashes, not estimates: a net contribution figure with no control arm behind it is a guess wearing a decimal point.
+              <span className="font-semibold text-ink">Not measured</span> — no acquiring data for this merchant in the demo.
+              <InfoTip title="Why dashes" className="ml-1">
+                Dashes, not estimates: a net contribution with no control arm behind it is a guess.
+              </InfoTip>
             </p>
           </div>
         )}
@@ -163,7 +169,8 @@ export default function RMCampaignDetail() {
       <Card className="p-6 mb-5">
         <h2 className="text-[15px] font-bold text-ink mb-1">The configuration as set</h2>
         <p className="text-[12.5px] text-ink-secondary mb-3">
-          What was agreed, and where it moved away from the Mobius draft. When a campaign underperforms, the explanation is usually on this list.
+          What was agreed, and where it moved from the Mobius draft.
+          <InfoTip title="Why this list matters" className="ml-1">When a campaign underperforms, the explanation is usually on this list.</InfoTip>
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <ConfigItem label="Reward" value={cfg.offer_headline ?? cfg.reward_type ?? "—"} />
@@ -198,7 +205,8 @@ export default function RMCampaignDetail() {
           </div>
         ) : (
           <p className="text-[12.5px] text-ink-secondary mt-3">
-            Nothing was changed from the Mobius draft — so if this campaign underperformed, the recommendation owns the result, not the RM.
+            Nothing was changed from the Mobius draft.
+            <InfoTip title="Who owns the result" className="ml-1">If it underperformed, the recommendation owns the result, not the RM.</InfoTip>
           </p>
         )}
       </Card>
@@ -217,10 +225,14 @@ export default function RMCampaignDetail() {
               {r.cost?.net_sign === "negative" && (
                 <div className="mt-3 rounded-lg border border-border bg-canvas/50 px-3 py-2.5">
                   <p className="text-[12.5px] text-ink-secondary">
-                    <span className="font-semibold text-ink">The distinction to make on the call: </span>
-                    a merchant pleased with a {pctOf(r.redemption?.redemption_rate_pct, 1)} redemption rate is reading popularity, not incremental trade. The
-                    control group — who never saw the offer — converted at {pctOf(r.conversion?.control_rate_pct, 1)} against the treated group's{" "}
-                    {pctOf(r.conversion?.treated_rate_pct, 1)}. The reward was claimed enthusiastically by people who were coming anyway.
+                    <span className="font-semibold text-ink">
+                      Control converted at {pctOf(r.conversion?.control_rate_pct, 1)} vs treated {pctOf(r.conversion?.treated_rate_pct, 1)}
+                    </span>{" "}
+                    — popularity, not incremental trade.
+                    <InfoTip title="The distinction to make on the call" className="ml-1">
+                      A merchant pleased with a {pctOf(r.redemption?.redemption_rate_pct, 1)} redemption rate is reading popularity. The reward was
+                      claimed by people who were coming anyway.
+                    </InfoTip>
                   </p>
                 </div>
               )}
@@ -234,6 +246,7 @@ export default function RMCampaignDetail() {
 }
 
 function MeasuredResults({ campaign, results: c }) {
+  const { floor } = usePrivacyRules();
   const cleared = c.cost.net_sign === "positive";
   const chart = [
     { group: "Treated (got the offer)", rate: c.conversion.treated_rate_pct },
@@ -277,14 +290,20 @@ function MeasuredResults({ campaign, results: c }) {
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-border">
         <div>
-          <h3 className="text-[14px] font-bold text-ink mb-2">Who redeemed</h3>
+          <h3 className="text-[14px] font-bold text-ink mb-2">
+            Who redeemed
+            <InfoTip title="About the floor" className="ml-1">
+              The {floor} floor applies to breakdowns of people: age bands, RFM segments, card mix. Counts from the merchant's own transactions are
+              reported exactly.
+            </InfoTip>
+          </h3>
           <div className="grid grid-cols-2 gap-3 mb-2">
             <Figure label="New to the business" value={num(c.redeemer_profile.new_to_business)} />
             <Figure label="Already returning" value={num(c.redeemer_profile.returning)} />
           </div>
           {SHOW_BASIS_NOTES && <p className="text-[11.5px] text-ink-light mb-3">{c.redeemer_profile.new_vs_returning_basis}</p>}
-          <Composition title="Age bands" composition={c.redeemer_profile.age_bands} />
-          <Composition title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} />
+          <Composition title="Age bands" composition={c.redeemer_profile.age_bands} redeemers={c.redemption.redeemers} floor={floor} />
+          <Composition title="RFM segment at redemption" composition={c.redeemer_profile.rfm_at_redemption} redeemers={c.redemption.redeemers} floor={floor} />
         </div>
         <div>
           <h3 className="text-[14px] font-bold text-ink mb-2">Did they come back</h3>
@@ -294,17 +313,15 @@ function MeasuredResults({ campaign, results: c }) {
             <Line label="Further visits: 1 / 2 / 3+" value={`${num(c.repeat.further_visits_distribution["1"])} / ${num(c.repeat.further_visits_distribution["2"])} / ${num(c.repeat.further_visits_distribution["3+"])}`} />
           </div>
           <BasisNote>{c.repeat.basis}</BasisNote>
-          <div className="mt-4 rounded-lg border border-border bg-canvas/50 px-3 py-2.5 flex items-start gap-2">
-            <ShieldCheck size={14} className="text-ink-light shrink-0 mt-0.5" />
-            <p className="text-[11.5px] text-ink-secondary">{c.floor_policy.note}</p>
-          </div>
         </div>
       </div>
     </>
   );
 }
 
-function Composition({ title, composition }) {
+// A withheld breakdown says so in one line built from the figures beside it — the pipeline's longer
+// note (composition.note) still ships, and still renders for any breakdown that is not all withheld.
+function Composition({ title, composition, redeemers, floor }) {
   if (!composition) return null;
   const entries = Object.entries(composition.cells);
   return (
@@ -323,7 +340,9 @@ function Composition({ title, composition }) {
           </li>
         ))}
       </ul>
-      <p className="text-[11.5px] text-ink-light leading-snug">{composition.note}</p>
+      <p className="text-[11.5px] text-ink-light leading-snug">
+        {composition.all_suppressed ? `Withheld — ${num(redeemers)} redeemers, below the ${num(floor)} floor.` : composition.note}
+      </p>
     </div>
   );
 }

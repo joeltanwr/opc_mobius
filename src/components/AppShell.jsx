@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2, ShieldAlert, RotateCcw } from "lucide-react";
-import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS, DEMO_CAMPAIGN_ID, maxScreenNum } from "../data/constants";
+import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS, DEMO_CAMPAIGN_ID, DEMO_LAYER, maxScreenNum } from "../data/constants";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
 import PrivacyAffordance from "./PrivacyAffordance";
 import PersonaSwitcher from "./PersonaSwitcher";
+import SystemTrace, { TraceToggle } from "./SystemTrace";
 import { MockDataBadge, ScaleDisclosure } from "./ui";
 
 // One chrome for both sides of the platform. The merchant variant is the default; the RM variant
@@ -16,18 +17,22 @@ import { MockDataBadge, ScaleDisclosure } from "./ui";
 // The scale disclosure is rendered here and only here — it is one sentence about the whole
 // dataset, not a per-screen caption, and validate.py checks it appears in exactly one component.
 
+// `trace` is the System Trace drawer (demo layer). The RM gets it; the merchant never does — the
+// merchant view stays what an SME owner would actually be shown.
 const VARIANTS = {
   merchant: {
     screens: SCREENS,
     optional: OPTIONAL_SCREENS,
     activeClass: "bg-[#FDECEC] text-brand",
     audience: "merchant",
+    trace: false,
   },
   rm: {
     screens: RM_SCREENS,
     optional: [],
     activeClass: "bg-navy text-white",
     audience: "rm",
+    trace: true,
   },
 };
 
@@ -36,6 +41,8 @@ export default function AppShell({ variant = "merchant" }) {
   const location = useLocation();
   const m = useMobiusState();
   const v = VARIANTS[variant] ?? VARIANTS.merchant;
+  const header = useRef(null);
+  const trace = DEMO_LAYER && v.trace;
 
   // The gated entry drops out of the nav until the merchant has applied and the eligibility gate
   // has cleared that application. The lock is enforced here and by the route guard in App.jsx, and
@@ -86,7 +93,7 @@ export default function AppShell({ variant = "merchant" }) {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur">
+      <header ref={header} className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur">
         <div className="max-w-container mx-auto px-6 flex items-center h-16 gap-6">
           <div className="flex items-center gap-2 shrink-0">
             <div className={`h-7 w-7 rounded-md flex items-center justify-center ${variant === "rm" ? "bg-navy" : "bg-brand"}`}>
@@ -127,46 +134,58 @@ export default function AppShell({ variant = "merchant" }) {
               where you were standing. It keeps its place at phone width: it is the demo's only
               route between the interfaces, so it is the last thing in this header that may go. */}
           <div className="ml-auto flex items-center gap-3 shrink-0">
+            {trace && <TraceToggle />}
             <PersonaSwitcher />
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
-        <div key={location.pathname} className="screen-enter">
-          <Outlet />
-        </div>
-      </main>
+      {/* The page and, in the RM view, the System Trace docked beside it. The drawer takes its
+          width from the page rather than covering it, so nothing on the screen hides under it. The
+          footer is inside the page column, not below the row: a sticky drawer cannot sit beside a
+          footer outside its own row, and would be shoved up by it at the bottom of every page. */}
+      <div className="flex flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="flex-1">
+            <div key={location.pathname} className="screen-enter">
+              <Outlet />
+            </div>
+          </main>
 
-      <footer className="border-t border-border bg-white">
-        <div className="max-w-container mx-auto px-6 min-h-12 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between text-ink-light">
-          <PrivacyAffordance audience={v.audience} />
-          <ScaleDisclosure />
-          <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
-            <span className="kbd">←</span>
-            <span className="kbd">→</span>
-            <span>navigate</span>
-            <span className="mx-1.5 text-border">|</span>
-            <span className="kbd">1</span>–<span className="kbd">{maxNum}</span>
-            <span>jump to screen</span>
-          </div>
-          {/* Reset the demo to a cold load. In the footer rather than on one screen because the
-              thing that needs resetting — the event log — is shared by all three views, so the
-              control belongs where every view can reach it. Confirmed before it fires: it drops
-              a configuration somebody may be mid-way through. */}
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
-                m?.resetDemoData?.();
-              }
-            }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
-          >
-            <RotateCcw size={11} /> Reset demo data
-          </button>
+          <footer className="border-t border-border bg-white">
+            <div className="max-w-container mx-auto px-6 min-h-12 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 justify-between text-ink-light">
+              <PrivacyAffordance audience={v.audience} />
+              <ScaleDisclosure />
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
+                <span className="kbd">←</span>
+                <span className="kbd">→</span>
+                <span>navigate</span>
+                <span className="mx-1.5 text-border">|</span>
+                <span className="kbd">1</span>–<span className="kbd">{maxNum}</span>
+                <span>jump to screen</span>
+              </div>
+              {/* Reset the demo to a cold load. In the footer rather than on one screen because the
+                  thing that needs resetting — the event log — is shared by all three views, so the
+                  control belongs where every view can reach it. Confirmed before it fires: it drops
+                  a configuration somebody may be mid-way through. */}
+              {DEMO_LAYER && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("Reset the demo to a cold load? This clears every configuration, application and redemption made in this session and reloads the page.")) {
+                      m?.resetDemoData?.();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-ink-light hover:text-ink hover:border-ink-light"
+                >
+                  <RotateCcw size={11} /> Reset demo data
+                </button>
+              )}
+            </div>
+          </footer>
         </div>
-      </footer>
+        {trace && <SystemTrace view="rm" stickyRef={header} />}
+      </div>
     </div>
   );
 }

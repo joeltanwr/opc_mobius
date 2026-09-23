@@ -217,6 +217,10 @@ export function buildSeed(data) {
       allocated_reach: num(alloc.final_allocation?.count),
       allocation: { push_eligible: alloc.push.eligible, push_suppressed_expected: alloc.push.suppressed_count, cap_per_week: alloc.push.cap_per_week,
                     cap_provisional: alloc.push.cap_provisional, week: alloc.push.week, note: alloc.push.note,
+                    // The pool before any filter ran, so the allocator's funnel can be read back as
+                    // candidates → after consent → after the cap (state/trace.js) from the same
+                    // figures the pipeline removed, rather than restated anywhere.
+                    candidate_pool: num(alloc.candidate_pool_before_filters),
                     removed: alloc.removed, frequency_cap: alloc.frequency_cap, retention_pools: alloc.retention_pools,
                     // Per-outlet counts for each retention pool, so the configuration screen can
                     // count whichever target group is selected at each location. Absent until the

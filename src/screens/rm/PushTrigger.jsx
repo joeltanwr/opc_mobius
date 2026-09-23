@@ -4,8 +4,10 @@ import { useMobiusState } from "../../state/StateProvider";
 import { useDemoData, natureOf } from "../../data/DataProvider";
 import { pushPreview, cohortTagsFor } from "../../state/store.js";
 import { num } from "../../data/format";
-import { Badge, BasisNote } from "../../components/ui";
+import { Badge, BasisNote, InfoTip } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame } from "../../components/RewardCard";
+import { useTrace } from "../../components/SystemTrace";
+import { DEMO_LAYER } from "../../data/constants";
 
 // ---------------------------------------------------------------------------------------------
 // RM §3.4 — the manual allocator trigger (the manual push trigger, renamed for what it does).
@@ -90,6 +92,10 @@ function Confirmation({ campaignId, onClose }) {
   const { data } = useDemoData();
   const [acknowledged, setAcknowledged] = useState(false);
   const [result, setResult] = useState(null);
+  // Demo layer: firing is the moment the System Trace animates, so while it is docked the overlay
+  // stops at its edge rather than dimming it — the room watches the stages light as the send goes.
+  const { open: traceOpen } = useTrace();
+  const traceDocked = DEMO_LAYER && traceOpen;
   const campaign = state.campaigns[campaignId];
   const preview = useMemo(() => pushPreview(state, campaignId, { cohort: true }), [state, campaignId]);
   if (!campaign) return null;
@@ -116,7 +122,7 @@ function Confirmation({ campaignId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-6" onClick={onClose}>
+    <div className={`fixed inset-0 ${traceDocked ? "lg:right-[400px]" : ""} z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-6`} onClick={onClose}>
       <div className="w-full max-w-3xl rounded-xl border border-border bg-white shadow-card-hover my-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
           <div>
@@ -126,8 +132,8 @@ function Confirmation({ campaignId, onClose }) {
             </h3>
             <p className="text-[12.5px] text-ink-secondary mt-0.5">
               {result
-                ? "The cards are in the feed and the campaign counters have moved. Everything below is what actually happened."
-                : "In production this is a scheduled send. Here it is a button, so the frequency cap can be watched doing its work."}
+                ? "Cards are in the feed. Below is what actually happened."
+                : "Demo trigger — in production this is a scheduled send."}
             </p>
           </div>
           <button onClick={onClose} className="text-ink-light hover:text-ink shrink-0" aria-label="Close"><X size={18} /></button>
@@ -143,7 +149,7 @@ function Confirmation({ campaignId, onClose }) {
             <div className="text-[12px] font-semibold text-ink mb-2">Exactly what goes out</div>
             <PhoneFrame
               time={campaign.window ? `From ${campaign.window.start}` : "Today"}
-              caption="Sent by OCBC. The merchant never receives a cardholder identity, and never learns who was targeted."
+              caption="Sent by OCBC. The merchant never learns who was targeted."
             >
               <PushNotificationCard
                 headline={cfg.offer_headline}
@@ -192,18 +198,19 @@ function BeforeFiring({ preview, acknowledged, onAcknowledge }) {
         />
       </div>
       <p className="text-[12.5px] text-ink-secondary leading-snug">
-        <span className="font-semibold text-ink">{num(preview.suppressed)} of {num(preview.delivered)}</span> recipients are already at the cap of{" "}
-        <span className="font-num font-semibold text-ink">{preview.cap_per_week} pushes per cardholder per week</span>
+        <span className="font-semibold text-ink">{num(preview.suppressed)} of {num(preview.delivered)}</span> already at the cap of{" "}
+        <span className="font-num font-semibold text-ink">{preview.cap_per_week} pushes a week</span>
         {preview.cap_provisional && <span className="ml-1 rounded bg-canvas border border-border px-1 py-0.5 text-[10.5px] text-ink-secondary">provisional</span>}
-        {" "}across every merchant on the platform. They still get the feed card — only the push is withheld, and the withholding is
-        counted here rather than dropped quietly.
+        <InfoTip title="What suppression means" className="ml-1">
+          They still get the feed card; only the push is withheld, and it's counted, not dropped.
+        </InfoTip>
       </p>
 
       {/* ------------------------------------------------------- the named cardholders, by name only because they are the demo's six */}
       {preview.named.length > 0 && (
         <div className="rounded-lg border border-border bg-canvas/50 px-3 py-2.5">
           <div className="text-[12px] font-semibold text-ink mb-1.5">
-            The {preview.named.length} showcase cardholders, individually — the rest of the allocation is counted, never listed
+            The {preview.named.length} showcase cardholders — the rest are counted, never listed
           </div>
           <ul className="space-y-1">
             {preview.named.map((n) => (
@@ -219,9 +226,11 @@ function BeforeFiring({ preview, acknowledged, onAcknowledge }) {
         </div>
       )}
       <div className="rounded-lg border border-border bg-canvas/50 px-3 py-2.5 text-[12.5px] text-ink-secondary">
-        <span className="font-semibold text-ink">{num(preview.rest)} more</span> in the allocation, of whom{" "}
-        <span className="font-num font-semibold text-ink">{num(preview.rest_suppressed)}</span> are expected to be suppressed. Counted in aggregate from
-        allocation_summary.json — this screen never holds a list of them, and there is no screen where it could.
+        <span className="font-semibold text-ink">{num(preview.rest)} more</span> in the allocation;{" "}
+        <span className="font-num font-semibold text-ink">{num(preview.rest_suppressed)}</span> expected to be suppressed.
+        <InfoTip title="How the rest are counted" className="ml-1">
+          Counted in aggregate from the pipeline. No screen holds a list of them.
+        </InfoTip>
         <BasisNote>
           Allocation week {preview.allocation_week}. Ranked highest propensity first — visits at the lift-source merchant × afternoon availability;
           not random, not alphabetical.
@@ -241,12 +250,13 @@ function BeforeFiring({ preview, acknowledged, onAcknowledge }) {
           <div className="flex items-start gap-2.5">
             <AlertTriangle size={15} className="text-warning shrink-0 mt-0.5" />
             <p className="text-[12.5px] text-ink-secondary">
-              <span className="font-semibold text-ink">This send takes the week past the portfolio ceiling.</span>{" "}
+              <span className="font-semibold text-ink">Past the weekly ceiling:</span>{" "}
               <span className="font-num tabular-nums">
-                {num(gate.contacted)} contacted + {num(gate.delivered)} = {num(gate.projected)} against a ceiling of {num(gate.ceiling)} — {num(gate.over_by)} over.
-              </span>{" "}
-              The ceiling is provisional and not yet calibrated, so it warns rather than blocks; the throttle is the control that binds. Crossing it is
-              recorded against this push either way.
+                {num(gate.contacted)} + {num(gate.delivered)} = {num(gate.projected)} against {num(gate.ceiling)} — {num(gate.over_by)} over.
+              </span>
+              <InfoTip title="Why it warns" className="ml-1">
+                The ceiling is provisional, so it warns rather than blocks; the throttle binds. Crossing it is recorded against this push.
+              </InfoTip>
             </p>
           </div>
           <label className="mt-2 flex items-center gap-2 text-[12.5px] font-semibold text-ink cursor-pointer">
@@ -276,23 +286,25 @@ function Outcome({ campaign }) {
       <div className="flex items-start gap-2 rounded-lg border border-success/40 bg-success-bg/50 px-3 py-2.5">
         <CheckCircle2 size={15} className="text-success shrink-0 mt-0.5" />
         <p className="text-[12.5px] text-ink-secondary">
-          Delivered {num(last.delivered)} = sent {num(last.sent)} + suppressed {num(last.suppressed)}. The arithmetic reconciles, which is the point:
-          a suppressed push is a counted outcome, not a disappearance.
+          Delivered {num(last.delivered)} = sent {num(last.sent)} + suppressed {num(last.suppressed)}.
           {last.suppressed_detail?.length > 0 && (
             <> Suppressed by name where the cardholder is one of the showcase six: {last.suppressed_detail.map((d) => d.id).join(", ")}.</>
           )}
+          <InfoTip title="Why it reconciles" className="ml-1">A suppressed push is a counted outcome, not a disappearance.</InfoTip>
         </p>
       </div>
       {last.portfolio?.over_ceiling && (
         <p className="text-[12px] text-warning">
-          Recorded as over the weekly ceiling: the week now stands at {num(last.portfolio.contacted_after)} against {num(last.portfolio.ceiling)}
-          {last.portfolio.acknowledged_over_ceiling ? ", acknowledged by the RM before sending" : ""}.
+          Over the weekly ceiling: {num(last.portfolio.contacted_after)} against {num(last.portfolio.ceiling)}
+          {last.portfolio.acknowledged_over_ceiling ? ", acknowledged before sending" : ""}.
         </p>
       )}
       {campaign.status === "capped" && (
         <p className="text-[12.5px] text-ink">
-          <span className="font-semibold">The reach cap fired</span> — the whole allocation now holds the card, so the campaign is closed to new deliveries and
-          its results are frozen. Cards already delivered stay valid until they expire; a reward a cardholder is holding is never revoked.
+          <span className="font-semibold">Reach cap reached</span> — closed to new deliveries, results frozen.
+          <InfoTip title="What happens to delivered cards" className="ml-1">
+            Cards already delivered stay valid until they expire. A reward a cardholder holds is never revoked.
+          </InfoTip>
         </p>
       )}
     </div>

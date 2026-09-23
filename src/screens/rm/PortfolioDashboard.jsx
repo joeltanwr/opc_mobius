@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num } from "../../data/format";
-import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
+import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
 import ExposurePanel from "./ExposurePanel";
 import PushTrigger, { PushTriggerProvider } from "./PushTrigger";
 import { StatusPill, Th, Td } from "./rmCommon";
@@ -55,7 +55,7 @@ export default function PortfolioDashboard() {
       <SectionTitle
         eyebrow="Screen 1 · Portfolio"
         title="Your caseload this week"
-        subtitle="Emerging Business and Middle Market merchants on the Mobius programme. The exposure panel below is the part no merchant can see — and the reason a per-campaign view alone is not enough."
+        subtitle="Emerging Business and Middle Market merchants on the Mobius programme."
       />
 
       {/* ------------------------------------------------------------------ 3.1 caseload strip */}
@@ -77,9 +77,11 @@ export default function PortfolioDashboard() {
           <div>
             <h2 className="text-[16px] font-bold text-ink">Ongoing</h2>
             <p className="text-[12.5px] text-ink-secondary mt-0.5 max-w-3xl">
-              Everything submitted and not yet finished — running programmes with live statistics, and those whose start date is still ahead.
-              The trigger on each row is what runs the allocator and puts the offer in a cardholder's app; it is marked as a demo control
-              because in production this is a scheduled send, not a button, and it is only available once a programme is actually live.
+              Submitted and not yet finished.
+              <InfoTip title="About the trigger" className="ml-1">
+                The trigger on a row runs the allocator and puts the offer in cardholders' apps. It's a demo control; in production
+                this is a scheduled send.
+              </InfoTip>
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -113,7 +115,7 @@ export default function PortfolioDashboard() {
       {/* ------------------------------------------------------------------ 3.3 completed */}
       <Card className="p-6">
         <h2 className="text-[16px] font-bold text-ink mb-1">Completed</h2>
-        <p className="text-[12.5px] text-ink-secondary mb-3">Final results, signed. One of these lost money, and it stays on the list.</p>
+        <p className="text-[12.5px] text-ink-secondary mb-3">Final results, signed.</p>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead><tr className="border-b border-border">
