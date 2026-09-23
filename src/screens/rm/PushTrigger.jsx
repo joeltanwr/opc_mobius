@@ -6,6 +6,8 @@ import { pushPreview, cohortTagsFor } from "../../state/store.js";
 import { num } from "../../data/format";
 import { Badge, BasisNote } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame } from "../../components/RewardCard";
+import { useTrace } from "../../components/SystemTrace";
+import { DEMO_LAYER } from "../../data/constants";
 
 // ---------------------------------------------------------------------------------------------
 // RM §3.4 — the manual allocator trigger (the manual push trigger, renamed for what it does).
@@ -90,6 +92,10 @@ function Confirmation({ campaignId, onClose }) {
   const { data } = useDemoData();
   const [acknowledged, setAcknowledged] = useState(false);
   const [result, setResult] = useState(null);
+  // Demo layer: firing is the moment the System Trace animates, so while it is docked the overlay
+  // stops at its edge rather than dimming it — the room watches the stages light as the send goes.
+  const { open: traceOpen } = useTrace();
+  const traceDocked = DEMO_LAYER && traceOpen;
   const campaign = state.campaigns[campaignId];
   const preview = useMemo(() => pushPreview(state, campaignId, { cohort: true }), [state, campaignId]);
   if (!campaign) return null;
@@ -116,7 +122,7 @@ function Confirmation({ campaignId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-6" onClick={onClose}>
+    <div className={`fixed inset-0 ${traceDocked ? "lg:right-[400px]" : ""} z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-6`} onClick={onClose}>
       <div className="w-full max-w-3xl rounded-xl border border-border bg-white shadow-card-hover my-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
           <div>

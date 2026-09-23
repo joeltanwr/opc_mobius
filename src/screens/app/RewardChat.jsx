@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Send, MapPin, Clock } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { RewardFeedCard } from "../../components/RewardCard";
 import { INTENTS, FALLBACK, matchIntent, searchPull } from "./chatbot";
 import { enrich } from "./offers";
+import { useTrace } from "../../components/SystemTrace";
 import { formatDays, formatHours } from "../../components/RewardCard";
 
 // The programme's own window, in the words the feed card uses for it.
@@ -35,6 +36,11 @@ export default function RewardChat({ cardholderId, holder }) {
   const [turns, setTurns] = useState([]);
   const [draft, setDraft] = useState("");
   const endRef = useRef(null);
+  // Demo layer: the latest answer is what the System Trace's Pull line reads, so it is handed over
+  // from here — the same result the funnel line under the answer prints — and withdrawn when the
+  // chat leaves the screen, so the trace never describes a conversation nobody can see.
+  const { publishPull } = useTrace();
+  useEffect(() => () => publishPull(null), [publishPull]);
 
   // Shipped by run_all.py alongside the rest of the manifest. Null until the pipeline has been
   // re-run, and searchPull() falls back to exact home/work districts when it is.
@@ -55,6 +61,12 @@ export default function RewardChat({ cardholderId, holder }) {
         })
       : null;
     setTurns((t) => [...t, { q, intent, found, id: t.length }]);
+    publishPull({
+      holderId: cardholderId,
+      intent: intent?.id ?? "unrecognised",
+      location: found?.districts?.length ? found.districts.map((d) => `D${d}`).join("/") : "—",
+      count: found?.results?.length ?? 0,
+    });
     setDraft("");
     // The newest answer, not the top of the thread: on a phone-sized panel the question the
     // presenter just asked has to be the thing on screen.

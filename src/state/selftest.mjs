@@ -9,7 +9,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
 import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued,
-         cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool } from "./store.js";
+         cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool, liveReach } from "./store.js";
+import { traceOf, allocatorFunnel, verdictFor, heldOffer } from "./trace.js";
 import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
 import { expectedOutcome } from "./expected.js";
 import { INTENTS, isFindable, searchPull, openNow } from "../screens/app/chatbot.js";
@@ -827,6 +828,81 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         mine.every((o) => Array.isArray(o.days_of_week) && Array.isArray(o.hours) && o.expires_at));
   check("feed: Bernice is still at zero pushes this week, so the RM's push reaches her",
         seed.cardholders.bernice.pushes_this_week === 0);
+}
+
+// ---------------------------------------------------------------- the System Trace reads state, not a copy of it
+// The demo drawer's one hard rule: every value it prints comes from the state that drives the
+// screen beside it. Held here against the reducer, so a trace that drifted from the send, the
+// dashboards' reach or the consolidated tiles fails validate.py instead of failing on stage.
+{
+  const line = (tr, key) => tr.nodes.find((n) => n.key === key)?.line ?? null;
+  const sub = (tr, key, subKey) => tr.nodes.find((n) => n.key === key)?.sub?.find((x) => x.key === subKey)?.line ?? null;
+  const alloc = data.allocationSummary;
+  let k = seed;
+  const f0 = allocatorFunnel(k, k.campaigns[DEMO]);
+  const t0 = traceOf({ state: k, data, view: "rm" });
+  check("trace: the allocator funnel is the pipeline's own arithmetic — every removal, in order",
+        f0.afterCap === alloc.candidate_pool_before_filters - Object.values(alloc.removed).reduce((a, b) => a + b, 0)
+        && f0.afterConsent - f0.afterCap === alloc.removed.frequency_cap
+        && f0.candidates - f0.afterConsent === alloc.removed.consent, f0);
+  check("trace: the funnel ends at the reach the dashboards print (liveReach), stated as the rounding of the exact figure",
+        f0.reach === liveReach(k.campaigns[DEMO], k.caps.reach_rounding) && f0.reach === Math.round(f0.afterCap / k.caps.reach_rounding) * k.caps.reach_rounding
+        && line(t0, "allocator") === `${f0.candidates.toLocaleString()} → ${f0.afterConsent.toLocaleString()} → ${f0.afterCap.toLocaleString()} (rounded to ${f0.reach.toLocaleString()})`,
+        line(t0, "allocator"));
+  check("trace: consent and the cap show exactly what the pipeline removed",
+        sub(t0, "allocator", "consent") === `\u2212${alloc.removed.consent}` && sub(t0, "allocator", "cap") === `\u2212${alloc.removed.frequency_cap}`,
+        [sub(t0, "allocator", "consent"), sub(t0, "allocator", "cap")]);
+  check("trace: the gate, the gap and the pick are the campaign's own eligibility, trough and recommendation",
+        line(t0, "gate").endsWith(k.campaigns[DEMO].eligibility.passed ? "pass" : "fail")
+        && line(t0, "sme").includes(data.merchantProfiles[k.campaigns[DEMO].merchant_id].trading_pattern.trough.window)
+        && line(t0, "recommender").includes(k.campaigns[DEMO].recommended.label), [line(t0, "gate"), line(t0, "sme"), line(t0, "recommender")]);
+  check("trace: nothing has been sent, and the trace says so", line(t0, "delivery") === "Push · not fired" && t0.runKey === "push:0");
+  const before = traceOf({ state: k, data, view: "consolidated" }).chips;
+  check("trace: before the send, the two in scope wait and the two outside are already out",
+        before.map((c) => c.mark).join() === "wait,wait,no,no", before);
+  // Consent moves the funnel only while the campaign is open — the reducer stops counting
+  // departures once it is terminal, and liveReach with it — so this is checked before the send.
+  const off = reduce(k, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(1), seq: 1 });
+  const fOff = allocatorFunnel(off, off.campaigns[DEMO]);
+  const chipOff = traceOf({ state: off, data, view: "consolidated" }).chips[1];
+  check("trace: a cardholder turning offers off moves the consent count live and flips her chip to the Consent stage",
+        fOff.optedOut === f0.optedOut + 1 && fOff.afterCap === f0.afterCap - 1
+        && fOff.reach === liveReach(off.campaigns[DEMO], off.caps.reach_rounding)
+        && chipOff.mark === "no" && chipOff.node === "consent", { fOff, chipOff });
+
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(2), seq: 2 });
+  k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3 });
+  k = reduce(k, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
+  const c = k.campaigns[DEMO], sent = c.pushes.at(-1);
+  const t1 = traceOf({ state: k, data, view: "rm" });
+  check("trace: after the send, Delivery prints the campaign's own counters — the figures the push dialog reports",
+        line(t1, "delivery") === `Push ${c.counters.pushes_sent.toLocaleString()} sent · ${c.counters.pushes_suppressed.toLocaleString()} suppressed`
+        && c.counters.pushes_sent === sent.sent && c.counters.pushes_suppressed === sent.suppressed && t1.runKey === "push:1",
+        { line: line(t1, "delivery"), sent });
+  const t2 = traceOf({ state: k, data, view: "consolidated" });
+  const held = t2.chips.filter((x) => heldOffer(k, DEMO, x.id)).length;
+  check("trace: consolidated chips — #1 and #2 allocated, #3 out on the target pool, #4 out on a tag",
+        t2.chips.map((x) => `${x.mark}:${x.node}`).join() === "yes:allocator,yes:allocator,no:recommender,no:tagging", t2.chips);
+  check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 4",
+        line(t2, "delivery") === `Push · ${held} of ${t2.chips.length} notified` && held === 2, line(t2, "delivery"));
+
+  k = reduce(k, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(5), seq: 5 });
+  const t3 = traceOf({ state: k, data, view: "consolidated" });
+  check("trace: a card withdrawn by turning offers off stops counting as held, on the chip and in the count",
+        t3.chips[1].mark === "no" && t3.chips[1].node === "consent" && !heldOffer(k, DEMO, "bernice")
+        && line(t3, "delivery") === `Push · 1 of ${t3.chips.length} notified`, { chip: t3.chips[1], line: line(t3, "delivery") });
+
+  const pull = { id: 1, holderId: "bernice", intent: "coffee", location: "D2/D14", count: 3 };
+  const t4 = traceOf({ state: k, data, view: "individual", cardholderId: "bernice", pull });
+  check("trace: a chatbot answer switches Delivery to Pull and greys the recommender and the allocator",
+        t4.mode === "pull" && line(t4, "delivery") === "Query → {coffee, D2/D14} → 3 programmes"
+        && t4.nodes.filter((n) => n.greyed).map((n) => n.key).join() === "recommender,allocator"
+        && !t4.sequence.includes("allocator") && !t4.sequence.includes("recommender"), t4.nodes.map((n) => [n.key, n.line]));
+  check("trace: the Pull line belongs to the phone that asked — another phone stays on Push",
+        traceOf({ state: k, data, view: "individual", cardholderId: "charles", pull }).mode === "push");
+  check("trace: a reset is a fresh seed, so the trace starts over with it",
+        traceOf({ state: seed, data, view: "rm" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "bernice", "Lookalike").mark === "wait");
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges

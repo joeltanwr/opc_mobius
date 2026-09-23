@@ -3,8 +3,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { DataProvider, useDemoData } from "./data/DataProvider";
 import { StateProvider, useMobiusState } from "./state/StateProvider";
 import { rewardConfigUnlocked } from "./state/store.js";
-import { MERCHANT_EXTRA_SCREENS, RM_EXTRA_SCREENS, DEMO_CAMPAIGN_ID } from "./data/constants";
+import { MERCHANT_EXTRA_SCREENS, RM_EXTRA_SCREENS, DEMO_CAMPAIGN_ID, DEMO_LAYER } from "./data/constants";
 import AppShell from "./components/AppShell";
+import { TraceProvider } from "./components/SystemTrace";
 import Overview from "./screens/Overview";
 import TargetCustomer from "./screens/TargetCustomer";
 import DemandGap from "./screens/DemandGap";
@@ -71,6 +72,9 @@ export default function App() {
   return (
     <DataProvider>
       <StateProvider>
+      {/* The System Trace's memory (open or collapsed, a highlighted stage, the chatbot's last
+          answer) sits above the router so it survives a hop between views. Demo layer only. */}
+      <TraceProvider>
       <Routes>
         <Route
           element={
@@ -150,8 +154,9 @@ export default function App() {
           {/* Demo presentation layer, not part of the cardholder app's IA — four cardholders'
               home screens at once, so the allocator's scope can be watched rather than asserted.
               It shares AppFrame's chrome because it is reached from a toggle inside the cardholder
-              view, and AppFrame renders it unframed: it draws its own four devices. */}
-          <Route path="/app/all" element={<ConsolidatedHome />} />
+              view, and AppFrame renders it unframed: it draws its own four devices. Behind
+              DEMO_LAYER with the rest of the pitch scaffolding. */}
+          {DEMO_LAYER && <Route path="/app/all" element={<ConsolidatedHome />} />}
           <Route path="/app/rewards" element={<Rewards />} />
           <Route path="/app/rewards/:offerId" element={<RewardDetail />} />
           <Route path="/app/redeem/:offerId" element={<Redeem />} />
@@ -164,6 +169,7 @@ export default function App() {
             thing that must not happen on a projector. */}
         <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
+      </TraceProvider>
       </StateProvider>
     </DataProvider>
   );

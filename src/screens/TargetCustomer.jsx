@@ -3,13 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
-import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles, Info } from "lucide-react";
+import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
 import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
-import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard } from "../components/ui";
+import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard, InfoTip } from "../components/ui";
 
 // Merchant view Tab 3 — "Target customer" (merchant prompt §6). The merchant understands its
 // customer base and is persuaded to apply.
@@ -660,7 +660,6 @@ function CustomerAnalysis({ profile, gap, rationale, hasRecommendation, trailing
 // The denominator is every customer scored, so the visible bars deliberately do not sum to 100%
 // when a segment is suppressed. That is the honest total, and the residual is the suppression.
 function RfmDistribution({ rfm, hasRecommendation }) {
-  const [openGlossary, setOpenGlossary] = useState(false);
   const scored = rfm.customers_scored || 0;
   const rows = useMemo(
     () =>
@@ -681,19 +680,8 @@ function RfmDistribution({ rfm, hasRecommendation }) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <p className="text-[12.5px] text-ink-secondary">Share of your scored customers, by segment</p>
-        <button
-          type="button"
-          onClick={() => setOpenGlossary((v) => !v)}
-          aria-expanded={openGlossary}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1 text-[12px] font-medium text-ink-secondary hover:text-ink hover:bg-canvas"
-        >
-          <Info size={13} />
-          What the segments mean
-        </button>
-      </div>
-
-      {openGlossary && (
-        <div className="mb-3 rounded-lg border border-border bg-canvas/60 p-4">
+        {/* The app's one ⓘ (components/ui.jsx InfoTip) started here; this is still its widest use. */}
+        <InfoTip label="What the segments mean" align="right" width="w-[36rem]">
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
             {rows.map((r) => (
               <div key={r.segment} className="flex gap-2 text-[12.5px]">
@@ -702,8 +690,8 @@ function RfmDistribution({ rfm, hasRecommendation }) {
               </div>
             ))}
           </dl>
-        </div>
-      )}
+        </InfoTip>
+      </div>
 
       <ResponsiveContainer width="100%" height={240}>
         <BarChart data={rows} margin={{ left: -12, right: 12, top: 8, bottom: 28 }}>

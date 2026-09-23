@@ -85,7 +85,8 @@ export default function Rewards() {
           never meant to stop them looking something up, and refusing to answer a direct question
           because of a marketing preference would be the wrong reading of it. */}
       <section className="px-4 pt-4">
-        <RewardChat cardholderId={cardholderId} holder={holder} />
+        {/* Keyed by cardholder: one person's conversation does not carry over onto another's phone. */}
+        <RewardChat key={cardholderId} cardholderId={cardholderId} holder={holder} />
       </section>
 
       {/* ---------------------------------------------------------- 4.2 why these offers */}
