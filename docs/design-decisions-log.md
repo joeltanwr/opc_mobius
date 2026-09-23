@@ -40,5 +40,40 @@ Five reward types only (from the write-up): discount, cashback, voucher, spend-a
 
 **Deliberately not built** (flagged, not silently dropped): mapping a customer's immediate family and frequent transaction counterparties into a network, then using their spending to raise the customer's own targeting propensity. Excluded from `retailer-transaction-data-analysis` as a documented future-extension — it infers relationships between identified individuals from transaction data, the same category of privacy exposure as the already-dropped Great Eastern insurance → travel-intent idea.
 
+## Round 7 — System Trace and UI copy sweep (2026-09-23)
+Rounds 1–6 were not written into this file. Their standing decisions (disconnect, don't delete; one source of truth for every figure; the merchant view stays realistic to an SME user) are recorded in code comments (`src/data/constants.js`, `src/App.jsx`), and this round follows them.
+
+### System Trace (demo layer)
+- **What:** a drawer showing the recommender's stages in pipeline order: Customer Tagging → SME Analysis → Eligibility Gate → Reward Recommender → Allocator [Consent → Freq Cap] → Delivery [Push | Pull]. It also has one fixed control node, "RM review — prod queue · bypassed in demo". That node makes the removed RM approval step visible on screen instead of leaving it for the talk track.
+- **Where:** RM view and both cardholder modes (Consolidated, Individual). **Never the merchant view.** Dark, monospace, badged "DEMO LAYER · simulated trace", so nobody mistakes it for OCBC product UI. Expanded by default on screens ≥1024px. It takes width from the page rather than covering it.
+- **Toggle:** sits immediately left of the persona switcher. Reset stays in the footer, where it is in all three views; moving it into two headers would break the "same control, same place" rule.
+- **One flag:** `DEMO_LAYER` in `constants.js` gates the trace, the Consolidated view and the reset buttons together. It is on by default, and nothing behind it is deleted.
+- **Word budget:** one line of output per stage, numbers over sentences. Explanations sit behind an ⓘ, at most two sentences.
+- **Hard rule: the trace has no figures of its own.** `src/state/trace.js` reads every value from shared state or the loaded dataset, through the same helpers the screens use. `selftest.mjs` checks it against the reducer. Reset clears it: its only memory is React state, and reset reloads the page.
+- **Settled details:**
+  - Reward Recommender shows the pool actually configured. For Soujourner that is **Non-customers (lookalike)**, not an RFM segment, because acquisition uses merchant-pair lift and retention uses RFM.
+  - Allocator reads **538 → 423 → 396 (rounded to 400)**: candidate pool, after consent, after the frequency cap, then the reach every dashboard shows. Exact counts inside the demo layer; the rounded figure is the one everywhere else (decided by Joel).
+  - Consolidated chips are worked out from state, not fixed:
+    - #1 Edwin ✓ and #2 Bernice ✓ point to Allocator.
+    - #3 Alvin ✗ "Champion · existing customer" points to Reward Recommender, because the campaign targets non-customers.
+    - #4 Charles ✗ "No lookalike match" points to Customer Tagging (price-band tag).
+    - Tapping a chip highlights that stage.
+  - A chatbot answer switches Delivery to Pull, showing `Query → {category, location} → N programmes` with the chat's own count. Recommender and Allocator grey out, tagged "segment match skipped · customer-initiated". This works on whichever phone asked: Charles is the designated pull persona, and Bernice works too.
+  - SME Analysis prints the figure (−43.6%), not the rounded narrative sentence from `rationales.json` (44%).
+  - The Consolidated tile pill and its "holding this offer" count no longer count a card that was withdrawn when its holder turned offers off. This is the same rule the chips use.
+
+### UI copy sweep (all three personas)
+- **Visible copy is limited to:** labels, numbers, headlines, CTAs, status, and at most one subtitle of about 12 words per section.
+- **How/why explanations** (metric meanings, calculation notes, what a segment or reward type is, process descriptions) go behind an ⓘ next to what they describe, trimmed to at most two sentences.
+- **One ⓘ component app-wide:** `InfoTip` in `src/components/ui.jsx`, grown from the RFM segment glossary. No variants. The trace uses it too.
+- **Delete, don't move, in the merchant and cardholder views:** rounding/precision notes, incremental share/score, control-group framing, and "where the incremental share comes from".
+- **In the RM view,** control-group and net-contribution explanations move behind an ⓘ and every figure stays. The control comparison belongs on the RM's campaign detail, and the losing campaign is on the never-cut list.
+- **Kept as-is:** the Overview tagline and subtext; the not-eligible message (shortened only if longer than one line); chatbot replies.
+- **Scope:** screens users can currently reach. Disconnected screens and `BasisNote` strings (already hidden by `SHOW_BASIS_NOTES`) stay untouched, so their flags still restore them intact. The System Trace is exempt; it has its own budget.
+- **Process:** nothing changes until a per-screen before/after table (changed / moved to ⓘ / deleted) has been approved.
+
 ## Still open / not yet decided
 - Exact numeric thresholds (portfolio-level frequency cap in `portfolio-allocator`, push cap, auto-approve reach/cost threshold) — need a stated basis before going in the deck, not just round numbers.
+- **System Trace default state.** It currently starts expanded on screens ≥1024px. Docked, it narrows every RM and cardholder screen by 400px and drops the Consolidated view to 2×2. Decide whether the live pitch and the video start with it open or collapsed.
+- **Final trace numbers once Soujourner Coffee's values are locked.** The trace reads whatever the pipeline ships, so a re-run moves the figures automatically: 538 / 423 / 396 / 400, the −43.6% gap, S$45,477 against S$30,000, and 399 sent · 1 suppressed. The talk track and video need re-checking against the locked set. The demand-gap narrative says 44% where the figure is 43.6%.
+- **Lock the chatbot demo query.** The intents are scripted (`src/screens/app/chatbot.js`). The Pull count depends on live programmes and the asking phone's districts (today, Bernice asking for coffee gets 3 near D4/D2). Fix the exact phrasing and which phone asks before recording.
