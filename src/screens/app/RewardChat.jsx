@@ -3,7 +3,7 @@ import { Sparkles, Send, MapPin, Clock } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { RewardFeedCard } from "../../components/RewardCard";
-import { INTENTS, FALLBACK, matchIntent, searchPull } from "./chatbot";
+import { INTENTS, FALLBACK, matchIntent, matchedPhrase, searchPull } from "./chatbot";
 import { enrich } from "./offers";
 import { useTrace } from "../../components/SystemTrace";
 import { InfoTip } from "../../components/ui";
@@ -62,11 +62,18 @@ export default function RewardChat({ cardholderId, holder }) {
         })
       : null;
     setTurns((t) => [...t, { q, intent, found, id: t.length }]);
+    // Everything the trace's Pull path prints is this same searchPull() result — the funnel line
+    // under the answer and the drawer read one object, so they cannot disagree.
     publishPull({
       holderId: cardholderId,
-      intent: intent?.id ?? "unrecognised",
+      q,
+      intent: intent?.id ?? null,
+      phrase: matchedPhrase(q, intent),
       location: found?.districts?.length ? found.districts.map((d) => `D${d}`).join("/") : "—",
       count: found?.results?.length ?? 0,
+      searched: found?.searched ?? 0, open: found?.open ?? 0, in_category: found?.in_category ?? 0,
+      open_now: found?.open_now ?? 0, exact_only: Boolean(found?.exact_only),
+      results: (found?.results ?? []).map((r) => ({ name: r.merchant?.name ?? r.campaign.merchant_name, near: r.near.length, of: r.districts.length, open_now: r.open_now })),
     });
     setDraft("");
     // The newest answer, not the top of the thread: on a phone-sized panel the question the

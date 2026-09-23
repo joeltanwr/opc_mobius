@@ -7,7 +7,7 @@ import { num } from "../../data/format";
 import { Badge, BasisNote, InfoTip } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame } from "../../components/RewardCard";
 import { useTrace } from "../../components/SystemTrace";
-import { DEMO_LAYER } from "../../data/constants";
+import { DEMO_LAYER, TRACE_VIEWS } from "../../data/constants";
 
 // ---------------------------------------------------------------------------------------------
 // RM §3.4 — the manual allocator trigger (the manual push trigger, renamed for what it does).
@@ -95,7 +95,7 @@ function Confirmation({ campaignId, onClose }) {
   // Demo layer: firing is the moment the System Trace animates, so while it is docked the overlay
   // stops at its edge rather than dimming it — the room watches the stages light as the send goes.
   const { open: traceOpen } = useTrace();
-  const traceDocked = DEMO_LAYER && traceOpen;
+  const traceDocked = DEMO_LAYER && TRACE_VIEWS.rm && traceOpen;
   const campaign = state.campaigns[campaignId];
   const preview = useMemo(() => pushPreview(state, campaignId, { cohort: true }), [state, campaignId]);
   if (!campaign) return null;

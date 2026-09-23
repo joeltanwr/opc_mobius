@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2, ShieldAlert, RotateCcw } from "lucide-react";
-import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS, DEMO_CAMPAIGN_ID, DEMO_LAYER, maxScreenNum } from "../data/constants";
+import { SCREENS, OPTIONAL_SCREENS, RM_SCREENS, DEMO_CAMPAIGN_ID, DEMO_LAYER, TRACE_VIEWS, maxScreenNum } from "../data/constants";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
 import PrivacyAffordance from "./PrivacyAffordance";
@@ -17,22 +17,20 @@ import { MockDataBadge, ScaleDisclosure } from "./ui";
 // The scale disclosure is rendered here and only here — it is one sentence about the whole
 // dataset, not a per-screen caption, and validate.py checks it appears in exactly one component.
 
-// `trace` is the System Trace drawer (demo layer). The RM gets it; the merchant never does — the
-// merchant view stays what an SME owner would actually be shown.
+// Which of the two carries the System Trace drawer is TRACE_VIEWS in constants.js — the demo
+// layer, never something a real merchant or RM would see.
 const VARIANTS = {
   merchant: {
     screens: SCREENS,
     optional: OPTIONAL_SCREENS,
     activeClass: "bg-[#FDECEC] text-brand",
     audience: "merchant",
-    trace: false,
   },
   rm: {
     screens: RM_SCREENS,
     optional: [],
     activeClass: "bg-navy text-white",
     audience: "rm",
-    trace: true,
   },
 };
 
@@ -42,7 +40,7 @@ export default function AppShell({ variant = "merchant" }) {
   const m = useMobiusState();
   const v = VARIANTS[variant] ?? VARIANTS.merchant;
   const header = useRef(null);
-  const trace = DEMO_LAYER && v.trace;
+  const trace = DEMO_LAYER && Boolean(TRACE_VIEWS[variant]);
 
   // The gated entry drops out of the nav until the merchant has applied and the eligibility gate
   // has cleared that application. The lock is enforced here and by the route guard in App.jsx, and
@@ -184,7 +182,7 @@ export default function AppShell({ variant = "merchant" }) {
             </div>
           </footer>
         </div>
-        {trace && <SystemTrace view="rm" stickyRef={header} />}
+        {trace && <SystemTrace view={variant} route={location.pathname} stickyRef={header} />}
       </div>
     </div>
   );

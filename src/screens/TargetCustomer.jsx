@@ -8,6 +8,7 @@ import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } f
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
 import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER } from "../data/constants";
+import { useTrace } from "../components/SystemTrace";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard, InfoTip } from "../components/ui";
 
@@ -51,6 +52,11 @@ export default function TargetCustomer() {
   const { data } = useDemoData();
   const m = useMobiusState();
   const [merchantId, setMerchantId] = useState(TAB3_ACCOUNTS[0].id);
+  // Demo layer: the System Trace follows the account switcher. Handed back on leaving, so every
+  // other merchant screen traces the demo campaign's merchant again.
+  const { setMerchantFocus } = useTrace();
+  useEffect(() => { setMerchantFocus(merchantId); }, [merchantId, setMerchantFocus]);
+  useEffect(() => () => setMerchantFocus(null), [setMerchantFocus]);
   if (!m) return null;
 
   const { state, dispatch, display, reachOf, rewind } = m;

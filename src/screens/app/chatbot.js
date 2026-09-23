@@ -73,6 +73,13 @@ export function matchIntent(text) {
   return INTENTS.find((i) => i.phrasings.some((p) => q.includes(p))) ?? null;
 }
 
+// Which of the intent's phrasings the question actually hit — the System Trace shows it, so the
+// match is visible as a keyword match rather than implied to be understanding.
+export function matchedPhrase(text, intent) {
+  const q = String(text ?? "").toLowerCase();
+  return intent?.phrasings.find((p) => q.includes(p)) ?? null;
+}
+
 // ----------------------------------------------------------------------------------------------
 // Near me — the allocator's own catchment rule, asked of the cardholder instead of the segment.
 //

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Workflow, ChevronRight } from "lucide-react";
+import { Workflow, ChevronRight, ChevronDown } from "lucide-react";
 import { useMobiusState } from "../state/StateProvider";
 import { useDemoData } from "../data/DataProvider";
 import { traceOf } from "../state/trace.js";
@@ -7,10 +7,12 @@ import { DEMO_LAYER, TRACE } from "../data/constants";
 import { InfoTip } from "./ui";
 
 // ----------------------------------------------------------------------------------------------
-// DEMO LAYER — the System Trace drawer. RM view and cardholder view only; never the merchant's.
+// DEMO LAYER — the System Trace drawer. Merchant and cardholder views; which views carry it is
+// TRACE_VIEWS in constants.js (round 8 took it off the RM view and put it on the merchant's).
 //
 // The recommender's stages as a strip of nodes that light up in order, so a judge can watch the
-// parts hand off to each other rather than be told they do. It is deliberately not the OCBC design
+// parts hand off to each other rather than be told they do — and, opened, the figures and the rule
+// each stage used, so "why this group, why this reward" has an answer on screen. It is deliberately not the OCBC design
 // language — dark, monospace, badged — because it is scaffolding around the product, like the
 // prototype bar, and must never be mistaken for a screen a banker or a cardholder would see.
 //
@@ -23,7 +25,8 @@ import { InfoTip } from "./ui";
 const STEP_MS = 400;
 
 const TraceContext = createContext(null);
-const INERT = { open: false, setOpen: () => {}, highlight: null, setHighlight: () => {}, pull: null, publishPull: () => {}, seen: { current: {} } };
+const INERT = { open: false, setOpen: () => {}, highlight: null, setHighlight: () => {}, pull: null, publishPull: () => {},
+                merchantFocus: null, setMerchantFocus: () => {}, seen: { current: {} } };
 export const useTrace = () => useContext(TraceContext) ?? INERT;
 
 // Above the router, so collapsing it in the RM view keeps it collapsed in the cardholder view, and
@@ -36,6 +39,9 @@ export function TraceProvider({ children }) {
   );
   const [highlight, setHighlight] = useState(null);
   const [pull, setPull] = useState(null);
+  // The account Customer Profile is showing, so the merchant trace follows its switcher. Null
+  // everywhere else, which means the demo campaign's merchant.
+  const [merchantFocus, setMerchantFocus] = useState(null);
   const counter = useRef(0);
   // The last run each view has shown, so a view that was not on screen for a fire still plays it
   // the first time it is opened afterwards — and only then.
@@ -45,12 +51,15 @@ export function TraceProvider({ children }) {
     counter.current += 1;
     setPull({ ...payload, id: counter.current });
   }, []);
-  const value = useMemo(() => ({ open, setOpen, highlight, setHighlight, pull, publishPull, seen }), [open, highlight, pull, publishPull]);
+  const value = useMemo(
+    () => ({ open, setOpen, highlight, setHighlight, pull, publishPull, merchantFocus, setMerchantFocus, seen }),
+    [open, highlight, pull, publishPull, merchantFocus]
+  );
   return <TraceContext.Provider value={value}>{children}</TraceContext.Provider>;
 }
 
 // ---------------------------------------------------------------------------------------- toggle
-// Sits immediately left of the persona switcher in the RM and cardholder chromes. Styled as the
+// Sits immediately left of the persona switcher in every chrome that carries the drawer. Styled as the
 // drawer is, so it reads as part of the demo layer rather than a control of the product.
 export function TraceToggle() {
   const t = useTrace();
@@ -101,19 +110,23 @@ export function TraceChip({ chip }) {
 // `stickyRef` is the chrome's sticky header: the drawer docks directly under it, at whatever height
 // it has wrapped to, and scrolls on its own if the strip is taller than the space left.
 //
-// 400px is set by the longest one-line output (the gap window and the pick, ~46 characters of
-// monospace) — measured in the browser, not estimated. The push dialog's overlay stops at the same
-// width (PushTrigger.jsx lg:right-[400px]); change the two together.
-export default function SystemTrace({ view, cardholderId = null, stickyRef }) {
+// Each stage is a header (agent, module, rules/scripted) and a one-line headline; opened, it shows
+// the figures the stage worked from and its rule. The stages in `trace.focus` open on their own —
+// on Reward Configuration that is whatever the last choice touched — and flash when it changes.
+//
+// 400px: the headlines are measured to fit on one line at this width. The push dialog's overlay
+// stops at the same width (PushTrigger.jsx lg:right-[400px]); change the two together.
+export default function SystemTrace({ view, cardholderId = null, route = null, stickyRef }) {
   const t = useTrace();
   const m = useMobiusState();
   const { data } = useDemoData();
   const top = useElementHeight(stickyRef);
   const trace = useMemo(
-    () => (m ? traceOf({ state: m.state, data, view, cardholderId, pull: t.pull }) : null),
-    [m, data, view, cardholderId, t.pull]
+    () => (m ? traceOf({ state: m.state, data, view, cardholderId, pull: t.pull, merchantId: t.merchantFocus, route }) : null),
+    [m, data, view, cardholderId, t.pull, t.merchantFocus, route]
   );
   const step = useRun(trace, `${view}:${cardholderId ?? ""}`, t.seen);
+  const { open: opened, toggle, flashing } = useFocus(trace);
   const highlight = view === "consolidated" ? t.highlight : null;
 
   if (!DEMO_LAYER || !t.open || !trace) return null;
@@ -143,8 +156,8 @@ export default function SystemTrace({ view, cardholderId = null, stickyRef }) {
           <span className="inline-flex items-center rounded border border-amber-300/50 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
             {TRACE.badge}
           </span>
-          <div className="mt-1.5 text-[13px] font-semibold text-slate-100">
-            {TRACE.title} <span className="font-normal text-slate-500">· {trace.campaignId} · {trace.mode}</span>
+          <div className="mt-1.5 text-[13px] font-semibold text-slate-100 truncate">
+            {TRACE.title} <span className="font-normal text-slate-500">· {trace.subject}{trace.mode === "recommend" ? "" : ` · ${trace.mode}`}</span>
           </div>
         </div>
         <button
@@ -165,6 +178,9 @@ export default function SystemTrace({ view, cardholderId = null, stickyRef }) {
             look={visual(n.key, n)}
             lookOf={(s) => visual(s.key, s)}
             highlight={highlight}
+            expanded={opened.has(n.key)}
+            onToggle={() => toggle(n.key)}
+            flash={flashing && trace.focus.includes(n.key)}
             last={i === trace.nodes.length - 1}
           />
         ))}
@@ -195,21 +211,54 @@ const BOX = {
 
 const CHANNEL_ON = "border-emerald-400/70 bg-emerald-400/10 text-emerald-300";
 
-function TraceNode({ node, look, lookOf, highlight, last }) {
-  const ring = highlight === node.key ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#0B1120]" : "";
+function TraceNode({ node, look, lookOf, highlight, expanded, onToggle, flash, last }) {
+  const ring = highlight === node.key ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#0B1120]"
+    : flash ? "ring-2 ring-sky-300/80 ring-offset-2 ring-offset-[#0B1120]" : "";
+  // A stage that did not run has nothing to open — its headline already says why.
+  const hasDetail = !node.greyed && ((node.facts?.length ?? 0) > 0 || Boolean(node.how));
   return (
     <li className="relative pl-5 pb-3">
       {!last && <span aria-hidden className={`absolute left-[5px] top-4 bottom-0 w-px ${look === "lit" || look === "fail" ? "bg-emerald-400/40" : "bg-slate-700"}`} />}
       <span aria-hidden className={`absolute left-0 top-3 h-[11px] w-[11px] rounded-full transition-all duration-300 ${DOT[look]}`} />
-      <div className={`rounded-md border px-2.5 py-2 transition-colors duration-300 ${BOX[look]} ${ring}`}>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{node.label}</span>
-          <InfoTip tone="dark" align="right" width="w-64" title={`About ${node.label}`}>{node.info}</InfoTip>
+      <div className={`rounded-md border px-2.5 py-2 transition-all duration-300 ${BOX[look]} ${ring}`}>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={hasDetail ? onToggle : undefined}
+            aria-expanded={hasDetail ? expanded : undefined}
+            className={`flex min-w-0 flex-1 items-center gap-1.5 text-left ${hasDetail ? "cursor-pointer" : "cursor-default"}`}
+          >
+            <span className="shrink-0 text-[10.5px] font-semibold uppercase tracking-wider text-slate-300">{node.label}</span>
+            {node.module && <span className="truncate text-[10px] text-slate-500">{node.module}</span>}
+            {hasDetail && <ChevronDown size={12} className={`ml-auto shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />}
+          </button>
+          <InfoTip tone="dark" align="right" width="w-64" title={`About ${node.label}`}>
+            {node.info}
+            {node.skill && <span className="mt-1.5 block text-slate-500">Implements: {node.skill}</span>}
+          </InfoTip>
         </div>
         {node.line && (
           <div data-trace-line className={`mt-0.5 text-[12px] leading-snug ${look === "greyed" || look === "control" ? "italic" : ""}`}>{node.line}</div>
         )}
         {node.sub && <SubNodes node={node} lookOf={lookOf} highlight={highlight} />}
+        {expanded && hasDetail && (
+          <div className="mt-2 border-t border-slate-700/70 pt-2">
+            {node.kind && (
+              <div className="mb-1.5 text-[9.5px] uppercase tracking-wider text-slate-500">{TRACE.kinds[node.kind]}</div>
+            )}
+            {(node.facts ?? []).length > 0 && (
+              <dl className="space-y-1">
+                {node.facts.map((f, i) => (
+                  <div key={i} className="grid grid-cols-[8.75rem_1fr] gap-2 text-[11px] leading-snug">
+                    <dt className={`truncate ${f.hi ? "text-amber-200" : "text-slate-500"}`} title={f.k}>{f.k}</dt>
+                    <dd className={f.hi ? "text-amber-100" : "text-slate-200"}>{f.v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {node.how && <p className="mt-2 text-[10.5px] italic leading-snug text-slate-400">Rule: {node.how}</p>}
+          </div>
+        )}
       </div>
     </li>
   );
@@ -267,8 +316,33 @@ function isNewRun(prev, next) {
   if (prev === undefined || prev === null || next === null) return false;
   const [pk, pv] = prev.split(":");
   const [nk, nv] = next.split(":");
-  if (nk === "pull") return prev !== next;
+  if (nk === "pull" || nk === "acct") return prev !== next;
   return pk === nk && Number(nv) > Number(pv);
+}
+
+// Which stages are open. Reset to the trace's focus whenever the thing it reacts to changes (an
+// account switch, a configuration change, a new chatbot answer, a send), and flash those stages for
+// a moment so the eye goes to the one that just changed. Between changes, the presenter's own
+// clicks stand.
+function useFocus(trace) {
+  const flashKey = trace?.flashKey ?? null;
+  const focus = (trace?.focus ?? []).join(",");
+  const [open, setOpen] = useState(() => new Set(trace?.focus ?? []));
+  const [flashing, setFlashing] = useState(false);
+  const first = useRef(true);
+  useEffect(() => {
+    setOpen(new Set(focus ? focus.split(",") : []));
+    if (first.current) { first.current = false; return undefined; }
+    setFlashing(true);
+    const id = setTimeout(() => setFlashing(false), 1600);
+    return () => clearTimeout(id);
+  }, [flashKey, focus]);
+  const toggle = (key) => setOpen((prev) => {
+    const next = new Set(prev);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    return next;
+  });
+  return { open, toggle, flashing };
 }
 
 function useRun(trace, viewKey, seen) {

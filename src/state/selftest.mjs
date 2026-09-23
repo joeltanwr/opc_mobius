@@ -10,10 +10,12 @@ import { fileURLToPath } from "node:url";
 import { STATUSES, ladderAudit } from "./ladder.js";
 import { reduce, audit, offerId, PER_CUSTOMER_OPTIONS, pushPreview, portfolioView, isQueued,
          cohortNamed, cohortTagsFor, reachFromSelection, perOutletFromSelection, onAllocatedPool, liveReach } from "./store.js";
-import { traceOf, allocatorFunnel, verdictFor, heldOffer } from "./trace.js";
+import { traceOf, allocatorFunnel, verdictFor, heldOffer, scoreParts, liftStory } from "./trace.js";
+import { REWARD_SCORE } from "../data/constants.js";
+import { floorRound } from "../data/format.js";
 import { DEMO_LIFT_EDWIN_PUSH_CAP } from "../data/constants.js";
 import { expectedOutcome } from "./expected.js";
-import { INTENTS, isFindable, searchPull, openNow } from "../screens/app/chatbot.js";
+import { INTENTS, isFindable, searchPull, openNow, matchIntent, matchedPhrase } from "../screens/app/chatbot.js";
 import { buildSeed } from "./seed.js";
 import { createBus, replay } from "./bus.js";
 
@@ -25,6 +27,7 @@ const data = {
   constants: load("constants.json"), merchantProfiles: load("merchant_profiles.json"), campaignResults: load("campaign_results.json"),
   allocationSummary: load("allocation_summary.json"), showcasePersonas: load("showcase_personas.json"),
   rewardRecommendations: load("reward_recommendations.json"), demandGaps: load("demand_gaps.json"), segments: load("segments.json"),
+  affinity: load("affinity.json"), taxonomy: load("taxonomy.json"),
 };
 
 const report = { checks: {}, notes: {} };
@@ -840,7 +843,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   const alloc = data.allocationSummary;
   let k = seed;
   const f0 = allocatorFunnel(k, k.campaigns[DEMO]);
-  const t0 = traceOf({ state: k, data, view: "rm" });
+  const t0 = traceOf({ state: k, data, view: "consolidated" });
+  const fact = (tr, key, k0) => tr.nodes.find((n) => n.key === key)?.facts?.find((x) => x.k === k0)?.v ?? null;
   check("trace: the allocator funnel is the pipeline's own arithmetic — every removal, in order",
         f0.afterCap === alloc.candidate_pool_before_filters - Object.values(alloc.removed).reduce((a, b) => a + b, 0)
         && f0.afterConsent - f0.afterCap === alloc.removed.frequency_cap
@@ -856,10 +860,66 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         line(t0, "gate").endsWith(k.campaigns[DEMO].eligibility.passed ? "pass" : "fail")
         && line(t0, "sme").includes(data.merchantProfiles[k.campaigns[DEMO].merchant_id].trading_pattern.trough.window)
         && line(t0, "recommender").includes(k.campaigns[DEMO].recommended.label), [line(t0, "gate"), line(t0, "sme"), line(t0, "recommender")]);
-  check("trace: nothing has been sent, and the trace says so", line(t0, "delivery") === "Push · not fired" && t0.runKey === "push:0");
-  const before = traceOf({ state: k, data, view: "consolidated" }).chips;
-  check("trace: before the send, the two in scope wait and the two outside are already out",
-        before.map((c) => c.mark).join() === "wait,wait,no,no", before);
+  check("trace: nothing has been sent, and the trace says so", line(t0, "delivery") === "Push · 0 of 4 notified" && t0.runKey === "push:0", line(t0, "delivery"));
+  check("trace: the RM view carries no trace — nothing on its screens recommends anything (TRACE_VIEWS, round 8)",
+        (await import("../data/constants.js")).TRACE_VIEWS.rm === false);
+
+  // ---- the reward score, taken apart: every shipped score, every merchant
+  const badScores = [];
+  for (const [mid, rec] of Object.entries(data.rewardRecommendations)) {
+    for (const r of rec.ranked ?? []) {
+      const p = scoreParts(r);
+      if (r.disabled) { if (r.score !== 0) badScores.push([mid, r.type, "disabled but scored"]); continue; }
+      const poolClears = r.target_pool === "non_customers"
+        ? r.non_customer_reach?.suppressed === false
+        : r.target_segments.some((t) => t.reach?.suppressed === false);
+      if (p.rank + p.uplift + p.floor !== r.score || ![0, REWARD_SCORE.floor_bonus].includes(p.floor)
+          || (p.floor === REWARD_SCORE.floor_bonus) !== Boolean(poolClears)) badScores.push([mid, r.type, p, r.score]);
+    }
+  }
+  check("trace: every shipped reward score decomposes into rank points + round(30 × share) + floor bonus, exactly as reward.py builds it",
+        badScores.length === 0, badScores.slice(0, 5));
+
+  // ---- the lift story: every merchant's lookalike pool, from the shipped figures alone
+  const badLift = [];
+  const floorV = data.constants.constants.MIN_SEGMENT_SIZE.value;
+  for (const mid of Object.keys(data.segments)) {
+    const L = liftStory(data, mid);
+    if (L.kind === "none") continue;
+    const want = L.seg.reach?.suppressed === false ? L.seg.reach.count : null;
+    if (floorRound(L.left, floorV, seed.caps.reach_rounding) !== want) badLift.push([mid, "funnel", L.left, want]);
+    if (L.kind === "lift") {
+      const already = Object.fromEntries(L.removed).already_customer ?? 0;
+      if (already !== L.seg.support) badLift.push([mid, "support vs already-yours", L.seg.support, already]);
+      if (Math.abs(L.pGivenB - L.seg.support / L.evaluated) > 1e-12) badLift.push([mid, "P(A|B)"]);
+    }
+  }
+  check("trace: every lookalike pool's filter chain rounds to its shipped reach, and a pair's shared customers are exactly who 'already yours' removes",
+        badLift.length === 0, badLift.slice(0, 5));
+
+  // ---- the merchant view follows the account on screen and the last choice made
+  const tm = traceOf({ state: k, data, view: "merchant" });
+  check("trace (merchant): Soujourner's target group is Brew & Co.'s lookalikes at 2.98× lift, and the pick opens with its score table",
+        line(tm, "lift").startsWith("Brew & Co. → 2.98× lift") && tm.focus.join() === "lift,recommender"
+        && tm.nodes.find((n) => n.key === "recommender").facts.filter((f) => /^\d\. /.test(f.k)).length === 6, [line(tm, "lift"), tm.focus]);
+  const tFail = traceOf({ state: k, data, view: "merchant", merchantId: "M0010" });
+  check("trace (merchant): a merchant the gate refuses stops there — lift, reward and allocation marked not run",
+        line(tFail, "gate").endsWith("fail") && tFail.focus.join() === "gate"
+        && ["lift", "recommender", "allocator"].every((key) => tFail.nodes.find((n) => n.key === key).greyed), tFail.nodes.map((n) => [n.key, n.line]));
+  const tCold = traceOf({ state: k, data, view: "merchant", merchantId: "M0002" });
+  check("trace (merchant): a cold-start merchant gets the category-catchment fallback instead of a lift pair",
+        line(tCold, "lift").startsWith("No lift pair yet") && line(tCold, "sme").startsWith("Cold start"), [line(tCold, "lift"), line(tCold, "sme")]);
+  let kc = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "merchant", at: at(1), seq: 1 });
+  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "reward_type", value: "cashback", by: "merchant", at: at(2), seq: 2 });
+  const tr1 = traceOf({ state: kc, data, view: "merchant", route: "/reward-configuration" });
+  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "hours", value: [11, 14], by: "merchant", at: at(3), seq: 3 });
+  const tr2 = traceOf({ state: kc, data, view: "merchant", route: "/reward-configuration" });
+  check("trace (merchant): choosing a reward opens the Reward Agent on it (and flags a returning-customer reward aimed at lookalikes); moving the window opens the SME Analysis Agent on the trough",
+        tr1.focus.join() === "recommender" && line(tr1, "recommender").startsWith("Chosen: Cashback #3 (64) vs Discount #1")
+        && Boolean(fact(tr1, "recommender", "Mismatch"))
+        && tr2.focus.join() === "sme" && fact(tr2, "sme", "Window chosen")?.endsWith("outside the trough") && tr1.flashKey !== tr2.flashKey,
+        [tr1.focus, line(tr1, "recommender"), tr2.focus, fact(tr2, "sme", "Window chosen")]);
+
   // Consent moves the funnel only while the campaign is open — the reducer stops counting
   // departures once it is terminal, and liveReach with it — so this is checked before the send.
   const off = reduce(k, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(1), seq: 1 });
@@ -875,15 +935,15 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3 });
   k = reduce(k, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
   const c = k.campaigns[DEMO], sent = c.pushes.at(-1);
-  const t1 = traceOf({ state: k, data, view: "rm" });
+  const t1 = traceOf({ state: k, data, view: "consolidated" });
   check("trace: after the send, Delivery prints the campaign's own counters — the figures the push dialog reports",
-        line(t1, "delivery") === `Push ${c.counters.pushes_sent.toLocaleString()} sent · ${c.counters.pushes_suppressed.toLocaleString()} suppressed`
+        fact(t1, "delivery", "Push").startsWith(`${c.counters.pushes_sent.toLocaleString()} sent · ${c.counters.pushes_suppressed.toLocaleString()} held back`)
         && c.counters.pushes_sent === sent.sent && c.counters.pushes_suppressed === sent.suppressed && t1.runKey === "push:1",
-        { line: line(t1, "delivery"), sent });
+        { fact: fact(t1, "delivery", "Push"), sent });
   const t2 = traceOf({ state: k, data, view: "consolidated" });
   const held = t2.chips.filter((x) => heldOffer(k, DEMO, x.id)).length;
-  check("trace: consolidated chips — #1 and #2 allocated, #3 out on the target pool, #4 out on a tag",
-        t2.chips.map((x) => `${x.mark}:${x.node}`).join() === "yes:allocator,yes:allocator,no:recommender,no:tagging", t2.chips);
+  check("trace: consolidated chips — #1 and #2 allocated, #3 out on the target pool, #4 out on the Lift Agent's price-band filter",
+        t2.chips.map((x) => `${x.mark}:${x.node}`).join() === "yes:allocator,yes:allocator,no:recommender,no:lift", t2.chips);
   check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 4",
         line(t2, "delivery") === `Push · ${held} of ${t2.chips.length} notified` && held === 2, line(t2, "delivery"));
 
@@ -893,16 +953,25 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         t3.chips[1].mark === "no" && t3.chips[1].node === "consent" && !heldOffer(k, DEMO, "bernice")
         && line(t3, "delivery") === `Push · 1 of ${t3.chips.length} notified`, { chip: t3.chips[1], line: line(t3, "delivery") });
 
-  const pull = { id: 1, holderId: "bernice", intent: "coffee", location: "D2/D14", count: 3 };
+  // The pull payload exactly as RewardChat builds it, from the same searchPull() result.
+  const q = "coffee deals near me", intent = matchIntent(q), holder = k.cardholders.bernice;
+  const found = searchPull({ intent, campaigns: k.campaigns, profiles: data.merchantProfiles, holderProfile: holder.profile, clock: k.clock,
+                             adjacency: data.constants.district_adjacency ?? null });
+  const pull = { id: 1, holderId: "bernice", q, intent: intent.id, phrase: matchedPhrase(q, intent),
+                 location: found.districts.map((d) => `D${d}`).join("/"), count: found.results.length, searched: found.searched, open: found.open,
+                 in_category: found.in_category, open_now: found.open_now, exact_only: found.exact_only,
+                 results: found.results.map((r) => ({ name: r.merchant?.name, near: r.near.length, of: r.districts.length, open_now: r.open_now })) };
   const t4 = traceOf({ state: k, data, view: "individual", cardholderId: "bernice", pull });
-  check("trace: a chatbot answer switches Delivery to Pull and greys the recommender and the allocator",
-        t4.mode === "pull" && line(t4, "delivery") === "Query → {coffee, D2/D14} → 3 programmes"
-        && t4.nodes.filter((n) => n.greyed).map((n) => n.key).join() === "recommender,allocator"
+  check("trace: a chatbot answer takes the Pull path — intent, search, catchment — and greys lift, reward and allocation as skipped",
+        t4.mode === "pull" && line(t4, "delivery") === `Query → {coffee, ${pull.location}} → ${found.results.length} programme${found.results.length === 1 ? "" : "s"}`
+        && line(t4, "intent") === `"${q}" → coffee` && fact(t4, "intent", "Matched on") === '"coffee"'
+        && line(t4, "search") === `${found.searched} live → ${found.in_category} in category → ${found.results.length} near you`
+        && t4.nodes.filter((n) => n.greyed).map((n) => n.key).join() === "lift,recommender,allocator"
         && !t4.sequence.includes("allocator") && !t4.sequence.includes("recommender"), t4.nodes.map((n) => [n.key, n.line]));
   check("trace: the Pull line belongs to the phone that asked — another phone stays on Push",
         traceOf({ state: k, data, view: "individual", cardholderId: "charles", pull }).mode === "push");
   check("trace: a reset is a fresh seed, so the trace starts over with it",
-        traceOf({ state: seed, data, view: "rm" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "bernice", "Lookalike").mark === "wait");
+        traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "bernice", "Lookalike").mark === "wait");
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges

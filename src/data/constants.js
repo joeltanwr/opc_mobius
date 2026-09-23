@@ -308,7 +308,7 @@ export const CONSOLIDATED_CARDHOLDERS = [
 // DEMO LAYER — one switch for everything that exists for the pitch rather than for a user.
 //
 // Three things sit behind it: the consolidated cardholder view (its toggle and its route), the
-// reset control in every chrome, and the System Trace drawer in the RM and cardholder views. On
+// reset control in every chrome, and the System Trace drawer (views per TRACE_VIEWS). On
 // by default, so flipping it changes nothing today; off, the build shows only the three products
 // themselves. Nothing behind it is deleted or commented out — same convention as the EXTRA_SCREENS
 // flags above.
@@ -316,37 +316,60 @@ export const CONSOLIDATED_CARDHOLDERS = [
 export const DEMO_LAYER = true;
 
 // ----------------------------------------------------------------------------------------------
+// Where the System Trace is shown. Per view, so a view can be taken out without deleting anything.
+//
+//   merchant    on (round 8) — the recommender's reasoning is the thing worth watching, and it
+//               happens for the merchant: why this target group, why this reward. Demo layer only;
+//               a real merchant never sees the drawer.
+//   rm          off (round 8) — nothing on the RM's screens recommends anything; the allocator is
+//               rules, and its numbers are already in the push dialog. Flip back to restore it.
+//   cardholder  on — the push path in both modes, and the pull path when the chatbot answers.
+// ----------------------------------------------------------------------------------------------
+export const TRACE_VIEWS = { merchant: true, rm: false, cardholder: true };
+
+// ----------------------------------------------------------------------------------------------
 // The System Trace — names and explanations for each stage of the recommender, and nothing else.
 //
 // No figure lives here. Every number the drawer prints is read from shared state or the loaded
 // dataset by state/trace.js at render time, so the trace cannot disagree with the screen beside
-// it. What is here is words: the stage names, the fixed control node, and the ⓘ text, each held
-// to two sentences. Where an explanation needs a number (a cap, the rounding), trace.js reads it
-// from state and appends it rather than a digit being typed into a sentence below.
+// it. What is here is words: each stage's agent name, the module that implements it, the skill it
+// implements, one line on how it works, and the ⓘ text.
 //
-// The strip runs in pipeline order. `sub` stages render inside their parent (Allocator is
-// Consent → Freq Cap; Delivery is Push | Pull).
+// "Agent" is the demo's name for each stage. Every one of them is a deterministic module that
+// ran when the pipeline built public/data (or, for the chatbot, a scripted matcher in the app) —
+// `kind` says which, on screen, so a judge who asks "is that an LLM?" gets a true answer from the
+// drawer itself. The narrowing module already calls itself an agent (pipeline/narrowing.py).
 // ----------------------------------------------------------------------------------------------
 export const TRACE = {
   badge: "DEMO LAYER · simulated trace",
   title: "System Trace",
-  skipped: "segment match skipped · customer-initiated",
+  skipped: "skipped · customer-initiated",
+  kinds: { rules: "rules · precomputed", scripted: "scripted · live" },
   nodes: {
     tagging: {
-      label: "Customer Tagging",
-      info: "Every active cardholder is tagged from their own card spend: category, spending frequency, local or foreign. Dormant cardholders are left out.",
+      label: "Tagging Agent", module: "tags.py", skill: "retailer-transaction-data-analysis", kind: "rules",
+      how: "Each cardholder's own card spend becomes tags; dormant cardholders are dropped first.",
+      info: "Tags are internal and never reach a merchant. They are what lookalike matching and catchment filters read.",
     },
     sme: {
-      label: "SME Analysis",
-      info: "Compares each weekday slot with the merchant's own baseline to find a recurring quiet window. Also scores the merchant's existing customers into RFM segments.",
+      label: "SME Analysis Agent", module: "sme_analysis.py", skill: "sme-business-customer-analysis", kind: "rules",
+      how: "Each weekday slot vs your own baseline, confirmed against peers; customers scored R, F, M by quintile.",
+      info: "A slot is a gap when it runs well under the merchant's own pattern for weeks on end, not merely when it is quiet. Peers are a cross-check, never the baseline.",
     },
     gate: {
-      label: "Eligibility Gate",
-      info: "Average balance must be strictly above the threshold, and the internal or external transaction score at the maximum band or better. Fail either and nothing is recommended.",
+      label: "Eligibility Agent", module: "reward.py · step 1", skill: "reward-programme-recommendation", kind: "rules",
+      how: "Balance strictly above the threshold AND (internal OR external score at the maximum band or better).",
+      info: "Fail either and nothing downstream runs for this merchant. Lower band = better is assumed (PD-band convention, flagged).",
+    },
+    lift: {
+      label: "Lift Agent", module: "lift.py", skill: "merchant-pair lift → lookalike pool", kind: "rules",
+      how: "lift = P(visits you | visits them) ÷ P(visits you); the top pair's customers who never visit you, filtered.",
+      info: "A lift of 3× means that merchant's cardholders are three times as likely as anyone to also shop with you. Its customers who have never come in are the lookalikes.",
     },
     recommender: {
-      label: "Reward Recommender",
-      info: "Ranks all six reward types against the gap and maps the pick to a target pool. Acquisition targets lookalikes from merchant-pair lift; retention targets RFM segments.",
+      label: "Reward Agent", module: "reward.py", skill: "reward-programme-recommendation", kind: "rules",
+      how: "Order comes from the skill's table for the gap type; score = rank points + 30 × incremental share + 10 if the pool clears the floor.",
+      info: "The gap type sets the order; the score adds expected uplift and a reach check on top. Overseas/FX is always ranked and disabled.",
     },
     review: {
       label: "RM review",
@@ -354,7 +377,8 @@ export const TRACE = {
       info: "In production every campaign waits in an RM queue before it is allocated. The demo skips the queue so the allocator can be fired live.",
     },
     allocator: {
-      label: "Allocator",
+      label: "Allocation Agent", module: "allocate.py", skill: "portfolio-allocator", kind: "rules",
+      how: "Candidate pool → drop opted-out → drop anyone at the frequency cap → rank by propensity → round the reach.",
       info: "Takes the candidate pool, removes anyone who opted out, then anyone already at the frequency cap. The last figure is the reach every dashboard shows, rounded.",
     },
     consent: {
@@ -366,8 +390,19 @@ export const TRACE = {
       info: "Anyone already holding the portfolio maximum of concurrent offers is left out, whichever merchant sent them.",
     },
     delivery: {
-      label: "Delivery",
+      label: "Delivery Agent", module: "state/store.js", skill: "send-time rules", kind: "rules",
+      how: "Push: feed card for everyone allocated, notification unless the weekly push cap is reached. Pull: answer what was asked.",
       info: "Push is OCBC reaching out: a feed card plus a notification, capped per week. Pull is the cardholder asking, so segment matching is skipped and only live programmes nearby come back.",
+    },
+    intent: {
+      label: "Intent Agent", module: "chatbot.js", skill: "fixed intent table", kind: "scripted",
+      how: "The question is matched against each intent's phrasings; the first hit maps to taxonomy categories.",
+      info: "A scripted keyword table, not a language model — it understands the demo's asks, and says so when it does not. What it finds is real.",
+    },
+    search: {
+      label: "Search Agent", module: "chatbot.js · searchPull", skill: "live programme search", kind: "scripted",
+      how: "Live programmes → inside their dates → in the asked categories → an outlet in your home/work district or next to it.",
+      info: "Searches every live programme in shared state, not a canned list. Ranked open-now first, then most nearby outlets, then name.",
     },
     push: { label: "Push" },
     pull: { label: "Pull" },
@@ -397,3 +432,18 @@ export const TRACE = {
 // move it to pipeline/config.py and delete this.
 // ----------------------------------------------------------------------------------------------
 export const DEMO_LIFT_EDWIN_PUSH_CAP = true;
+
+// ----------------------------------------------------------------------------------------------
+// The reward score's own formula, so the System Trace can show each score as its parts.
+//
+// These are pipeline/reward.py's RANK_POINTS and the two terms recommend() adds, restated here for
+// the one screen that decomposes a score. A restated figure drifts, so it is not trusted:
+// selftest.mjs rebuilds every shipped score in reward_recommendations.json from these and fails
+// the moment one does not add up.
+// ----------------------------------------------------------------------------------------------
+export const REWARD_SCORE = {
+  rank_points: [60, 50, 40, 30, 20, 10],
+  uplift_weight: 30,
+  floor_bonus: 10,
+  basis: "pipeline/reward.py RANK_POINTS and recommend(): rank points by the skill's ordering for the gap type, + round(30 × expected incremental share), + 10 if the target pool clears the floor (reward_recommendations.json score_basis). Checked against every shipped score by selftest.mjs.",
+};
