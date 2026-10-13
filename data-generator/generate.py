@@ -247,9 +247,16 @@ PRODUCTS = ["Business current account", "Merchant acquiring", "Business credit c
 # has something to be missing from. Used for peers; M0001 gets a fixed profile.
 CAFE_DAYPART_ALPHA = np.array([4.0, 2.5, 3.0, 1.5, 0.5])
 # M0001 trades 8am–6pm, so "evening" is its last hour (17:00–18:00) and "late" never happens.
-# The afternoon weight is the baseline the Tue–Thu trough (H1_SUPPRESS_FACTOR) is cut from.
-M0001_DAYPART_PROFILE = {"morning": 0.37, "lunch": 0.28, "afternoon": 0.27, "evening": 0.08, "late": 0.0}
+# Relative sales per hour on an ordinary weekday: lunch (12:00–14:00) is the peak, and the 8–10am
+# morning rush runs 20% under it. The afternoon hours are the baseline the Tue–Thu trough
+# (H1_SUPPRESS_FACTOR) is then cut from, so Tue–Thu 2–5pm lands near a third of the lunch peak.
 M0001_OPEN_HOURS = (8, 18)        # 08:00 to 18:00 — the last sale rings before 18:00
+M0001_HOUR_WEIGHTS = {8: 0.80, 9: 0.80, 10: 0.70, 11: 0.85, 12: 1.00, 13: 1.00,
+                      14: 0.72, 15: 0.70, 16: 0.68, 17: 0.50}
+# Daypart weights follow from the hours (morning 7–11, lunch 11–14, afternoon 14–17, evening 17–21),
+# so the weekday × daypart tables and the hour inside a daypart agree.
+M0001_DAYPART_PROFILE = {d: round(sum(w for h, w in M0001_HOUR_WEIGHTS.items() if DAYPART_HOURS[d][0] <= h < DAYPART_HOURS[d][1])
+                                  / sum(M0001_HOUR_WEIGHTS.values()), 4) for d in DAYPARTS}
 
 
 def hour_window(mid, daypart):
@@ -258,6 +265,16 @@ def hour_window(mid, daypart):
     if mid == "M0001":
         lo, hi = max(lo, M0001_OPEN_HOURS[0]), min(hi, M0001_OPEN_HOURS[1])
     return lo, hi
+
+
+def sample_hour(mid, daypart, r):
+    """An hour inside the daypart: weighted by M0001_HOUR_WEIGHTS at M0001, uniform elsewhere."""
+    lo, hi = hour_window(mid, daypart)
+    if mid != "M0001":
+        return int(r.integers(lo, hi))
+    hrs = list(range(lo, hi))
+    w = np.array([M0001_HOUR_WEIGHTS[h] for h in hrs])
+    return hrs[int(r.choice(len(hrs), p=w / w.sum()))]
 
 
 def jitter_latlng(district, r):
@@ -919,7 +936,7 @@ def generate_generic_transactions(cardholders_df, merchants_df, cat_merchant_idx
 # 7. PLANTED HERO PATTERNS
 # ============================================================================
 
-H1_SUPPRESS_FACTOR = 0.5   # Tue/Wed/Thu 14–17 at half its weekday-matched baseline
+H1_SUPPRESS_FACTOR = 0.4   # Tue/Wed/Thu 14–17 at 40% of its weekday-matched baseline (0.5 sat too close to the 75% detection line once the lunch peak moved the afternoon share)
 
 
 def build_weekday_date_index():
@@ -976,8 +993,7 @@ def generate_h1_transactions(cardholders_df, merchants_df, cohorts, descriptor_l
         dates, dayparts = sample_hero_visits(r, n_visits, wd_index, table)
         descs, dweights = descriptor_lookup[merch_row.name]
         for dt_date, dp in zip(dates, dayparts):
-            h_lo, h_hi = hour_window(merch_row.name, DAYPARTS[dp])
-            dt = datetime(dt_date.year, dt_date.month, dt_date.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60)))
+            dt = datetime(dt_date.year, dt_date.month, dt_date.day, sample_hour(merch_row.name, DAYPARTS[dp], r), int(r.integers(0, 60)), int(r.integers(0, 60)))
             amount = _sample_amount(r, lo_hi[0], lo_hi[1], merch_row["price_band"])
             descriptor = descs[r.choice(len(descs), p=dweights)] if len(descs) > 1 else descs[0]
             rows.append(_make_txn_row(txn_counter, card_id, merch_row, descriptor, amount, dt, _channel_for_category("cafe", r), "SG"))
@@ -1047,10 +1063,10 @@ def generate_m0001_first_timers(cardholders_df, merchants_df, cohorts, descripto
         back = JIERU_FIRST_VISIT_DAYS_BACK if c == jieru else int(r.integers(M0001_FIRST_VISIT_DAYS_BACK[0], M0001_FIRST_VISIT_DAYS_BACK[1] + 1))
         d = DEMO_CLOCK_D - timedelta(days=back)
         row_w = table_m0001[d.weekday()] / table_m0001[d.weekday()].sum()
-        h_lo, h_hi = hour_window("M0001", DAYPARTS[int(r.choice(5, p=row_w))])
+        hour = sample_hour("M0001", DAYPARTS[int(r.choice(5, p=row_w))], r)
         amount = JIERU_TICKET_SGD if c == jieru else float(np.clip(r.normal(6.6, 0.7), 4.8, 8.5))
         rows.append(_make_txn_row(txn_counter, c, m0001, desc_a, amount,
-                                  datetime(d.year, d.month, d.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60))),
+                                  datetime(d.year, d.month, d.day, hour, int(r.integers(0, 60)), int(r.integers(0, 60))),
                                   "contactless", "SG"))
         txn_counter += 1
         dates, dayparts = sample_hero_visits(r, int(np.clip(r.lognormal(math.log(14), 0.4), 4, 45)), wd_index, table_m0055)
@@ -1641,8 +1657,7 @@ def generate_acquiring_transactions(card_txns_df, merchants_df):
                 # follow the merchant's own weekday×daypart shape (incl. the planted trough)
                 row_w = table[d.weekday()]; row_w = row_w / row_w.sum()
                 dpi = int(r.choice(5, p=row_w))
-                h_lo, h_hi = hour_window(mid, DAYPARTS[dpi])
-                dt = datetime(d.year, d.month, d.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60)))
+                dt = datetime(d.year, d.month, d.day, sample_hour(mid, DAYPARTS[dpi], r), int(r.integers(0, 60)), int(r.integers(0, 60)))
                 amount = (float(np.clip(r.normal(*M0001_FIRST_DRINK_SGD), 4.5, 10.0)) if first_drink
                           else _sample_amount(r, lo_hi[0], lo_hi[1], mrow["price_band"]))
                 is_paynow = r.random() < 0.10
