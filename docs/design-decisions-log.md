@@ -51,14 +51,14 @@ Rounds 1–6 were not written into this file. Their standing decisions (disconne
 - **Word budget:** one line of output per stage, numbers over sentences. Explanations sit behind an ⓘ, at most two sentences.
 - **Hard rule: the trace has no figures of its own.** `src/state/trace.js` reads every value from shared state or the loaded dataset, through the same helpers the screens use. `selftest.mjs` checks it against the reducer. Reset clears it: its only memory is React state, and reset reloads the page.
 - **Settled details:**
-  - Reward Recommender shows the pool actually configured. For Soujourner that is **Non-customers (lookalike)**, not an RFM segment, because acquisition uses merchant-pair lift and retention uses RFM.
+  - Reward Recommender shows the pool actually configured. For Hanami that is **Non-customers (lookalike)**, not an RFM segment, because acquisition uses merchant-pair lift and retention uses RFM.
   - Allocator reads **538 → 423 → 396 (rounded to 400)**: candidate pool, after consent, after the frequency cap, then the reach every dashboard shows. Exact counts inside the demo layer; the rounded figure is the one everywhere else (decided by Joel).
   - Consolidated chips are worked out from state, not fixed:
-    - #1 Edwin ✓ and #2 Bernice ✓ point to Allocator.
-    - #3 Alvin ✗ "Champion · existing customer" points to Reward Recommender, because the campaign targets non-customers.
+    - #1 Edwin ✓ and #2 Kelly ✓ point to Allocator.
+    - #3 Joel ✗ "Champion · existing customer" points to Reward Recommender, because the campaign targets non-customers.
     - #4 Charles ✗ "No lookalike match" points to Customer Tagging (price-band tag).
     - Tapping a chip highlights that stage.
-  - A chatbot answer switches Delivery to Pull, showing `Query → {category, location} → N programmes` with the chat's own count. Recommender and Allocator grey out, tagged "segment match skipped · customer-initiated". This works on whichever phone asked: Charles is the designated pull persona, and Bernice works too.
+  - A chatbot answer switches Delivery to Pull, showing `Query → {category, location} → N programmes` with the chat's own count. Recommender and Allocator grey out, tagged "segment match skipped · customer-initiated". This works on whichever phone asked: Charles is the designated pull persona, and Kelly works too.
   - SME Analysis prints the figure (−43.6%), not the rounded narrative sentence from `rationales.json` (44%).
   - The Consolidated tile pill and its "holding this offer" count no longer count a card that was withdrawn when its holder turned offers off. This is the same rule the chips use.
 
@@ -88,7 +88,7 @@ Round 7's trace said *what* each stage decided in one line. It did not say *why*
   - "scripted · live" for the chatbot matcher.
   "Agent" is the demo's word. The tag keeps the answer to "is that an LLM?" true on screen. Nothing in the app calls a model.
 - **Opened, a stage shows its figures and its rule.** Every figure is still read from state or `public/data`; none is typed in.
-  - **Lift Agent:** names the lift source (Brew & Co. — decided by Joel, round 7's anonymity dropped for the demo layer). Shows P(you | them) 51.5% = 773 of 1,502, P(you) 17.3%, lift 2.98×, the runners-up, and the filter chain 1,502 → −773 already yours → −87 price band → −104 daypart → 538 → 550 after rounding.
+  - **Lift Agent:** names the lift source (Green Whisk Matcha — decided by Joel, round 7's anonymity dropped for the demo layer). Shows P(you | them) 51.5% = 773 of 1,502, P(you) 17.3%, lift 2.98×, the runners-up, and the filter chain 1,502 → −773 already yours → −87 price band → −104 daypart → 538 → 550 after rounding.
   - **Reward Agent:** shows the full score table, incremental share included (decided by Joel, for the demo layer only). The order comes from the skill's table for the gap type; score = rank points + round(30 × incremental share) + 10 if the pool clears the floor. The formula sits in `constants.js REWARD_SCORE`, and `selftest.mjs` rebuilds every shipped score for all 69 merchants from it.
   - **Reward Agent mismatch:** flags when the chosen reward is ranked for one kind of customer and the selected pool is the other. Example: Cashback is ranked for returning customers but aimed at lookalikes.
 - **The trace follows clicks.**
@@ -100,11 +100,20 @@ Round 7's trace said *what* each stage decided in one line. It did not say *why*
 - **Breakdown floor 50 (decided by Joel):** Customer Profile's RFM segments and age bands now display at a floor of 50 (`MIN_BREAKDOWN_SIZE`, `pipeline/config.py`), still rounded to 50. At 250, most of those cells read "below threshold".
   - **Scope:** these are breakdowns of the merchant's own customers. Everything a merchant could *target* or difference keeps the 250 floor: segment reach, narrowing, per-outlet counts, retention pools, the reward cards' target segments, and redeemer profiles.
   - **Recommendation unchanged:** `reward.py` floors its target pools at 250 from the per-customer RFM frame, never from the display cell, so no reward score or ranking moved (`reward_recommendations.json` is byte-identical).
-  - **Never-cut item holds:** the suppressed demographic band still renders. Soujourner has three empty bands, and Tanjong Kopi's 18–24, 55–64 and 65+ are under 50.
+  - **Never-cut item holds:** the suppressed demographic band still renders. Hanami has three empty bands, and Tanjong Kopi's 18–24, 55–64 and 65+ are under 50.
 - **Consolidated chip #4 (Charles)** now points to the Lift Agent. The price-band filter that excluded him runs in `lift.py`, and round 7 had no Lift stage.
 
 ## Still open / not yet decided
 - Exact numeric thresholds (portfolio-level frequency cap in `portfolio-allocator`, push cap, auto-approve reach/cost threshold) — need a stated basis before going in the deck, not just round numbers.
 - **System Trace default state.** It currently starts expanded on screens ≥1024px. Docked, it narrows every merchant and cardholder screen by 400px and drops the Consolidated view to 2×2. Decide whether the live pitch and the video start with it open or collapsed.
-- **Final trace numbers once Soujourner Coffee's values are locked.** The trace reads whatever the pipeline ships, so a re-run moves the figures automatically: 538 / 423 / 396 / 400, the −43.6% gap, S$45,477 against S$30,000, and 399 sent · 1 suppressed. The talk track and video need re-checking against the locked set. The demand-gap narrative says 44% where the figure is 43.6%.
-- **Lock the chatbot demo query.** The intents are scripted (`src/screens/app/chatbot.js`). The Pull count depends on live programmes and the asking phone's districts (today, Bernice asking for coffee gets 3 near D4/D2). Fix the exact phrasing and which phone asks before recording.
+- **Final trace numbers once Hanami Matcha's values are locked.** The trace reads whatever the pipeline ships, so a re-run moves the figures automatically: 538 / 423 / 396 / 400, the −43.6% gap, S$45,477 against S$30,000, and 399 sent · 1 suppressed. The talk track and video need re-checking against the locked set. The demand-gap narrative says 44% where the figure is 43.6%.
+- **Lock the chatbot demo query.** The intents are scripted (`src/screens/app/chatbot.js`). The Pull count depends on live programmes and the asking phone's districts (today, Kelly asking for coffee gets 3 near D4/D2). Fix the exact phrasing and which phone asks before recording.
+
+## Hero merchant and cardholders recast (2026-10-14)
+Status: implemented.
+
+- **Merchant**: Soujourner Coffee (M0001) → **Hanami Matcha**, a matcha bar; its lift-pair rival Brew & Co. (M0055) → **Green Whisk Matcha**. Joel asked for "OC Tea", then chose a neutral shop name because "OC" reads as OCBC on a public repo. Both stay in the café category so lift, peers and ticket range are unchanged; their sector label is "Matcha Bar".
+- **Hours**: 08:00–18:00. The Tue–Thu 14:00–17:00 trough is unchanged (−44% vs own baseline, high confidence).
+- **Customer mix**: Joel asked for Champions ~7%, Loyal ~20%, one-time ~30%, Promising ~10%, and chose to keep quintile RFM and add one-time and Promising customers rather than move to fixed thresholds. Result: one-time 30%, Promising 5%, Champions 23%, Loyal 10%. Quintile scoring is why the last three don't reach target — the most recent 40% of customers are mostly regulars, so Promising (R = 4) can't grow without a fake-looking spike in first visits. Fixed-threshold scoring is the route if the targets matter.
+- **Cardholders**: Alvin → **Joel**, Bernice → **Kelly**, and a seventh persona **Jieru** — a generated cardholder who tried Hanami once, seven days before the clock, and scores Promising. Joel confirmed the three names for the public build despite the "no real named people" rule.
+- **Four-phone view**: Jieru replaces Edwin as the in-scope existing customer (fixes Edwin being captioned an existing customer with zero visits). Promising became a selectable target pool and is prefilled alongside the lookalikes, so Jieru is in scope by default. `DEMO_LIFT_EDWIN_PUSH_CAP` is now false: Edwin is back to being the named suppressed push.

@@ -30,11 +30,11 @@
 export const INTENTS = [
   {
     id: "coffee",
-    label: "Coffee deals near me",
-    phrasings: ["coffee", "cafe", "café", "latte", "flat white", "espresso", "brew"],
+    label: "Matcha & coffee deals near me",
+    phrasings: ["matcha", "green tea", "hojicha", "coffee", "cafe", "café", "latte", "flat white", "espresso", "brew"],
     categories: ["cafe", "bubble_tea", "bakery_dessert"],
-    reply: "Here's what's running near you for coffee and drinks.",
-    empty: "Nothing on coffee near you right now.",
+    reply: "Here's what's running near you for matcha, coffee and drinks.",
+    empty: "Nothing on matcha or coffee near you right now.",
   },
   {
     id: "food",
@@ -65,7 +65,7 @@ export const INTENTS = [
 // What the assistant says when it does not recognise the ask. It names what it can do rather than
 // guessing: a canned matcher that bluffs is the one failure mode that would embarrass this on
 // stage, because the follow-up question is always "what else can it do".
-export const FALLBACK = "I can look up live rewards near you by what you're after — try coffee, somewhere to eat, fitness, or hair and nails.";
+export const FALLBACK = "I can look up live rewards near you by what you're after — try matcha, somewhere to eat, fitness, or hair and nails.";
 
 export function matchIntent(text) {
   const q = String(text ?? "").toLowerCase();
@@ -186,7 +186,7 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
   // asking. A search that answered "you are not in the target segment" would be refusing to tell
   // somebody what is publicly on offer near them, and a frequency cap applied to a question the
   // customer asked is not a frequency cap, it is a broken search. Wiring any of them in here
-  // would also quietly break the demo's whole point: Charles finds the Soujourner programme he
+  // would also quietly break the demo's whole point: Charles finds the Hanami programme he
   // was never targeted for, and that is the moment the two channels are shown to be different.
   //
   // What DOES belong: isFindable() above, which drops a programme whose N are all claimed —
@@ -203,7 +203,7 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
   //
   // This is deliberate and it is load-bearing for the demo. The hero programme's window is
   // Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so hiding what is shut right now
-  // would take Soujourner Coffee out of the pull list at exactly the moment the pitch searches
+  // would take Hanami Matcha out of the pull list at exactly the moment the pitch searches
   // for coffee. To hide them instead, move openNow() into the filter below and drop `open_now`
   // from the sort — one line each, and the funnel line already reports both counts either way.
   // --------------------------------------------------------------------------------------------

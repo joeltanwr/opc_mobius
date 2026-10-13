@@ -966,7 +966,7 @@ function Apply({ campaign, inFlight, profile, eligibility, state, dispatch, disp
         <p className="text-[13px] text-ink-secondary max-w-3xl">
           The demo dataset carries one live application per merchant at most, and this merchant has none. The profile
           and the ranked rewards above are what a merchant sees before applying; the action itself is wired on{" "}
-          {profile.name === "Soujourner Coffee" ? "this merchant" : "Soujourner Coffee"}.
+          {profile.name === "Hanami Matcha" ? "this merchant" : "Hanami Matcha"}.
         </p>
       </Card>
     );

@@ -44,7 +44,7 @@ Anything in `docs/archive/` is superseded. Don't build from it.
   (`MIN_BREAKDOWN_SIZE`). Anything targetable keeps 250.
 - **Cardholder base 800,000.** Never ">1 million".
 - **Acquisition targeting uses merchant-pair lift; retention uses RFM.**
-- Primary merchant is **Soujourner Coffee**; the logged-in cardholder is **Bernice**; the
+- Primary merchant is **Hanami Matcha**; the logged-in cardholder is **Kelly**; the
   suppressed push recipient is **Edwin**.
 
 ## Non-negotiable

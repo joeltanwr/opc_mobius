@@ -138,7 +138,7 @@ claim depends on the RM being able to answer "why is this one first" without ope
 
 ---
 
-## Worked example — Soujourner Coffee
+## Worked example — Hanami Matcha
 
 - Turnover (6m × 2) ≈ S$1.5m → 78th percentile → **31.2**
 - Avg CASA ≈ S$45k ÷ S$1.5m = ratio 0.03 → 23rd percentile → (1 − 0.23) × 40 = **30.8**

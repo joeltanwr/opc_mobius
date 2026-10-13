@@ -22,8 +22,8 @@ export default function DemandGap() {
   const reach = cellCount(segment.reach);
 
   const personas = data.showcasePersonas;
-  const alvin = personas.find((p) => p.id === "alvin");
-  const bernice = personas.find((p) => p.id === "bernice");
+  const joel = personas.find((p) => p.id === "joel");
+  const kelly = personas.find((p) => p.id === "kelly");
   const charles = personas.find((p) => p.id === "charles");
 
   // demand_gaps.json ships the shortfall as a signed percentage against each baseline; the chart
@@ -39,7 +39,7 @@ export default function DemandGap() {
       <SectionTitle
         eyebrow={`Screen ${screenNum("demand-gap")} · The demand gap`}
         title="The turn: this is what your own POS can never show you"
-        subtitle={`${profile.name} sees every card that taps at its own counter. It has no way to see the ${cellText(segment.reach, "below-floor number of")} people who tap at a café just like it, two streets over.`}
+        subtitle={`${profile.name} sees every card that taps at its own counter. It has no way to see the ${cellText(segment.reach, "below-floor number of")} people who tap at a ${(profile.sector ?? "café").toLowerCase()} just like it, two streets over.`}
       />
 
       <Card className="p-8 mb-6 border-brand/20 bg-gradient-to-br from-white to-[#FFF8F8]">
@@ -51,7 +51,7 @@ export default function DemandGap() {
             </div>
             <div className="text-[14px] text-ink-secondary mt-1">
               cardholders who regularly shop at <span className="font-semibold text-ink">{rivalName}</span> — a
-              comparable café — and have <span className="font-semibold text-ink">zero recorded visits</span> to{" "}
+              comparable {(profile.sector ?? "café").toLowerCase()} — and have <span className="font-semibold text-ink">zero recorded visits</span> to{" "}
               {profile.name}.
             </div>
             {reach !== null && (
@@ -159,7 +159,7 @@ export default function DemandGap() {
           label={`Your Champions — most recent, most frequent, highest value`}
           count={cellCount(profile.rfm.segments.Champions)}
           suppressedReason="Below the reporting threshold."
-          pattern={alvin.signature_pattern}
+          pattern={joel.signature_pattern}
           basis={`merchant_profiles.json rfm.segments — your own customers, rounded to ${rounding}.`}
         />
         <CohortCard
@@ -168,7 +168,7 @@ export default function DemandGap() {
           label={segment.label}
           count={reach}
           suppressedReason="Below the reporting threshold."
-          pattern={bernice.signature_pattern}
+          pattern={kelly.signature_pattern}
           basis="segments.json reach — a count and a label only, which is everything the merchant may see about cardholders it has never served."
         />
         <CohortCard

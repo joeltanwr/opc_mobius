@@ -165,7 +165,7 @@ export default function RewardChat({ cardholderId, holder }) {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="e.g. coffee deals near me"
+            placeholder="e.g. matcha deals near me"
             aria-label="Ask for a reward"
             className="flex-1 min-w-0 rounded-full border border-border bg-white px-3 py-2 text-[12.5px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/30"
           />

@@ -103,31 +103,43 @@ def main(rerun=True):
           not top["reach"]["suppressed"] and 350 <= top["reach"]["count"] <= 800 and top["reach"]["count"] % 50 == 0, str(top["reach"]))
 
     final = alloc[alloc["exclusion_reason"].isna()]
-    check("Bernice is in the Soujourner allocation", ids["bernice"] in set(final["card_id"]))
-    check("Alvin is not in the cohort (already a customer)", ids["alvin"] in A and ids["alvin"] not in set(final["card_id"]))
+    check("Kelly is in the Hanami allocation", ids["kelly"] in set(final["card_id"]))
+    check("Joel is not in the cohort (already a customer)", ids["joel"] in A and ids["joel"] not in set(final["card_id"]))
     charles = cohort[cohort["card_id"] == ids["charles"]]
     check("Charles evaluated and excluded with reason price_band", len(charles) == 1 and charles["exclusion_reason"].iloc[0] == "price_band",
           str(charles["exclusion_reason"].tolist()))
-    check("Alvin is in Champions", rfm[rfm["card_id"] == ids["alvin"]]["segment"].tolist() == ["Champions"],
-          str(rfm[rfm["card_id"] == ids["alvin"]]["segment"].tolist()))
+    check("Joel is in Champions", rfm[rfm["card_id"] == ids["joel"]]["segment"].tolist() == ["Champions"],
+          str(rfm[rfm["card_id"] == ids["joel"]]["segment"].tolist()))
 
     personas = load_pub("showcase_personas.json")
-    check("six showcase personas, all is_illustrative", len(personas) == 6 and all(p["is_illustrative"] is True for p in personas))
+    check("seven showcase personas, all is_illustrative", len(personas) == 7 and all(p["is_illustrative"] is True for p in personas))
     byp = {p["id"]: p for p in personas}
     nums = lambda s: [int(x.replace(",", "")) for x in re.findall(r"\d[\d,]*", s)]
     t = lambda cid: asof[asof["card_id"] == cid]
-    alvin_n = int((t(ids["alvin"])["merchant_id"] == "M0001").sum())
-    check("Alvin signature = actual M0001 visits", nums(byp["alvin"]["signature_pattern"])[:2] == [alvin_n, alvin_n], f"{byp['alvin']['signature_pattern']} vs {alvin_n}")
-    check("Bernice has zero M0001 visits", int((t(ids["bernice"])["merchant_id"] == "M0001").sum()) == 0)
+    joel_n = int((t(ids["joel"])["merchant_id"] == "M0001").sum())
+    check("Joel signature = actual M0001 visits", nums(byp["joel"]["signature_pattern"])[:2] == [joel_n, joel_n], f"{byp['joel']['signature_pattern']} vs {joel_n}")
+    check("Kelly has zero M0001 visits", int((t(ids["kelly"])["merchant_id"] == "M0001").sum()) == 0)
     weeks = (cfg.DEMO_DATE - cfg.PERIOD_START).days / 7
-    b_days = int(round((t(ids["bernice"])["merchant_id"] == "M0055").sum() / weeks))
-    check("Bernice signature days-per-week = actual", nums(byp["bernice"]["signature_pattern"])[1] == b_days, byp["bernice"]["signature_pattern"])
+    b_days = int(round((t(ids["kelly"])["merchant_id"] == "M0055").sum() / weeks))
+    check("Kelly signature days-per-week = actual", nums(byp["kelly"]["signature_pattern"])[1] == b_days, byp["kelly"]["signature_pattern"])
     check("Charles signature avg ticket = actual", nums(byp["charles"]["signature_pattern"])[0] == int(round(t(ids["charles"])["amount_sgd"].mean())))
     d = t(ids["denise"]); days = sorted(d["txn_datetime"].dt.date.unique()); gaps = [(days[i + 1] - days[i]).days for i in range(len(days) - 1)]
     gi = int(np.argmax(gaps)); burst = float(d[d["txn_datetime"].dt.date == days[gi + 1]]["amount_sgd"].sum())
     check("Denise signature gap and burst = actual", nums(byp["denise"]["signature_pattern"])[:2] == [max(gaps), int(round(burst))], byp["denise"]["signature_pattern"])
     e = t(ids["edwin"])
     check("Edwin signature count and average = actual", nums(byp["edwin"]["signature_pattern"])[:2] == [len(e), int(round(e["amount_sgd"].mean()))], byp["edwin"]["signature_pattern"])
+    jr = t(ids["jieru"]); jr_a = jr[jr["merchant_id"] == "M0001"]
+    check("Jieru is a one-visit Hanami customer, in Promising, consented",
+          len(jr_a) == 1 and rfm[rfm["card_id"] == ids["jieru"]]["segment"].tolist() == ["Promising"] and "hanami_rfm:Promising" in byp["jieru"]["cohort_membership"]
+          and byp["jieru"]["consent"]["offers"] is True,
+          f"{len(jr_a)} visits, {rfm[rfm['card_id'] == ids['jieru']]['segment'].tolist()}, {byp['jieru']['cohort_membership']}")
+    check("Jieru signature = actual (days since, ticket, M0055 visits)",
+          nums(byp["jieru"]["signature_pattern"])[:1] == [(cfg.DEMO_DATE - jr_a["txn_datetime"].dt.date.max()).days]
+          and f"S${float(jr_a['amount_sgd'].sum()):.2f}" in byp["jieru"]["signature_pattern"]
+          and f"{int((jr['merchant_id'] == 'M0055').sum())} visits" in byp["jieru"]["signature_pattern"], byp["jieru"]["signature_pattern"])
+    check("Jieru is under the weekly push cap (so the push visibly lands on her tile)", not byp["jieru"]["push_state"]["at_push_cap"], str(byp["jieru"]["push_state"]))
+    check("the Promising pool clears the targeting floor (it is in the default target group)",
+          load_pub("allocation_summary.json")["retention_pools"].get("Promising", {}).get("suppressed") is False, str(load_pub("allocation_summary.json")["retention_pools"].get("Promising")))
     fa = t(ids["farah"])
     check("Farah signature count = actual, single merchant", nums(byp["farah"]["signature_pattern"])[0] == len(fa) and fa["merchant_id"].nunique() == 1)
 
@@ -180,11 +192,11 @@ def main(rerun=True):
                  and e["internal_score_band"] > 3 and e["external_score_band"] > 3]
     check("merchant master contains a balance failure", len(bal_fail) >= 1, str(bal_fail))
     check("merchant master contains a both-bands failure", len(band_fail) >= 1, str(band_fail))
-    check("Soujourner passes eligibility", elig["M0001"]["passed"])
+    check("Hanami passes eligibility", elig["M0001"]["passed"])
     priority = load_pub("merchant_priority.json")
     tiers = {p["tier"] for p in priority.values()}
     check("one merchant per priority tier (high/medium/low/insufficient_data)", {"high", "medium", "low", "insufficient_data"} <= tiers, str(tiers))
-    check("Soujourner priority tier is high", priority["M0001"]["tier"] == "high", str(priority["M0001"]))
+    check("Hanami priority tier is high", priority["M0001"]["tier"] == "high", str(priority["M0001"]))
     # The RM pending row shows tier, score and all three components so the RM can answer "why is
     # this one first" without opening anything (sme-relationship-value-score, output contract).
     scored = [p for p in priority.values() if p["tier"] != "insufficient_data"]
@@ -206,8 +218,8 @@ def main(rerun=True):
     check("marketing_consent opt-out between 15% and 25%", 0.15 <= opt_out <= 0.25, f"{opt_out:.3f}")
 
     summ = load_pub("allocation_summary.json")
-    check("frequency cap (30-day) removes >= 1 from the Soujourner cohort", summ["removed"]["frequency_cap"] >= 1, str(summ["removed"]))
-    check("consent removes >= 1 from the Soujourner cohort", summ["removed"]["consent"] >= 1)
+    check("frequency cap (30-day) removes >= 1 from the Hanami cohort", summ["removed"]["frequency_cap"] >= 1, str(summ["removed"]))
+    check("consent removes >= 1 from the Hanami cohort", summ["removed"]["consent"] >= 1)
     edwin = alloc[alloc["card_id"] == ids["edwin"]]
     check("Edwin is allocated the feed card and push-suppressed by the weekly cap",
           len(edwin) == 1 and pd.isna(edwin["exclusion_reason"].iloc[0]) and bool(edwin["push_suppressed"].iloc[0]),
@@ -217,20 +229,20 @@ def main(rerun=True):
     const = load_pub("constants.json")
     profiles = load_pub("merchant_profiles.json")
     check("Boba Lane below 100 OCBC acquiring transactions (gate fires)", not profiles["M0002"]["gate"]["passed"], str(profiles["M0002"]["gate"]))
-    check("Soujourner above 100 (gate does not fire)", profiles["M0001"]["gate"]["passed"])
+    check("Hanami above 100 (gate does not fire)", profiles["M0001"]["gate"]["passed"])
     check("Tanjong Kopi House card mix is the reduced state", profiles["M0004"]["card_mix"]["reduced"] is True)
-    check("Soujourner card mix is the full acquiring state", profiles["M0001"]["card_mix"]["reduced"] is False)
+    check("Hanami card mix is the full acquiring state", profiles["M0001"]["card_mix"]["reduced"] is False)
 
     gaps = {g["merchant_id"]: g for g in load_pub("demand_gaps.json")}
     g1 = gaps["M0001"]
-    check("Soujourner gap detected: Tue–Thu afternoon, high confidence",
+    check("Hanami gap detected: Tue–Thu afternoon, high confidence",
           g1["type"] == "off_peak" and g1["daypart"] == "afternoon" and g1["weekdays"] == ["Tue", "Wed", "Thu"] and g1["confidence"] == "high",
           str({k: g1.get(k) for k in ("type", "window", "confidence")}))
     check("Boba Lane takes the cold-start branch", gaps["M0002"]["type"] == "cold_start")
 
     camps = load_pub("campaign_results.json")
     measured = {c["campaign_id"]: c for c in camps["completed"] if c.get("measured")}
-    check("both Soujourner campaigns present and measured", {"C-SJ-01", "C-SJ-02"} <= set(measured), str(list(measured)))
+    check("both Hanami campaigns present and measured", {"C-SJ-01", "C-SJ-02"} <= set(measured), str(list(measured)))
     if {"C-SJ-01", "C-SJ-02"} <= set(measured):
         w, l = measured["C-SJ-02"], measured["C-SJ-01"]
         check("winner net positive, loser net negative", w["cost"]["net_contribution_sgd"] > 0 > l["cost"]["net_contribution_sgd"],
@@ -246,7 +258,7 @@ def main(rerun=True):
     check("an application from an ineligible merchant is in the pending list", any(a["eligibility"] and not a["eligibility"]["passed"] for a in camps["applied"]))
 
     ab = profiles["M0001"]["age_bands"]
-    check("at least one demographic band renders suppressed for Soujourner", any(v["suppressed"] for v in ab.values()) and any(not v["suppressed"] for v in ab.values()))
+    check("at least one demographic band renders suppressed for Hanami", any(v["suppressed"] for v in ab.values()) and any(not v["suppressed"] for v in ab.values()))
 
     # -------------------------------------------------------------- fix 1: the floor's scope
     # The 250 floor belongs on composition breakdowns — who a group of people is made of. It does
@@ -294,7 +306,7 @@ def main(rerun=True):
     check("a below-floor card mix exists and its copy accounts for the population behind it",
           any(x["all_suppressed"] for x in mixes.values()) and all(names_population(x) for x in mixes.values() if x["all_suppressed"]),
           str([(m, x["population"], x["note"]) for m, x in mixes.items() if x["all_suppressed"] and not names_population(x)][:5]))
-    check("Soujourner card mix still ships shares summing to ~100%",
+    check("Hanami card mix still ships shares summing to ~100%",
           abs(sum(mixes["M0001"]["shares"].values()) - 100) < 1.5, str(mixes["M0001"]["shares"]))
 
     # all_customers_seen is the merchant's own count of its own terminals: exact, unrounded, and a
@@ -462,7 +474,7 @@ def main(rerun=True):
                      "permissions: nobody can author the segment as a field",
                      "submit: refused while a required field is missing, naming it",
                      "cohort push: the reach cap fires — campaign capped with the reason, results frozen",
-                     "cohort push: Bernice's card is still honoured after the reach cap"):
+                     "cohort push: Kelly's card is still honoured after the reach cap"):
             check(f"state module: {name}", st_report["checks"].get(name, {}).get("ok") is True)
 
     # Suppression counts reconcile end to end: the shipped allocation_summary against the derived
@@ -479,9 +491,9 @@ def main(rerun=True):
     check("suppression reconciles: Edwin's seeded push_state matches his allocation row (at the cap, suppressed)",
           p_by_id["edwin"]["push_state"]["pushes_this_week"] == int(edwin_row["pushes_this_week"]) and p_by_id["edwin"]["push_state"]["at_push_cap"]
           and "push_suppressed_frequency_cap" in p_by_id["edwin"]["cohort_membership"], str(p_by_id["edwin"]["push_state"]))
-    check("suppression reconciles: Bernice's seeded push_state matches her allocation row (clear)",
-          p_by_id["bernice"]["push_state"]["pushes_this_week"] == int(allocated[allocated["card_id"] == ids["bernice"]].iloc[0]["pushes_this_week"])
-          and not p_by_id["bernice"]["push_state"]["at_push_cap"])
+    check("suppression reconciles: Kelly's seeded push_state matches her allocation row (clear)",
+          p_by_id["kelly"]["push_state"]["pushes_this_week"] == int(allocated[allocated["card_id"] == ids["kelly"]].iloc[0]["pushes_this_week"])
+          and not p_by_id["kelly"]["push_state"]["at_push_cap"])
     check("suppression reconciles: personas flagged at the cap == suppressed_count (every suppression has a name in the demo)",
           sum("push_suppressed_frequency_cap" in p["cohort_membership"] for p in personas) == summ["push"]["suppressed_count"])
     check("state seed: every persona ships consent, weights summing to 1, push_state and offer history",
@@ -559,7 +571,7 @@ def main(rerun=True):
           all(c["cost"]["funded_by"] == "merchant" for c in camps["completed"] if c.get("measured")))
 
     r1 = recs["M0001"]["ranked"]
-    check("Soujourner shows six ranked reward types with overseas/FX disabled",
+    check("Hanami shows six ranked reward types with overseas/FX disabled",
           r1 is not None and len(r1) == 6 and [x["type"] for x in r1 if x["disabled"]] == ["overseas_fx"] and len({x["type"] for x in r1}) == 6)
 
     blob = "".join(open(os.path.join(PUB, f), encoding="utf-8").read().lower() for f in os.listdir(PUB) if f.endswith(".json"))

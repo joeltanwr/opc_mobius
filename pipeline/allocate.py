@@ -1,5 +1,5 @@
 """
-pipeline/allocate.py — implements portfolio-allocator for the Soujourner demo campaign:
+pipeline/allocate.py — implements portfolio-allocator for the Hanami demo campaign:
 pool choice, consent, dormancy, portfolio frequency cap, ranking, push eligibility.
 Per-customer output is raw-only; allocation_summary.json is aggregate.
 """

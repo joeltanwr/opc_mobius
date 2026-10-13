@@ -137,7 +137,7 @@ function Tile({ tile }) {
       <div className="rounded-[22px] border-4 border-ink bg-white overflow-hidden shadow-card">
         {/* Scrollable but not clickable. A tile is something to look at during a two-minute
             stretch of the pitch, and every control inside a real home screen goes somewhere —
-            one stray click on Alvin's tile and the presenter is on a reward detail page for
+            one stray click on Joel's tile and the presenter is on a reward detail page for
             somebody else's offer. The wheel still reaches the scroll container, so the screens
             can be read in full; only the children stop taking pointer events. */}
         <div className="rounded-[18px] overflow-hidden h-[30rem] overflow-y-auto no-scrollbar">

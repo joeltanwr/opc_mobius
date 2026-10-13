@@ -68,10 +68,10 @@ def build_personas(raw, cohorts, allocation_df, rfm_by_merchant):
         t = txns[txns["card_id"] == cid]
         top = t.groupby("merchant_id").size().sort_values(ascending=False).head(5)
         facts = {}
-        if bio["id"] == "alvin":
-            facts["alvin_visits"] = int((t["merchant_id"] == "M0001").sum())
-        elif bio["id"] == "bernice":
-            facts["bernice_days_per_week"] = int(round((t["merchant_id"] == "M0055").sum() / weeks))
+        if bio["id"] == "joel":
+            facts["joel_visits"] = int((t["merchant_id"] == "M0001").sum())
+        elif bio["id"] == "kelly":
+            facts["kelly_days_per_week"] = int(round((t["merchant_id"] == "M0055").sum() / weeks))
         elif bio["id"] == "charles":
             facts["charles_avg_ticket"] = int(round(float(t["amount_sgd"].mean())))
         elif bio["id"] == "denise":
@@ -83,13 +83,18 @@ def build_personas(raw, cohorts, allocation_df, rfm_by_merchant):
             facts["denise_burst_total"] = int(round(float(t[t["txn_datetime"].dt.date == burst_day]["amount_sgd"].sum())))
         elif bio["id"] == "edwin":
             facts["edwin_n"] = int(len(t)); facts["edwin_avg"] = int(round(float(t["amount_sgd"].mean())))
+        elif bio["id"] == "jieru":
+            mine = t[t["merchant_id"] == "M0001"]
+            facts["jieru_days_ago"] = int((DEMO_DATE - mine["txn_datetime"].dt.date.max()).days)
+            facts["jieru_ticket"] = f"{float(mine['amount_sgd'].sum()):.2f}"
+            facts["jieru_m0055_visits"] = int((t["merchant_id"] == "M0055").sum())
         elif bio["id"] == "farah":
             facts["farah_n"] = int(len(t))
         membership = []
         if alloc is not None and cid in alloc.index:
             row = alloc.loc[cid]
             if row["exclusion_reason"] is None or (isinstance(row["exclusion_reason"], float) and np.isnan(row["exclusion_reason"])):
-                membership.append("soujourner_acquisition_cohort")
+                membership.append("hanami_acquisition_cohort")
                 if bool(row["push_suppressed"]):
                     membership.append("push_suppressed_frequency_cap")
             else:
@@ -97,7 +102,7 @@ def build_personas(raw, cohorts, allocation_df, rfm_by_merchant):
         elif cid in excl:
             membership.append(f"excluded:{excl[cid]}")
         if cid in rfm_by_card:
-            membership.append(f"soujourner_rfm:{rfm_by_card[cid]}")
+            membership.append(f"hanami_rfm:{rfm_by_card[cid]}")
         ch = raw["cardholder_by_id"].loc[cid]
         weights = {k: round(float(v), 5) for k, v in ch["category_affinity"].items()}
         out.append(dict(id=bio["id"], name=bio["name"], age=bio["age"], occupation=bio["occupation"], home_district=bio["home_district"],

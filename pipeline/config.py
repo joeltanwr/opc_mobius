@@ -57,7 +57,7 @@ CONSTANTS = {
                                 "age band and location stay permitted as ordinary commercial targeting"),
     "PRIORITY_TIERS": C([(70, "high"), (40, "medium"), (0, "low")], "sme-relationship-value-score Step 2"),
     "LIFT_MIN_SUPPORT": C(20, "mock_data_spec §8 lift specification"),
-    "LIFT_PRICE_BAND_TOLERANCE": C(1, "Brief §5 — |cardholder pref − merchant band| ≤ 1; excludes Charles, keeps Bernice"),
+    "LIFT_PRICE_BAND_TOLERANCE": C(1, "Brief §5 — |cardholder pref − merchant band| ≤ 1; excludes Charles, keeps Kelly"),
     "LIFT_MIN_DAYPART_AVAILABILITY": C(0.15, "Brief §5 — daypart_availability[gap_daypart] ≥ 0.15"),
     "GAP_SLOT_RATIO": C(0.75, "Brief §5 — slot ≤ 75% of own daypart-matched mean slot volume"),
     "GAP_MIN_WEEKS": C(8, "Brief §5 — in ≥ 8 of trailing 12 weeks"),
@@ -162,7 +162,10 @@ RFM_SEGMENTS = [
     ("New Customers", (5, 5), (1, 1)), ("Promising", (4, 4), (1, 1)), ("Need Attention", (3, 3), (1, 3)),
     ("Can't Lose Them", (1, 2), (5, 5)), ("At Risk", (1, 2), (3, 4)), ("Hibernating", (2, 2), (1, 2)), ("Lost", (1, 1), (1, 2)),
 ]
-RETENTION_POOLS = ["Champions", "Loyal Customers", "Potential Loyalists", "Need Attention", "At Risk", "Can't Lose Them"]
+# Existing-customer pools a merchant can aim a campaign at. Promising (recent first-timers) is here
+# because the off-peak discount's target segments include it (REWARD_TARGET_SEGMENTS) and the demo
+# campaign aims at it alongside the lookalike non-customers: a second visit is the cheapest one to win.
+RETENTION_POOLS = ["Champions", "Loyal Customers", "Potential Loyalists", "Promising", "Need Attention", "At Risk", "Can't Lose Them"]
 ACQUISITION_ARCHETYPES = ["New Customers", "Promising"]
 
 # Six reward types (brief §2). Rankings per demand-gap type from reward-programme-recommendation Step 3 / 3b.

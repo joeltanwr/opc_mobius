@@ -55,7 +55,7 @@ def main():
     print("5. priority.py — RM caseload score")
     priority = build_priority(raw)
 
-    print("6. allocate.py — Soujourner acquisition allocation + portfolio exposure")
+    print("6. allocate.py — Hanami acquisition allocation + portfolio exposure")
     allocation_summary, allocation_df = allocate(raw, tags, cohorts, rfm_by_merchant, "M0001")
 
     print("7. campaign.py — measured campaigns")
@@ -113,7 +113,7 @@ def main():
     tiers = {}
     for p in priority.values():
         tiers[p["tier"]] = tiers.get(p["tier"], 0) + 1
-    print("Priority tiers:", tiers, "| Soujourner:", priority["M0001"]["tier"], priority["M0001"]["score"])
+    print("Priority tiers:", tiers, "| Hanami:", priority["M0001"]["tier"], priority["M0001"]["score"])
     return 0
 
 
