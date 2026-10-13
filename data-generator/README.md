@@ -44,7 +44,7 @@ Requires `pandas`, `numpy`, `pyarrow`. `SEED = 42`; two runs are byte-identical.
   700 both, 800 Green Whisk-only) sized so lift clears 2.5 at N = 12,000, B \ A lands in 350–800 after
   the past campaign converts ~67, and Hanami's OCBC base (~2,000) lets RFM segments and age
   bands clear the 250 floor — except one age band, on purpose. The Tue/Wed/Thu 14–17 cells of
-  M0001's weekday × daypart table are multiplied by 0.5 before every visit is drawn, on the OCBC
+  M0001's weekday × daypart table are multiplied by 0.4 before every visit is drawn, on the OCBC
   and non-OCBC sides alike. Both shops are matcha bars kept in the café category, so the lift pair,
   peer set and ticket range are unchanged.
 - **Hanami's hours and customer mix.** Open 08:00–18:00 (`M0001_OPEN_HOURS`): no sale rings outside
