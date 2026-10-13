@@ -220,8 +220,11 @@ NAME_POOL = {
 
 # Brief §2 merchant table (patch 12). M0010 is retired; M0004 takes the not-acquired slot.
 RESERVED = {
-    "M0001": dict(category="cafe", name="Soujourner Coffee", district=2, acquired=True),
-    "M0055": dict(category="cafe", name="Brew & Co.", district=2, acquired=False),
+    # M0001 and M0055 are matcha bars. They stay in the café category on purpose: the lift pair,
+    # the peer set the demand gap is checked against, and the café ticket range all read the
+    # category, and a matcha bar competes for the same office-corridor drink as a café does.
+    "M0001": dict(category="cafe", name="Hanami Matcha", district=2, acquired=True),
+    "M0055": dict(category="cafe", name="Green Whisk Matcha", district=2, acquired=False),
     "M0002": dict(category="bubble_tea", name="Boba Lane", district=11, acquired=True),
     "M0004": dict(category="cafe", name="Tanjong Kopi House", district=2, acquired=False),
     "M0003": dict(category="apparel", name=None, district=None, acquired=True),   # H3 plant, ordinary otherwise
@@ -243,7 +246,18 @@ PRODUCTS = ["Business current account", "Merchant acquiring", "Business credit c
 # The café daypart shape: real afternoon trade, so the Tue–Thu afternoon trough
 # has something to be missing from. Used for peers; M0001 gets a fixed profile.
 CAFE_DAYPART_ALPHA = np.array([4.0, 2.5, 3.0, 1.5, 0.5])
-M0001_DAYPART_PROFILE = {"morning": 0.36, "lunch": 0.22, "afternoon": 0.26, "evening": 0.13, "late": 0.03}
+# M0001 trades 8am–6pm, so "evening" is its last hour (17:00–18:00) and "late" never happens.
+# The afternoon weight is the baseline the Tue–Thu trough (H1_SUPPRESS_FACTOR) is cut from.
+M0001_DAYPART_PROFILE = {"morning": 0.37, "lunch": 0.28, "afternoon": 0.27, "evening": 0.08, "late": 0.0}
+M0001_OPEN_HOURS = (8, 18)        # 08:00 to 18:00 — the last sale rings before 18:00
+
+
+def hour_window(mid, daypart):
+    """Hours a sale can ring in this daypart at this merchant. M0001 is clipped to its opening hours."""
+    lo, hi = DAYPART_HOURS[daypart]
+    if mid == "M0001":
+        lo, hi = max(lo, M0001_OPEN_HOURS[0]), min(hi, M0001_OPEN_HOURS[1])
+    return lo, hi
 
 
 def jitter_latlng(district, r):
@@ -305,7 +319,7 @@ def build_merchants():
         if mid == "M0001":
             price_band = 2
         elif mid == "M0055":
-            price_band = 3      # band tolerance 1 keeps Bernice (3) and excludes Charles (4)
+            price_band = 3      # band tolerance 1 keeps Kelly (3) and excludes Charles (4)
         elif mid == "M0004":
             price_band = 2
 
@@ -396,7 +410,7 @@ def build_merchants():
 
         rows.append(dict(
             merchant_id=mid, canonical_name=name + (CHAIN_SUFFIXES[r.integers(0, len(CHAIN_SUFFIXES))] if is_chain else ""),
-            category=cat_id, sector=cat["label"], mcc=mcc, price_band=price_band,
+            category=cat_id, sector="Matcha Bar" if mid in ("M0001", "M0055") else cat["label"], mcc=mcc, price_band=price_band,
             frequency_archetype=freq_archetype, catchment_type=catchment_type,
             daypart_profile=daypart_profile, postal_district=district,
             lat=round(float(lat), 5), lng=round(float(lng), 5),
@@ -425,7 +439,7 @@ def build_merchants():
     df.loc[df["merchant_id"] == "M0002", ["internal_score_band", "external_score_band"]] = [2, 3]
     df.loc[df["merchant_id"] == "M0004", ["internal_score_band", "external_score_band"]] = [2, 2]
     df.loc[df["merchant_id"] == PLANT_BALANCE_FAIL, ["internal_score_band", "external_score_band"]] = [2, 2]
-    # Soujourner: settlement account with OCBC all along; operating account opened 8 Sep 2026 (brief §5).
+    # Hanami: settlement account with OCBC all along; operating account opened 8 Sep 2026 (brief §5).
     df.loc[df["merchant_id"] == "M0001", "operating_account_opened_date"] = "2026-09-08"
     df.loc[df["merchant_id"] == "M0001", "owner_name"] = "Mei Xin Tan"
     df.loc[df["merchant_id"] == "M0001", "owner_role"] = "Owner"
@@ -615,11 +629,11 @@ def _card_id(n):
 # CH00007..         H1 hero cohort (a_only, overlap, b_only)
 # then              generic population
 
-SHOWCASE_IDS = {"alvin": "CH00001", "bernice": "CH00002", "charles": "CH00003",
+SHOWCASE_IDS = {"joel": "CH00001", "kelly": "CH00002", "charles": "CH00003",
                 "denise": "CH00004", "edwin": "CH00005", "farah": "CH00006"}
 
 # Sized so that (a) lift(M0001, M0055) clears 2.5 with N=12,000, (b) B \ A lands in
-# [350, 800] after the past campaign converts ~67 of them, (c) Soujourner's OCBC customer
+# [350, 800] after the past campaign converts ~67 of them, (c) Hanami's OCBC customer
 # base is ~2,000 so RFM segments and age bands can clear the 250 floor — and one can't.
 N_H1_A_ONLY = 1300
 N_H1_OVERLAP = 700
@@ -635,17 +649,17 @@ def build_cardholders_and_cohorts(merchants_df):
     rows = []
     cohorts = dict(showcase={}, h1_a_only=[], h1_overlap=[], h1_b_only=[])
 
-    alvin = _sample_cardholder(PERSONA_BY_ID[0], r, SHOWCASE_IDS["alvin"], home_district_override=2, work_district_override=2)
-    alvin.update(price_band_pref=float(m0001["price_band"]), engagement_tier="high", marketing_consent=True, mailing_country="SG",
+    joel = _sample_cardholder(PERSONA_BY_ID[0], r, SHOWCASE_IDS["joel"], home_district_override=2, work_district_override=2)
+    joel.update(price_band_pref=float(m0001["price_band"]), engagement_tier="high", marketing_consent=True, mailing_country="SG",
                  daypart_availability={"morning": 0.72, "lunch": 0.08, "afternoon": 0.08, "evening": 0.08, "late": 0.04},
                  age_band="25-34")
-    rows.append(alvin); cohorts["showcase"]["alvin"] = alvin["card_id"]
+    rows.append(joel); cohorts["showcase"]["joel"] = joel["card_id"]
 
-    bernice = _sample_cardholder(PERSONA_BY_ID[2], r, SHOWCASE_IDS["bernice"], home_district_override=4, work_district_override=2)
-    bernice.update(price_band_pref=float(m0055["price_band"]), engagement_tier="high", marketing_consent=True, mailing_country="SG",
+    kelly = _sample_cardholder(PERSONA_BY_ID[2], r, SHOWCASE_IDS["kelly"], home_district_override=4, work_district_override=2)
+    kelly.update(price_band_pref=float(m0055["price_band"]), engagement_tier="high", marketing_consent=True, mailing_country="SG",
                    daypart_availability={"morning": 0.58, "lunch": 0.10, "afternoon": 0.20, "evening": 0.08, "late": 0.04},
                    age_band="25-34")
-    rows.append(bernice); cohorts["showcase"]["bernice"] = bernice["card_id"]
+    rows.append(kelly); cohorts["showcase"]["kelly"] = kelly["card_id"]
 
     # Charles: home Orchard, office in Tanjong Pagar (so catchment passes and price band is the
     # reason he is excluded — brief §5).
@@ -689,7 +703,7 @@ def build_cardholders_and_cohorts(merchants_df):
     for _ in range(N_H1_A_ONLY - 1):
         ch = make_corridor_cardholder(_card_id(next_id), 0 if r.random() < 0.6 else 2)
         rows.append(ch); cohorts["h1_a_only"].append(ch["card_id"]); next_id += 1
-    cohorts["h1_a_only"].append(alvin["card_id"])
+    cohorts["h1_a_only"].append(joel["card_id"])
 
     for _ in range(N_H1_OVERLAP):
         ch = make_corridor_cardholder(_card_id(next_id), 0 if r.random() < 0.5 else 2)
@@ -698,7 +712,7 @@ def build_cardholders_and_cohorts(merchants_df):
     for _ in range(N_H1_B_ONLY - 1):
         ch = make_corridor_cardholder(_card_id(next_id), 2 if r.random() < 0.6 else 0)
         rows.append(ch); cohorts["h1_b_only"].append(ch["card_id"]); next_id += 1
-    cohorts["h1_b_only"].append(bernice["card_id"])
+    cohorts["h1_b_only"].append(kelly["card_id"])
 
     assert next_id == H1_FIRST_ID + (N_H1_TOTAL - 2)
     last_h1_id = next_id - 1
@@ -962,7 +976,7 @@ def generate_h1_transactions(cardholders_df, merchants_df, cohorts, descriptor_l
         dates, dayparts = sample_hero_visits(r, n_visits, wd_index, table)
         descs, dweights = descriptor_lookup[merch_row.name]
         for dt_date, dp in zip(dates, dayparts):
-            h_lo, h_hi = DAYPART_HOURS[DAYPARTS[dp]]
+            h_lo, h_hi = hour_window(merch_row.name, DAYPARTS[dp])
             dt = datetime(dt_date.year, dt_date.month, dt_date.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60)))
             amount = _sample_amount(r, lo_hi[0], lo_hi[1], merch_row["price_band"])
             descriptor = descs[r.choice(len(descs), p=dweights)] if len(descs) > 1 else descs[0]
@@ -970,16 +984,83 @@ def generate_h1_transactions(cardholders_df, merchants_df, cohorts, descriptor_l
             txn_counter += 1
 
     for card_id in cohorts["h1_a_only"]:
-        if card_id == cohorts["showcase"]["alvin"]:
+        if card_id == cohorts["showcase"]["joel"]:
             continue
         visits_for(card_id, m0001, table_m0001, int(np.clip(r.lognormal(math.log(30), 0.4), 8, 90)))
     for card_id in cohorts["h1_overlap"]:
         visits_for(card_id, m0001, table_m0001, int(np.clip(r.lognormal(math.log(20), 0.4), 5, 60)))
         visits_for(card_id, m0055, table_m0055, int(np.clip(r.lognormal(math.log(16), 0.4), 5, 60)))
     for card_id in cohorts["h1_b_only"]:
-        if card_id == cohorts["showcase"]["bernice"]:
+        if card_id == cohorts["showcase"]["kelly"]:
             continue
         visits_for(card_id, m0055, table_m0055, int(np.clip(r.lognormal(math.log(28), 0.4), 8, 90)))
+    return pd.DataFrame(rows, columns=TXN_COLS), txn_counter
+
+
+# ----------------------------------------------------------------------------
+# 7a. M0001's recent OCBC first-timers (Promising) and Jieru
+# ----------------------------------------------------------------------------
+# Matcha drinkers from the competitor 200 metres away (M0055) who tried M0001 once, a few days
+# before the demo clock. They are what fills RFM's "Promising" cell (R = 4, F×M = 1) for the
+# customers OCBC can actually reach, so the Promising pool clears the 250 floor and can be targeted.
+#
+# Why the visit sits 5–8 days back: R is a quintile, so Promising is whoever lands in the second-
+# most-recent fifth of all customers. With regulars filling the most recent fifth, that fifth runs
+# roughly 4–9 days back; a first visit inside it is "recent, not brand new". Earlier and they read
+# as New Customers, later and they slip to Need Attention.
+#
+# Why they also drink at M0055: adding ~700 customers to M0001 alone would raise P(visits M0001)
+# and pull lift(M0001, M0055) under the 2.5 bar. Drawn from M0055's own customers, they raise
+# P(M0001 | M0055) by as much, so the pair keeps its lift — and B \ A, the acquisition cohort, is
+# untouched because none of them came from it.
+N_M0001_FIRST_TIMERS = 700
+M0001_FIRST_VISIT_DAYS_BACK = (5, 8)          # inclusive, before the demo clock
+JIERU_FIRST_VISIT_DAYS_BACK = 7
+JIERU_TICKET_SGD = 5.90
+
+
+def generate_m0001_first_timers(cardholders_df, merchants_df, cohorts, descriptor_lookup, txn_id_start):
+    r = np.random.default_rng(SEED + 20)
+    m_by_id = merchants_df.set_index("merchant_id")
+    m0001, m0055 = m_by_id.loc["M0001"], m_by_id.loc["M0055"]
+    wd_index = build_weekday_date_index()
+    table_m0001 = weekday_daypart_table(m0001["daypart_profile"], suppress=True)
+    table_m0055 = weekday_daypart_table(m0055["daypart_profile"], suppress=False)
+    taken = set(cohorts["showcase"].values()) | set(cohorts["h1_a_only"]) | set(cohorts["h1_overlap"]) | set(cohorts["h1_b_only"])
+    pool = cardholders_df[~cardholders_df["card_id"].isin(taken) & (cardholders_df["engagement_tier"] != "dormant")]
+    chosen = sorted(r.choice(pool["card_id"].to_numpy(), size=N_M0001_FIRST_TIMERS, replace=False).tolist())
+
+    # Jieru: the consented, active first-timer whose acquiring token sorts first. RFM breaks ties
+    # in F by token order, so among one-visit customers she is scored F = 1 for certain rather than
+    # by the luck of the hash — that, a small ticket and a visit in the R = 4 band make her Promising.
+    ch = cardholders_df.set_index("card_id")
+    eligible = [c for c in chosen if bool(ch.loc[c, "marketing_consent"]) and ch.loc[c, "engagement_tier"] in ("high", "medium")]
+    jieru = min(eligible, key=_token)
+    cohorts["showcase"]["jieru"] = jieru
+    cohorts["m0001_first_timers"] = chosen
+
+    rows, txn_counter = [], txn_id_start
+    lo_hi = CATEGORY_BY_ID["cafe"]["ticket_range_sgd"]
+    desc_a = descriptor_lookup["M0001"][0][0]
+    descs_b, dweights_b = descriptor_lookup["M0055"]
+    for c in chosen:
+        back = JIERU_FIRST_VISIT_DAYS_BACK if c == jieru else int(r.integers(M0001_FIRST_VISIT_DAYS_BACK[0], M0001_FIRST_VISIT_DAYS_BACK[1] + 1))
+        d = DEMO_CLOCK_D - timedelta(days=back)
+        row_w = table_m0001[d.weekday()] / table_m0001[d.weekday()].sum()
+        h_lo, h_hi = hour_window("M0001", DAYPARTS[int(r.choice(5, p=row_w))])
+        amount = JIERU_TICKET_SGD if c == jieru else float(np.clip(r.normal(6.6, 0.7), 4.8, 8.5))
+        rows.append(_make_txn_row(txn_counter, c, m0001, desc_a, amount,
+                                  datetime(d.year, d.month, d.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60))),
+                                  "contactless", "SG"))
+        txn_counter += 1
+        dates, dayparts = sample_hero_visits(r, int(np.clip(r.lognormal(math.log(14), 0.4), 4, 45)), wd_index, table_m0055)
+        for dt_date, dp in zip(dates, dayparts):
+            h_lo, h_hi = hour_window("M0055", DAYPARTS[dp])
+            descriptor = descs_b[r.choice(len(descs_b), p=dweights_b)] if len(descs_b) > 1 else descs_b[0]
+            rows.append(_make_txn_row(txn_counter, c, m0055, descriptor, _sample_amount(r, lo_hi[0], lo_hi[1], m0055["price_band"]),
+                                      datetime(dt_date.year, dt_date.month, dt_date.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60))),
+                                      _channel_for_category("cafe", r), "SG"))
+            txn_counter += 1
     return pd.DataFrame(rows, columns=TXN_COLS), txn_counter
 
 
@@ -1003,21 +1084,21 @@ def generate_showcase_transactions(cardholders_df, merchants_df, cohorts, descri
         rows.append(_make_txn_row(txn_counter, card_id, mrow, descriptor_lookup[mid][0][0], amount, dt, channel, country))
         txn_counter += 1
 
-    # Alvin — 127 visits to M0001, ~8:40am weekdays, flat white S$6.20.
+    # Joel — 127 visits to M0001, ~8:40am weekdays, iced matcha latte S$6.20.
     weekdays = _weekday_dates_upto_clock()
     for i in np.sort(r.choice(len(weekdays), size=127, replace=False)):
         d = weekdays[i]
-        add_row(cohorts["showcase"]["alvin"], "M0001", 6.20,
+        add_row(cohorts["showcase"]["joel"], "M0001", 6.20,
                 datetime(d.year, d.month, d.day, 8, max(0, min(59, 40 + int(r.integers(-3, 4)))), int(r.integers(0, 60))), channel="contactless")
 
-    # Bernice — 205 visits to M0055 (~4 days a week), zero at M0001.
-    n_bernice = 205
-    for i in np.sort(r.choice(len(weekdays), size=n_bernice, replace=False)):
+    # Kelly — 205 visits to M0055 (~4 days a week), zero at M0001.
+    n_kelly = 205
+    for i in np.sort(r.choice(len(weekdays), size=n_kelly, replace=False)):
         d = weekdays[i]
-        add_row(cohorts["showcase"]["bernice"], "M0055", 6.50,
+        add_row(cohorts["showcase"]["kelly"], "M0055", 6.50,
                 datetime(d.year, d.month, d.day, 8, max(0, min(59, 42 + int(r.integers(-4, 5)))), int(r.integers(0, 60))), channel="contactless")
 
-    # Charles — premium spend, mean ticket exactly S$180; four premium coffees at Brew & Co. so
+    # Charles — premium spend, mean ticket exactly S$180; four premium coffees at Green Whisk Matcha so
     # he is a candidate for the M0001 cohort and is rejected on price band, not absence.
     charles_id = cohorts["showcase"]["charles"]
     premium_cats = ["japanese", "bar_pub", "apparel", "electronics"]
@@ -1057,7 +1138,7 @@ def generate_showcase_transactions(cardholders_df, merchants_df, cohorts, descri
         for j, amt in enumerate(amts):
             add_row(denise_id, apparel_merchant, amt, datetime(d.year, d.month, d.day, 13 + j, int(r.integers(0, 60)), int(r.integers(0, 60))))
 
-    # Edwin — 142 transactions, average S$9, across many merchants including 8 at Brew & Co.
+    # Edwin — 142 transactions, average S$9, across many merchants including 8 at Green Whisk Matcha
     edwin_id = cohorts["showcase"]["edwin"]
     diverse_cats = ["bubble_tea", "fast_food", "hawker_kopitiam", "bakery_dessert", "cafe"]
     candidates = merchants_df[merchants_df["category"].isin(diverse_cats) & non_hero]["merchant_id"].tolist()
@@ -1080,7 +1161,7 @@ def generate_showcase_transactions(cardholders_df, merchants_df, cohorts, descri
                 datetime(d.year, d.month, d.day, int(r.integers(10, 17)), int(r.integers(0, 60)), int(r.integers(0, 60))))
 
     df = pd.DataFrame(rows, columns=TXN_COLS)
-    facts = dict(alvin_merchant="M0001", bernice_merchant="M0055", denise_gap_days=41, denise_burst_total=430.0,
+    facts = dict(joel_merchant="M0001", kelly_merchant="M0055", denise_gap_days=41, denise_burst_total=430.0,
                  farah_merchant=clinic_merchant)
     return df, txn_counter, facts
 
@@ -1203,10 +1284,10 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     b_only = [c for c in cohorts["h1_b_only"] if ch_by_id.loc[c, "marketing_consent"]]
     b_only_sorted = sorted(b_only)
     r.shuffle(b_only_sorted)
-    bernice = cohorts["showcase"]["bernice"]
-    treated = [bernice] + [c for c in b_only_sorted if c != bernice][:WINNER_TREATED - 1]
+    kelly = cohorts["showcase"]["kelly"]
+    treated = [kelly] + [c for c in b_only_sorted if c != kelly][:WINNER_TREATED - 1]
     control = [c for c in b_only_sorted if c not in set(treated)][:WINNER_CONTROL]
-    converters = [c for c in treated if c != bernice][:WINNER_CONVERTERS]
+    converters = [c for c in treated if c != kelly][:WINNER_CONVERTERS]
     conv_set = set(converters)
     w_start, w_end = date.fromisoformat(WINNER["window_start"]), date.fromisoformat(WINNER["window_end"])
     window_days = [d for d in ALL_DATES if w_start <= d <= w_end and d.weekday() in WINNER["days_of_week"]]
@@ -1307,7 +1388,7 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     for i, (mid, applied_at) in enumerate(applied_specs):
         campaigns.append(mk(f"C-APP-{i + 1:02d}", mid, "applied", "discount", None, None, applied_at, None, push=False))
 
-    # ---- Bernice's rewards feed (customer prompt §4, §8) -----------------------------------
+    # ---- Kelly's rewards feed (customer prompt §4, §8) -----------------------------------
     # The customer view is a rewards list with four filter groups, and a list of one card makes
     # every one of them decoration. These are ordinary campaigns from ordinary merchants; what is
     # planted here is the SPREAD — business nature, reward type, when the offer may be redeemed,
@@ -1316,12 +1397,12 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     # (Friday 15:12), which is what makes "Available now" a real filter rather than a label.
     #
     # Two rules constrain the dates and neither may be broken, because the push-cap story depends
-    # on both: no allocation of Bernice's is pushed inside the demo week (so she is at zero of two
+    # on both: no allocation of Kelly's is pushed inside the demo week (so she is at zero of two
     # pushes and the RM's push reaches her), and at most one is an ACTIVE campaign allocated
     # within the trailing 30 days (so the portfolio frequency cap of three concurrent offers does
-    # not remove her from the Soujourner allocation).
+    # not remove her from the Hanami allocation).
     #
-    # (suffix, category, reward_type, days_of_week, hours, window_start, window_end, status, bernice_status)
+    # (suffix, category, reward_type, days_of_week, hours, window_start, window_end, status, kelly_status)
     FEED_SPECS = [
         ("01", "apparel",          "voucher",        [0, 1, 2, 3, 4, 5, 6], [10, 21], "2026-08-01", "2026-12-20", "active",    "delivered"),
         ("02", "hair_nail_salon",  "discount",       [0, 1, 2, 3, 4],       [11, 19], "2026-07-20", "2026-09-16", "active",    "delivered"),
@@ -1373,8 +1454,8 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
         ("02", "beauty_cosmetics", "discount",     [1, 2, 3, 4, 5],       [10, 19], "2026-08-25", "2026-11-08"),
         ("03", "zichar_chinese_casual", "voucher", [0, 1, 2, 3, 4, 5, 6], [17, 22], "2026-09-01", "2026-10-18"),
     ]
-    bernice_row = cardholders_df[cardholders_df["card_id"] == bernice].iloc[0]
-    near_districts = {int(bernice_row["home_district"]), int(bernice_row["work_district"])}
+    kelly_row = cardholders_df[cardholders_df["card_id"] == kelly].iloc[0]
+    near_districts = {int(kelly_row["home_district"]), int(kelly_row["work_district"])}
 
     def _outlet_districts(mid):
         return {o["district"] for o in m_by_id.loc[mid, "outlets"]}
@@ -1399,12 +1480,12 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     # Allocations for the six other-merchant campaigns, concentrated on a subset that includes Edwin.
     generic_ids = cardholders_df[cardholders_df["marketing_consent"] & ~cardholders_df["card_id"].isin(set(cohorts["h1_a_only"]) | set(cohorts["h1_overlap"]) | set(cohorts["h1_b_only"]) | set(cohorts["showcase"].values()))]["card_id"].tolist()
     edwin = cohorts["showcase"]["edwin"]
-    freq_cap_plants = [c for c in b_only_sorted if c != bernice and c not in conv_set][-40:]   # 40 cohort members already holding 3 offers
+    freq_cap_plants = [c for c in b_only_sorted if c != kelly and c not in conv_set][-40:]   # 40 cohort members already holding 3 offers
     heavy = list(r.choice(generic_ids, size=800, replace=False)) + [edwin]
     light = [c for c in generic_ids if c not in set(heavy)]
     feed_ids = {c["campaign_id"] for c, _ in feed_campaigns}
     # The pull programmes are allocated to an ordinary population so they are real live campaigns
-    # with real reach — but never to Bernice, and never to the cardholders the frequency-cap story
+    # with real reach — but never to Kelly, and never to the cardholders the frequency-cap story
     # depends on. She has to FIND them. An allocated programme would arrive in her feed, and the
     # one thing the pull channel exists to demonstrate is a reward reaching somebody the allocator
     # never picked.
@@ -1419,9 +1500,9 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
             picks = picks + freq_cap_plants
         # Edwin holds exactly two live offers and is at the weekly push cap; a feed campaign
         # allocated inside the 30-day window would make it three and the frequency cap would
-        # remove him from the Soujourner cohort, taking the suppressed push with him.
+        # remove him from the Hanami cohort, taking the suppressed push with him.
         if camp["campaign_id"] in held_out:
-            picks = [c for c in picks if c not in (edwin, bernice)]
+            picks = [c for c in picks if c not in (edwin, kelly)]
         ws = date.fromisoformat(camp["window_start"])
         for c in picks:
             pushed = camp["channel_push"] and r.random() < 0.6
@@ -1429,13 +1510,13 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
             alloc_rows.append(dict(card_id=c, campaign_id=camp["campaign_id"], merchant_id=camp["merchant_id"],
                                    allocated_date=(ws - timedelta(days=3)).isoformat(), arm="treated", status=status,
                                    pushed_at=datetime(ws.year, ws.month, ws.day, 10, 0, 0) if pushed else None, push_suppressed=False))
-    # Bernice's own card on each feed campaign, with the status the customer view needs to show.
+    # Kelly's own card on each feed campaign, with the status the customer view needs to show.
     # Pushed on the allocation date where the campaign had push, which is always outside the demo
-    # week — she must still be at zero pushes when the RM fires the Soujourner one.
+    # week — she must still be at zero pushes when the RM fires the Hanami one.
     for camp, suffix in feed_campaigns:
         b_status = next(x[-1] for x in FEED_SPECS if x[0] == suffix)
         allocated = date.fromisoformat(camp["window_start"]) - timedelta(days=3)
-        alloc_rows.append(dict(card_id=bernice, campaign_id=camp["campaign_id"], merchant_id=camp["merchant_id"],
+        alloc_rows.append(dict(card_id=kelly, campaign_id=camp["campaign_id"], merchant_id=camp["merchant_id"],
                                allocated_date=allocated.isoformat(), arm="treated", status=b_status,
                                pushed_at=datetime(allocated.year, allocated.month, allocated.day, 10, 0, 0), push_suppressed=False))
 
@@ -1444,7 +1525,7 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     # held_out, not feed_ids: the pull programmes must be invisible to this block too. It force-
     # adds Edwin to every core_active campaign and then removes him from exactly one, so a longer
     # list leaves him holding more offers, trips the 30-day frequency cap, and drops him from the
-    # Soujourner cohort — taking the suppressed push, which the brief says never to cut, with him.
+    # Hanami cohort — taking the suppressed push, which the brief says never to cut, with him.
     core_active = [c["campaign_id"] for c in campaigns if c["status"] == "active" and c["campaign_id"] not in held_out]
     edwin_active = alloc_df[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"].isin(core_active))]
     for cid in core_active:
@@ -1459,10 +1540,10 @@ def plant_campaigns(cardholders_df, merchants_df, cohorts, card_txns_df, descrip
     push_days = [datetime(2026, 9, 8, 9, 30, 0), datetime(2026, 9, 10, 12, 15, 0)]
     for cid, pd_at in zip(core_active[:2], push_days):
         alloc_df.loc[(alloc_df["card_id"] == edwin) & (alloc_df["campaign_id"] == cid), "pushed_at"] = pd_at
-    # Bernice holds no live offer from the generic campaign draw: nothing but the cap could stop
+    # Kelly holds no live offer from the generic campaign draw: nothing but the cap could stop
     # her push, and it doesn't. Her planted feed cards are deliberate and are kept — they are
     # allocated outside the 30-day cap window bar one, so she stays under the concurrent-offer cap.
-    alloc_df = alloc_df[~((alloc_df["card_id"] == bernice)
+    alloc_df = alloc_df[~((alloc_df["card_id"] == kelly)
                           & (alloc_df["campaign_id"].isin(set(active_ids) - feed_ids)))].reset_index(drop=True)
     campaigns_df = pd.DataFrame(campaigns)
     extra_df = pd.DataFrame(extra_rows, columns=TXN_COLS)
@@ -1478,6 +1559,22 @@ CARD_SCHEMES = ["visa", "mastercard", "amex", "unionpay"]
 CATCHMENT_FOREIGN_SHARE = {"neighbourhood": 0.03, "office": 0.05, "transit": 0.10, "destination": 0.18}
 HERO_ACQUIRING_MERCHANTS = ["M0001", "M0002", "M0003"]
 TARGET_OCBC_SHARE = 0.25
+
+
+# M0001's customers who pay with other banks' cards and PayNow (tokens only). Three kinds:
+#   regulars     the long-tailed repeat pool, as before
+#   one-timers   came once at some point in the year and never again (tourists, passers-by)
+#   first-timer  a flow of first visits that steps up from 21 days before the demo clock and holds
+#   flow         to the end of the period — new customers finding the place, mostly a single drink
+# One-time customers end up ~30% of everyone M0001 has seen. They sit at the bottom of the F
+# quintile, so they also feed RFM's Promising / New Customers / Lost cells according to when the
+# one visit was. The pool shares the same transaction budget as before (OCBC ≈ 25% of volume).
+M0001_EXT_ONE_TIMERS = 1500
+M0001_EXT_FLOW_START_DAYS_BACK = 21
+M0001_EXT_FLOW_PER_DAY = 75
+M0001_EXT_VISITS_PER_REGULAR = 25
+M0001_EXT_REGULAR_SIGMA = 0.6
+M0001_FIRST_DRINK_SGD = (6.6, 0.8)        # a single matcha, not a meal
 
 
 def _token(s):
@@ -1507,26 +1604,47 @@ def generate_acquiring_transactions(card_txns_df, merchants_df):
         target_total = int(round(n_ocbc / TARGET_OCBC_SHARE)) if n_ocbc > 0 else 0
         n_foreign = max(target_total - n_ocbc, 0)
         window_days = [d for d in ALL_DATES if d >= acq_start]
+        if mid == "M0002":
+            # H2 cold start: terminals live two days before the demo clock, first sale after it — the
+            # merchant view's "no customers at your terminals yet" state. Stated here rather than left
+            # to where the random dates happen to fall.
+            window_days = [d for d in window_days if d > DEMO_CLOCK_D]
         if n_foreign > 0 and window_days:
             trend_w = np.array([_day_trend(ALL_DATES.index(d)) * MONTH_MULT[f"{d.year}-{d.month:02d}"] for d in window_days])
             trend_w /= trend_w.sum()
             day_choices = r.choice(len(window_days), size=n_foreign, p=trend_w)
             lo_hi = CATEGORY_BY_ID[mrow["category"]]["ticket_range_sgd"]
             foreign_share = CATCHMENT_FOREIGN_SHARE.get(mrow["catchment_type"], 0.05)
-            # Non-OCBC customers repeat too: a token pool with a long-tailed visit distribution.
-            n_tokens = max(int(n_foreign / 18), 1)      # ~18 visits per non-OCBC customer: comparable to OCBC regulars, so RFM quintiles are not skewed by issuer
-            tok_w = r.lognormal(0, 0.8, size=n_tokens); tok_w /= tok_w.sum()
-            tok_draws = r.choice(n_tokens, size=n_foreign, p=tok_w)
             dp = np.array([mrow["daypart_profile"][d] for d in DAYPARTS])
             table = weekday_daypart_table(mrow["daypart_profile"], suppress=(mid == "M0001"))
-            for k in range(n_foreign):
-                d = window_days[day_choices[k]]
+            # (date, token key, first-drink?) for every non-OCBC sale
+            if mid == "M0001":
+                flow_start = DEMO_CLOCK_D - timedelta(days=M0001_EXT_FLOW_START_DAYS_BACK - 1)
+                flow_days = [d for d in window_days if d >= flow_start]
+                quiet_days = [d for d in window_days if d < flow_start]
+                n_flow = M0001_EXT_FLOW_PER_DAY * len(flow_days)
+                n_reg = n_foreign - M0001_EXT_ONE_TIMERS - n_flow
+                n_tokens = max(int(n_reg / M0001_EXT_VISITS_PER_REGULAR), 1)
+                tok_w = r.lognormal(0, M0001_EXT_REGULAR_SIGMA, size=n_tokens); tok_w /= tok_w.sum()
+                sales = [(window_days[i], f"{mid}:ext:{t}", False)
+                         for i, t in zip(r.choice(len(window_days), size=n_reg, p=trend_w), r.choice(n_tokens, size=n_reg, p=tok_w))]
+                qw = np.array([_day_trend(ALL_DATES.index(d)) * MONTH_MULT[f"{d.year}-{d.month:02d}"] for d in quiet_days]); qw /= qw.sum()
+                sales += [(quiet_days[i], f"{mid}:once:{k}", False) for k, i in enumerate(r.choice(len(quiet_days), size=M0001_EXT_ONE_TIMERS, p=qw))]
+                sales += [(flow_days[k % len(flow_days)], f"{mid}:new:{k}", True) for k in range(n_flow)]
+            else:
+                # Non-OCBC customers repeat too: a token pool with a long-tailed visit distribution.
+                n_tokens = max(int(n_foreign / 18), 1)      # ~18 visits per non-OCBC customer: comparable to OCBC regulars, so RFM quintiles are not skewed by issuer
+                tok_w = r.lognormal(0, 0.8, size=n_tokens); tok_w /= tok_w.sum()
+                tok_draws = r.choice(n_tokens, size=n_foreign, p=tok_w)
+                sales = [(window_days[day_choices[k]], f"{mid}:ext:{tok_draws[k]}", False) for k in range(n_foreign)]
+            for d, tok_key, first_drink in sales:
                 # follow the merchant's own weekday×daypart shape (incl. the planted trough)
                 row_w = table[d.weekday()]; row_w = row_w / row_w.sum()
                 dpi = int(r.choice(5, p=row_w))
-                h_lo, h_hi = DAYPART_HOURS[DAYPARTS[dpi]]
+                h_lo, h_hi = hour_window(mid, DAYPARTS[dpi])
                 dt = datetime(d.year, d.month, d.day, int(r.integers(h_lo, h_hi)), int(r.integers(0, 60)), int(r.integers(0, 60)))
-                amount = _sample_amount(r, lo_hi[0], lo_hi[1], mrow["price_band"])
+                amount = (float(np.clip(r.normal(*M0001_FIRST_DRINK_SGD), 4.5, 10.0)) if first_drink
+                          else _sample_amount(r, lo_hi[0], lo_hi[1], mrow["price_band"]))
                 is_paynow = r.random() < 0.10
                 scheme = "paynow" if is_paynow else CARD_SCHEMES[int(r.choice(4, p=[0.45, 0.3, 0.15, 0.10]))]
                 issuer = None if is_paynow else ["DBS", "UOB", "other"][int(r.choice(3, p=[0.45, 0.30, 0.25]))]
@@ -1534,7 +1652,7 @@ def generate_acquiring_transactions(card_txns_df, merchants_df):
                 oi = int(r.choice(len(outlet_ids), p=outlet_w))
                 rows.append((f"A{txn_counter:08d}", mid, outlet_ids[oi], f"{outlet_ids[oi]}-T{int(r.integers(1, 3)):02d}", round(amount, 2), dt,
                              scheme, bin_country, False, issuer, "paynow" if is_paynow else "card",
-                             _token(f"{mid}:ext:{tok_draws[k]}"), None))
+                             _token(tok_key), None))
                 txn_counter += 1
     cols = ["txn_id", "merchant_id", "outlet_id", "terminal_id", "amount_sgd", "txn_datetime", "card_scheme",
             "card_bin_country", "is_ocbc_card", "issuer_bank", "payment_method", "customer_token", "campaign_id"]
@@ -1591,16 +1709,21 @@ def build_deposit_flows(merchants_df):
 #     fills from the generated data (and validate.py re-derives independently).
 # ============================================================================
 
-def build_showcase_bios(cohorts, facts):
+def build_showcase_bios(cohorts, facts, cardholders_df):
+    jieru_home = int(cardholders_df.set_index("card_id").loc[cohorts["showcase"]["jieru"], "home_district"])
     return [
-        dict(id="alvin", card_id=cohorts["showcase"]["alvin"], name="Alvin", age=34, occupation="Accounts Manager", home_district=2,
-             description="Creature of habit to an almost comic degree. Same flat white, same 8:40am, same corner table, all year. Has never ordered anything else on the menu.",
-             signature_template="{alvin_visits} visits to Soujourner Coffee. {alvin_visits} flat whites.",
+        dict(id="joel", card_id=cohorts["showcase"]["joel"], name="Joel", age=34, occupation="Accounts Manager", home_district=2,
+             description="Creature of habit to an almost comic degree. Same iced matcha latte, same 8:40am, same corner table, all year. Has never ordered anything else on the menu.",
+             signature_template="{joel_visits} visits to Hanami Matcha. {joel_visits} iced matcha lattes.",
              role="fingerprint", is_illustrative=True),
-        dict(id="bernice", card_id=cohorts["showcase"]["bernice"], name="Bernice", age=29, occupation="Consultant", home_district=4,
-             description="Alvin's statistical twin. Same daypart, same price band, same category mix, same S$6–7 ticket. The only difference is which way she turns out of the lift lobby.",
-             signature_template="Buys the identical coffee, 200 metres away, {bernice_days_per_week} days a week. Zero visits to Soujourner Coffee.",
+        dict(id="kelly", card_id=cohorts["showcase"]["kelly"], name="Kelly", age=29, occupation="Consultant", home_district=4,
+             description="Joel's statistical twin. Same daypart, same price band, same category mix, same S$6–7 ticket. The only difference is which way she turns out of the lift lobby.",
+             signature_template="Buys the same matcha latte, 200 metres away, {kelly_days_per_week} days a week. Zero visits to Hanami Matcha.",
              role="target", is_illustrative=True),
+        dict(id="jieru", card_id=cohorts["showcase"]["jieru"], name="Jieru", age=27, occupation="Analyst", home_district=jieru_home,
+             description="Tried Hanami Matcha once last week, on her way back from the competitor down the road. A first visit that either turns into a habit or is forgotten by the weekend.",
+             signature_template="One visit to Hanami Matcha, {jieru_days_ago} days ago — a single S${jieru_ticket} matcha. {jieru_m0055_visits} visits to Green Whisk Matcha this year.",
+             role="promising", is_illustrative=True),
         dict(id="charles", card_id=cohorts["showcase"]["charles"], name="Charles", age=52, occupation="Director", home_district=9,
              description="Does not look at prices. Hotel dining, premium retail, business class. A 20% discount changes nothing about his behaviour — he was buying it regardless.",
              signature_template="Average ticket S${charles_avg_ticket}. Has never used a voucher.",
@@ -1670,6 +1793,10 @@ def main():
     print("6. H1 hero cohort transactions (M0001 / M0055)")
     h1_df, next_txn = generate_h1_transactions(cardholders_df, merchants_df, cohorts, descriptor_lookup, next_txn)
 
+    print("6b. M0001 first-timers (Promising) and Jieru")
+    ft_df, next_txn = generate_m0001_first_timers(cardholders_df, merchants_df, cohorts, descriptor_lookup, next_txn)
+    h1_df = pd.concat([h1_df, ft_df], ignore_index=True)
+
     print("7. Showcase persona transactions")
     showcase_df, next_txn, facts = generate_showcase_transactions(cardholders_df, merchants_df, cohorts, descriptor_lookup, next_txn)
 
@@ -1705,7 +1832,7 @@ def main():
         os.path.join(RAW_DIR, "campaigns.parquet"), index=False)
     alloc_df.to_parquet(os.path.join(RAW_DIR, "allocations.parquet"), index=False)
     with open(os.path.join(RAW_DIR, "showcase_personas.json"), "w") as f:
-        json.dump(build_showcase_bios(cohorts, facts), f, indent=2)
+        json.dump(build_showcase_bios(cohorts, facts, cardholders_df), f, indent=2)
     with open(os.path.join(RAW_DIR, "cohorts.json"), "w") as f:
         json.dump(dict(cohorts, plants=dict(balance_fail=PLANT_BALANCE_FAIL, bands_fail=PLANT_BANDS_FAIL, no_scores=PLANT_NO_SCORES)), f)
 

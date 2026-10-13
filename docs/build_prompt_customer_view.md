@@ -59,7 +59,7 @@ rewards app home screen.
 - **Flat illustrated header** in slate, with an OCBC logo treatment and a greeting. Flat and
   restrained — no gradients, no photography.
 - **Push notification card**, the most prominent thing below the header: *"Looking for a
-  mid-day boost? Check out vouchers from your nearby coffee shop, Soujourner."* Two actions —
+  mid-day boost? Check out vouchers from your nearby coffee shop, Hanami."* Two actions —
   view the offer, or dismiss. Dismissing should say the offer is still in Rewards, not
   disappear silently; a customer who dismisses a notification has not declined the offer.
 - **Quick actions**: Scan & Pay, PayNow, Wealth Insights, Rewards, More, Support. Rewards
@@ -197,7 +197,7 @@ result and at least one combination is genuinely empty. Company names must be pl
 Singapore businesses and must match the ones used in the merchant and RM views — a judge
 comparing screens should see the same campaign.
 
-The pushed Soujourner Coffee reward should be **the same campaign the merchant configured**:
+The pushed Hanami Matcha reward should be **the same campaign the merchant configured**:
 weekday afternoons, the trough window. Three screens showing one campaign from three sides is
 the demo; three screens showing three unrelated offers is three demos.
 
@@ -259,4 +259,4 @@ anything on the home screen other than the offer and the quick actions.
 - Does redemption update two other screens without a reload?
 - Does a push arriving while this view is open land without a refresh?
 - Does the reward card match the RM configuration preview exactly?
-- Is the Soujourner offer the same campaign the merchant view configured?
+- Is the Hanami offer the same campaign the merchant view configured?

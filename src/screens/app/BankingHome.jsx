@@ -34,8 +34,8 @@ const QUICK = [
 //
 // The consolidated view passes the id explicitly — it renders four of these at once, so it cannot
 // rely on a single current cardholder. Everywhere else the screen is mounted by the router with no
-// props at all, and the fallback used to be the Bernice constant: switching the chrome to Charles
-// left his Rewards tab correct and his home screen still greeting Bernice with her offers on it.
+// props at all, and the fallback used to be the Kelly constant: switching the chrome to Charles
+// left his Rewards tab correct and his home screen still greeting Kelly with her offers on it.
 // Reading the context is what makes the switch mean anything.
 export default function BankingHome({ cardholderId: cardholderIdProp, compact = false }) {
   const contextCardholderId = useCardholderId();

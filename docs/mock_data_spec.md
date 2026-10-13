@@ -150,20 +150,20 @@ Each entry carries `name`, `age`, `occupation`, `home_district`, `card_product`,
 
 | persona | personality | `signature_pattern` | role |
 |---|---|---|---|
-| **Alvin, 34** — accounts manager, Tanjong Pagar | Creature of habit to an almost comic degree. Same flat white, same 8:40am, same corner table, fourteen months running. Has never ordered anything else on the menu. | *"127 visits to `M0001`. 127 flat whites."* | The **fingerprint** — this is who already converts here. |
-| **Bernice, 29** — consultant, one street over | Alvin's statistical twin. Same daypart, same price band, same category mix, same S$6–7 ticket. The only difference is which way she turns out of the lift lobby. | *"Buys the identical coffee, 200 metres away, 4 days a week. Zero visits to `M0001`."* | The **target**, and the H1 hero. |
+| **Joel, 34** — accounts manager, Tanjong Pagar | Creature of habit to an almost comic degree. Same flat white, same 8:40am, same corner table, fourteen months running. Has never ordered anything else on the menu. | *"127 visits to `M0001`. 127 flat whites."* | The **fingerprint** — this is who already converts here. |
+| **Kelly, 29** — consultant, one street over | Joel's statistical twin. Same daypart, same price band, same category mix, same S$6–7 ticket. The only difference is which way she turns out of the lift lobby. | *"Buys the identical coffee, 200 metres away, 4 days a week. Zero visits to `M0001`."* | The **target**, and the H1 hero. |
 | **Charles, 52** — director, Orchard | Does not look at prices. Hotel dining, premium retail, business class. A 15% discount changes nothing about his behaviour — he was buying it regardless. | *"Average ticket S$180. Has never used a voucher."* | The **exclusion** case. Rejecting him *is* the incrementality argument, made visible. |
 | **Denise, 31** — Tampines, two young kids | Spends in bursts, not streams. Silent for six weeks, then clears a whole season's shopping in one Saturday. Everything is timed to school holidays and CNY. | *"Nothing for 41 days, then S$430 in a single afternoon."* | H3 apparel cohort — the seasonal buyer. |
 | **Edwin, 26** — Bugis, first job | Highest transaction count in the entire dataset and the smallest tickets. Tries every new opening within a week. Loyal to nothing. | *"142 transactions. Average S$9."* | H2 cold start — reachable only through category peers. |
 | **Farah, 58** — Toa Payoh | Card lives in a drawer. Kopitiam, wet market and hawker all in cash. The card comes out for the clinic and almost nothing else. | *"9 card transactions in 12 months. All at the same clinic."* | Dormant reactivation, and the honest limit: too little data to recommend confidently, and the UI should say so. |
 
-**Alvin, Bernice and Charles carry the demo.** Put them on screen together: this is who converts, here is someone identical the merchant could never have found, and here is someone we deliberately rejected. That third one is what separates a real recommender from a mailing list.
+**Joel, Kelly and Charles carry the demo.** Put them on screen together: this is who converts, here is someone identical the merchant could never have found, and here is someone we deliberately rejected. That third one is what separates a real recommender from a mailing list.
 
 Merchant names should be plausible Singapore businesses — no real brands. `M0001` is the Tanjong Pagar café with the Tuesday gap, `M0055` its rival across the road.
 
-Every bio must stand alone. A judge reading nothing but the `signature_pattern` line should understand why Bernice is in the cohort and Charles isn't.
+Every bio must stand alone. A judge reading nothing but the `signature_pattern` line should understand why Kelly is in the cohort and Charles isn't.
 
-Generate their transactions **first**, hand-specified, then generate the remaining ~4,994 cardholders around them. The `signature_pattern` numbers must be *true of the generated data*, not decorative — if Alvin's history shows 118 visits, the line says 118.
+Generate their transactions **first**, hand-specified, then generate the remaining ~4,994 cardholders around them. The `signature_pattern` numbers must be *true of the generated data*, not decorative — if Joel's history shows 118 visits, the line says 118.
 
 ---
 
@@ -211,7 +211,7 @@ Deliberately light. One dashboard tile, not a pillar.
 These drive the demo. Generate the base population first, then inject.
 
 **H1 — Off-peak gap (`M0001`, `cafe`, Tanjong Pagar, OCBC-acquired, full 12 months history).**
-Tue–Thu 14:00–17:00 volume runs 40% below its own weekly average, and below the other nine cafés in the benchmark set. Plant a non-OCBC competitor `M0055` (also `cafe`) in the same district, 200 metres away, with strong lift against `M0001`'s converting profile: cardholders who transact at `M0055`, are available in that daypart, are within catchment, match the price band — and have **zero** transactions at `M0001`. Verify the cohort lands between 350 and 800, and that Bernice (§5a) is inside it.
+Tue–Thu 14:00–17:00 volume runs 40% below its own weekly average, and below the other nine cafés in the benchmark set. Plant a non-OCBC competitor `M0055` (also `cafe`) in the same district, 200 metres away, with strong lift against `M0001`'s converting profile: cardholders who transact at `M0055`, are available in that daypart, are within catchment, match the price band — and have **zero** transactions at `M0001`. Verify the cohort lands between 350 and 800, and that Kelly (§5a) is inside it.
 
 **H2 — Cold start (`M0002`, `bubble tea`, OCBC-acquired, `acquiring_start_date` 3 weeks before `PERIOD_END`).**
 Almost no history. Forces the category-and-catchment fallback path. The target cohort must be derivable from the other nine bubble tea merchants, not from `M0002`'s own data.
@@ -273,7 +273,7 @@ Make control-group uplift **positive but modest**. An implausibly large effect r
 2. `validate.py` — assertions that must pass:
    - every category has at least 8 merchants
    - H1 target cohort size falls between 350 and 800
-   - Bernice is in the H1 cohort; Charles and Alvin are not (Alvin already transacts at M0001)
+   - Kelly is in the H1 cohort; Charles and Joel are not (Joel already transacts at M0001)
    - every `signature_pattern` figure matches the persona's actual generated transactions
    - all six showcase personas carry `is_illustrative: true`
    - `lift(M0001, M0055) > 2.5` with `support ≥ 50`

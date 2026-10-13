@@ -284,9 +284,10 @@ export const QUEUED_DISPLAY = "In queue";
 // same state as the individual view rather than a parallel fixture.
 //
 // The four, and why each is here:
-//   edwin    in Soujourner's acquisition cohort — an existing customer inside the target segment
-//   bernice  in the same cohort — the lookalike who has never walked in (the acquisition case)
-//   alvin    Champions, not the acquisition cohort — an existing regular the allocator leaves be
+//   jieru    Promising — an existing customer who has been in once, recently; the campaign aims
+//            at Promising alongside the lookalikes, so she is in scope
+//   kelly    the lookalike who has never walked in (the acquisition case)
+//   joel     Champions, not a target group — an existing regular the allocator leaves be
 //   charles  excluded on price band — a non-customer who does not match, and is not contacted
 //
 // Scope is decided by cohort_membership against the campaign's cohort_tag, in store.js — the same
@@ -298,9 +299,9 @@ export const QUEUED_DISPLAY = "In queue";
 // cardholder who turns offers off, or a campaign re-aimed at another pool, flips the mark without
 // anybody editing this list.
 export const CONSOLIDATED_CARDHOLDERS = [
-  { id: "edwin", caption: "In segment · existing customer", chip: "In segment · existing" },
-  { id: "bernice", caption: "Lookalike · not yet a customer", chip: "Lookalike" },
-  { id: "alvin", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
+  { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
+  { id: "kelly", caption: "Lookalike · not yet a customer", chip: "Lookalike" },
+  { id: "joel", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
   { id: "charles", caption: "No match · not a customer", chip: "No lookalike match" },
 ];
 
@@ -410,28 +411,21 @@ export const TRACE = {
 };
 
 // ----------------------------------------------------------------------------------------------
-// Edwin's weekly push cap, lifted for the demo.
+// Edwin's weekly push cap, lifted for the demo — now off.
 //
 // The shipped dataset puts Edwin at 2 of 2 pushes for the demo week, which makes him the named
 // suppressed-push recipient: in scope for the campaign, delivered a feed card, and refused the
 // push by the frequency cap. That is a deliberate fixture — it is his description, his role and
 // his second cohort tag in showcase_personas.json.
 //
-// The consolidated view needs both in-scope cardholders to visibly receive the notification, so
-// this drops his count to zero at seed time. Consequences, said plainly rather than discovered on
-// stage: the RM's push dialog no longer names anyone as suppressed (the aggregate suppression
-// count from the allocation is unaffected and still shown), and the suppressed-push demonstration
-// now has no named face. Flip this to false to put the fixture back exactly as the pipeline
-// shipped it.
+// This flag used to zero his count at seed time, because he sat on the consolidated cardholder
+// view and that view needs both in-scope cardholders to visibly receive the notification. Jieru
+// has taken his tile, and she is under the cap in the data, so the lift is no longer needed and
+// the suppressed-push demonstration has its named face back. Flip to true to zero his count again.
 //
-// It is applied in the seed and nowhere else, so every screen agrees about Edwin. The alternative
-// — overriding him only inside the consolidated view — would have shown him receiving a push on
-// one screen and being refused one on another, which is worse than either state on its own.
-//
-// The pipeline is the proper home for this and cannot be re-run in this environment; when it can,
-// move it to pipeline/config.py and delete this.
+// It is applied in the seed and nowhere else, so every screen agrees about Edwin.
 // ----------------------------------------------------------------------------------------------
-export const DEMO_LIFT_EDWIN_PUSH_CAP = true;
+export const DEMO_LIFT_EDWIN_PUSH_CAP = false;
 
 // ----------------------------------------------------------------------------------------------
 // The reward score's own formula, so the System Trace can show each score as its parts.

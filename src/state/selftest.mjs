@@ -75,20 +75,20 @@ const atCap = (st, id) => ({
   cardholders: { ...st.cardholders, [id]: { ...st.cardholders[id], pushes_this_week: st.caps.push_per_week } },
 });
 
-check("seed: the demo flag decides Edwin's starting push count, and Bernice is under the cap either way",
+check("seed: the demo flag decides Edwin's starting push count, and Kelly is under the cap either way",
       (DEMO_LIFT_EDWIN_PUSH_CAP
         ? seed.cardholders.edwin.pushes_this_week === 0
         : seed.cardholders.edwin.pushes_this_week >= seed.caps.push_per_week)
-      && seed.cardholders.bernice.pushes_this_week < seed.caps.push_per_week,
+      && seed.cardholders.kelly.pushes_this_week < seed.caps.push_per_week,
       { lifted: DEMO_LIFT_EDWIN_PUSH_CAP, edwin: seed.cardholders.edwin.pushes_this_week,
-        bernice: seed.cardholders.bernice.pushes_this_week, cap: seed.caps.push_per_week });
+        kelly: seed.cardholders.kelly.pushes_this_week, cap: seed.caps.push_per_week });
 check("seed: an expired reward is seeded from a real allocation row",
       Object.values(seed.offers).some((o) => o.status === "expired" && o.source === "allocations.parquet"));
 check("seed: audit clean", audit(seed).length === 0, audit(seed));
 
 // ---------------------------------------------------------------- guards before active
 let s = seed;
-s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], at: at(1), seq: 1 });
+s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly"], at: at(1), seq: 1 });
 check("push on a campaign that is not active is rejected and logged",
       s.ledger.at(-1).type === "REJECTED" && Object.keys(s.offers).length === Object.keys(seed.offers).length, s.ledger.at(-1));
 s = reduce(s, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(2), seq: 2 });
@@ -106,23 +106,23 @@ check("ladder walked applied → draft → pending → active with history recor
 // dataset. Every assertion below is unchanged from when the seed supplied that state.
 s = atCap(s, "edwin");
 const beforePush = s;
-s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(6), seq: 6 });
+s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin", "charles"], by: "rm", at: at(6), seq: 6 });
 const push = s.campaigns[DEMO].pushes[0];
-const bOffer = s.offers[offerId(DEMO, "bernice")], eOffer = s.offers[offerId(DEMO, "edwin")];
+const bOffer = s.offers[offerId(DEMO, "kelly")], eOffer = s.offers[offerId(DEMO, "edwin")];
 check("event 1: every recipient with offers on gets the feed card", bOffer?.status === "delivered" && eOffer?.status === "delivered");
-check("event 1: Bernice gets the push, Edwin is suppressed by the weekly cap",
+check("event 1: Kelly gets the push, Edwin is suppressed by the weekly cap",
       bOffer?.via === "push" && eOffer?.via === "feed_only" && push.suppressed_detail.some((d) => d.id === "edwin" && /weekly push cap/.test(d.why)), push);
 check("event 1: suppression is counted, not dropped — delivered = sent + suppressed",
       push.reconciles && push.delivered === 3 && push.sent === 2 && push.suppressed === 1
       && s.campaigns[DEMO].counters.pushes_suppressed === 1 && s.campaigns[DEMO].counters.feed_delivered === 3);
-check("event 1: Edwin's push count did not move; Bernice's did",
+check("event 1: Edwin's push count did not move; Kelly's did",
       s.cardholders.edwin.pushes_this_week === beforePush.cardholders.edwin.pushes_this_week
-      && s.cardholders.bernice.pushes_this_week === beforePush.cardholders.bernice.pushes_this_week + 1);
-check("event 1: the notification exists for Bernice only",
-      s.cardholders.bernice.notifications.length === 1 && s.cardholders.edwin.notifications.length === 0);
+      && s.cardholders.kelly.pushes_this_week === beforePush.cardholders.kelly.pushes_this_week + 1);
+check("event 1: the notification exists for Kelly only",
+      s.cardholders.kelly.notifications.length === 1 && s.cardholders.edwin.notifications.length === 0);
 check("event 1: pipeline suppressed_count agrees with the seeded personas at the cap",
       data.allocationSummary.push.suppressed_count === Object.values(seed.cardholders).filter((c) => c.cohort_membership.includes("push_suppressed_frequency_cap")).length);
-s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], by: "rm", at: at(7), seq: 7 });
+s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly"], by: "rm", at: at(7), seq: 7 });
 check("event 1: a repeat push to a holder of the card is counted as already_holding, not delivered twice",
       s.campaigns[DEMO].pushes[1].already_holding === 1 && s.campaigns[DEMO].pushes[1].delivered === 0);
 
@@ -152,12 +152,12 @@ check("the send reserves nothing: 3 cards delivered against a limit of 2 and not
         status: s.campaigns[DEMO].status });
 
 // ---------------------------------------------------------------- event 2: redemption propagates
-const wBefore = s.cardholders.bernice.profile.category_weights[s.campaigns[DEMO].merchant_category];
+const wBefore = s.cardholders.kelly.profile.category_weights[s.campaigns[DEMO].merchant_category];
 s = reduce(s, { type: "REDEEMED", offer_id: bOffer.id, at: at(8), seq: 8 });
-const wAfter = s.cardholders.bernice.profile.category_weights[s.campaigns[DEMO].merchant_category];
-const wSum = Object.values(s.cardholders.bernice.profile.category_weights).reduce((a, b) => a + b, 0);
+const wAfter = s.cardholders.kelly.profile.category_weights[s.campaigns[DEMO].merchant_category];
+const wSum = Object.values(s.cardholders.kelly.profile.category_weights).reduce((a, b) => a + b, 0);
 check("event 2: redemption counted on the campaign (merchant dashboard + RM detail read this)",
-      s.campaigns[DEMO].counters.redemptions === 1 && s.campaigns[DEMO].counters.redeemers.includes("bernice") && s.offers[bOffer.id].status === "redeemed" && Boolean(s.offers[bOffer.id].code));
+      s.campaigns[DEMO].counters.redemptions === 1 && s.campaigns[DEMO].counters.redeemers.includes("kelly") && s.offers[bOffer.id].status === "redeemed" && Boolean(s.offers[bOffer.id].code));
 check("event 2: customer profile weight moved toward the merchant's category and still sums to 1",
       wAfter > wBefore && Math.abs(wSum - 1) < 0.001, { before: wBefore, after: wAfter, category: s.campaigns[DEMO].merchant_category });
 check("event 2: nobody else's profile moved",
@@ -166,16 +166,16 @@ s = reduce(s, { type: "REDEEMED", offer_id: bOffer.id, at: at(9), seq: 9 });
 check("event 2: a second redemption of the same card is rejected", s.ledger.at(-1).type === "REJECTED");
 
 // ---------------------------------------------------------------- event 3: redemption limit → capped
-s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["alvin"], by: "rm", at: at(10), seq: 10 });
+s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["joel"], by: "rm", at: at(10), seq: 10 });
 s = reduce(s, { type: "REDEEMED", offer_id: eOffer.id, at: at(11), seq: 11 });
 check("event 3: reaching the redemption limit moves the campaign to capped with the reason",
       s.campaigns[DEMO].status === "capped" && s.campaigns[DEMO].capped.why === "redemption limit reached" && s.campaigns[DEMO].frozen != null);
-const alvinOffer = s.offers[offerId(DEMO, "alvin")];
-check("event 3: unclaimed cards close in the feed and say why", alvinOffer.status === "closed" && /fully claimed/i.test(alvinOffer.closed.why));
+const joelOffer = s.offers[offerId(DEMO, "joel")];
+check("event 3: unclaimed cards close in the feed and say why", joelOffer.status === "closed" && /fully claimed/i.test(joelOffer.closed.why));
 check("event 3: redeemed cards keep their redemption", s.offers[bOffer.id].status === "redeemed" && s.offers[eOffer.id].status === "redeemed");
 s = reduce(s, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["farah"], by: "rm", at: at(12), seq: 12 });
 check("event 3: pushes after capped are rejected", s.ledger.at(-1).type === "REJECTED");
-s = reduce(s, { type: "REDEEMED", offer_id: alvinOffer.id, at: at(13), seq: 13 });
+s = reduce(s, { type: "REDEEMED", offer_id: joelOffer.id, at: at(13), seq: 13 });
 check("event 3: redeeming a closed card is rejected", s.ledger.at(-1).type === "REJECTED");
 check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 
@@ -186,8 +186,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", at: at(2), seq: 2, configuration: { ...CONFIG, redemption_limit: 50 } });  // limit is required (§7.5); large so the reach cap fires first
   r = reduce(r, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3, window: WINDOW });
   r.campaigns[DEMO].reach_cap = 2;      // test input: a two-person reach so the cap is reachable
-  r = reduce(r, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin"], by: "rm", at: at(4), seq: 4 });
-  const held = r.offers[offerId(DEMO, "bernice")];
+  r = reduce(r, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin"], by: "rm", at: at(4), seq: 4 });
+  const held = r.offers[offerId(DEMO, "kelly")];
   check("event 3 (reach): reaching the reach cap moves the campaign to capped", r.campaigns[DEMO].status === "capped" && r.campaigns[DEMO].capped.why === "reach cap reached");
   check("event 3 (reach): delivered cards are not revoked by a reach cap", held.status === "delivered");
   r = reduce(r, { type: "REDEEMED", offer_id: held.id, at: at(5), seq: 5 });
@@ -202,8 +202,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   t = reduce(t, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   t = reduce(t, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", at: at(2), seq: 2, configuration: { ...CONFIG, redemption_limit: 50 } });
   t = reduce(t, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3, window: WINDOW });
-  t = reduce(t, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin"], by: "rm", at: at(4), seq: 4 });
-  t = reduce(t, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: at(5), seq: 5 });
+  t = reduce(t, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin"], by: "rm", at: at(4), seq: 4 });
+  t = reduce(t, { type: "REDEEMED", offer_id: offerId(DEMO, "kelly"), at: at(5), seq: 5 });
   t = reduce(t, { type: "STOPPED", campaign_id: DEMO, by: "merchant", reason: "owner paused it", at: at(6), seq: 6 });
   const frozen = t.campaigns[DEMO].frozen;
   check("event 4: stopped freezes results", t.campaigns[DEMO].status === "stopped" && frozen.counters.redemptions === 1);
@@ -214,7 +214,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         t.campaigns[DEMO].frozen.counters.redemptions === 1 && t.campaigns[DEMO].counters.redemptions === 1 && t.campaigns[DEMO].post_freeze.redemptions === 1);
   t = reduce(t, { type: "REDEEMED", offer_id: offerId(DEMO, "edwin"), at: new Date(Date.parse(WINDOW.end) + 3 * 86_400_000).toISOString(), seq: 8 });
   check("event 4: after expiry the card cannot be redeemed (already redeemed here; expiry guard exercised below)", t.ledger.at(-1).type === "REJECTED");
-  t = reduce(t, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["alvin"], by: "rm", at: at(9), seq: 9 });
+  t = reduce(t, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["joel"], by: "rm", at: at(9), seq: 9 });
   check("event 4: no new deliveries after a stop", t.ledger.at(-1).type === "REJECTED");
   check("event 4: audit clean after stop", audit(t).length === 0, audit(t));
   // expiry guard across UTC offsets: 04:00 SGT on the day after expiry, written in Z
@@ -223,8 +223,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     w = reduce(w, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
     w = reduce(w, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", at: at(2), seq: 2, configuration: { ...CONFIG, redemption_limit: 50 } });
     w = reduce(w, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", at: at(3), seq: 3, window: WINDOW });
-    w = reduce(w, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], by: "rm", at: at(4), seq: 4 });
-    w = reduce(w, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: `${WINDOW.end}T20:00:00Z`, seq: 5 });
+    w = reduce(w, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly"], by: "rm", at: at(4), seq: 4 });
+    w = reduce(w, { type: "REDEEMED", offer_id: offerId(DEMO, "kelly"), at: `${WINDOW.end}T20:00:00Z`, seq: 5 });
     check("expiry: compared as instants, not strings (20:00Z on the last day is 04:00 SGT the next day — expired)", w.ledger.at(-1).type === "REJECTED", w.ledger.at(-1));
   }
   // expiry guard on a real seeded expired card
@@ -245,7 +245,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("event 5: the held cards are marked withdrawn by the customer, not revoked by us",
         Object.values(v.offers).filter((o) => o.cardholder_id === "edwin" && o.status === "withdrawn").length === edwinFeedBefore);
   check("event 5: departure recorded against every non-terminal campaign's segment", v.campaigns[DEMO].segment_departures.consent === 1);
-  v = reduce(v, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin"], by: "rm", at: at(5), seq: 5 });
+  v = reduce(v, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin"], by: "rm", at: at(5), seq: 5 });
   const p = v.campaigns[DEMO].pushes[0];
   check("event 5: a later push excludes them and counts the exclusion separately from suppression",
         p.delivered === 1 && p.excluded === 1 && p.suppressed === 0 && !v.offers[offerId(DEMO, "edwin")]);
@@ -267,21 +267,21 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   q = reduce(q, { type: "CONFIGURE", campaign_id: DEMO, field: "per_customer_limit", value: "once_per_week", by: "merchant", at: at(2), seq: 2 });
   q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "merchant", at: at(3), seq: 3 });
   q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(4), seq: 4 });
-  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice"], by: "rm", at: at(5), seq: 5 });
-  q = reduce(q, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: atDays(3), seq: 6 });
+  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly"], by: "rm", at: at(5), seq: 5 });
+  q = reduce(q, { type: "REDEEMED", offer_id: offerId(DEMO, "kelly"), at: atDays(3), seq: 6 });
   check("limit: the first redemption under a weekly per-customer limit is honoured",
-        q.offers[offerId(DEMO, "bernice")].status === "redeemed" && q.offers[offerId(DEMO, "bernice")].redeemed_at === atDays(3));
+        q.offers[offerId(DEMO, "kelly")].status === "redeemed" && q.offers[offerId(DEMO, "kelly")].redeemed_at === atDays(3));
 
-  // A second Soujourner campaign, same merchant, its own card in Bernice's feed.
+  // A second Hanami campaign, same merchant, its own card in Kelly's feed.
   const second = JSON.parse(JSON.stringify(q.campaigns[DEMO]));
   Object.assign(second, { id: "C-SJ-04", counters: { ...second.counters, feed_delivered: 0, pushes_sent: 0, pushes_suppressed: 0, redemptions: 0, redeemers: [],
                           seeded: { feed_delivered: 0, pushes_sent: 0, pushes_suppressed: 0, redemptions: 0 } }, pushes: [], post_freeze: { redemptions: 0, offers: [] } });
-  const twin = { ...q.offers[offerId(DEMO, "bernice")], id: offerId("C-SJ-04", "bernice"), campaign_id: "C-SJ-04", status: "delivered", redeemed_at: undefined, code: undefined };
+  const twin = { ...q.offers[offerId(DEMO, "kelly")], id: offerId("C-SJ-04", "kelly"), campaign_id: "C-SJ-04", status: "delivered", redeemed_at: undefined, code: undefined };
   q = { ...q, campaigns: { ...q.campaigns, "C-SJ-04": second }, offers: { ...q.offers, [twin.id]: twin } };
 
   let r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(5), seq: 7 });
   check("limit: a second reward from the same merchant inside the week is refused, with the reason and the prior redemption named",
-        r.ledger.at(-1).type === "REJECTED" && /per-customer limit/.test(r.ledger.at(-1).reason) && /bernice/.test(r.ledger.at(-1).reason)
+        r.ledger.at(-1).type === "REJECTED" && /per-customer limit/.test(r.ledger.at(-1).reason) && /kelly/.test(r.ledger.at(-1).reason)
         && r.offers[twin.id].status === "delivered", r.ledger.at(-1));
   r = reduce(q, { type: "REDEEMED", offer_id: twin.id, at: atDays(11), seq: 7 });
   check("limit: the same reward eight days later is honoured — the window is rolling, not a ban",
@@ -415,25 +415,32 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   const base = reduce(seed, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   const pick = (st, pools) => reduce(st, { type: "CONFIGURE", campaign_id: DEMO, field: "target_segments", value: pools, by: "merchant", at: at(2), seq: 2 });
 
-  check("target groups: the prefilled selection is the recommended acquisition pool",
-        base.campaigns[DEMO].configuration.target_segments.join() === "Non-customers",
+  check("target groups: the prefilled selection is the recommended acquisition pool plus Promising",
+        base.campaigns[DEMO].configuration.target_segments.join() === "Non-customers,Promising",
         base.campaigns[DEMO].configuration.target_segments);
-  check("target groups: the acquisition pool resolves to the tag the pipeline writes on personas",
-        cohortTagsFor(base.campaigns[DEMO]).join() === "soujourner_acquisition_cohort",
+  check("target groups: the prefilled pools resolve to the tags the pipeline writes on personas",
+        cohortTagsFor(base.campaigns[DEMO]).join() === "hanami_acquisition_cohort,hanami_rfm:Promising",
         cohortTagsFor(base.campaigns[DEMO]));
-  check("target groups: the acquisition pool reaches Bernice and Edwin, not Alvin",
-        cohortNamed(base, base.campaigns[DEMO]).sort().join() === "bernice,edwin",
+  check("target groups: the prefilled pools reach Kelly, Edwin and Jieru, not Joel",
+        cohortNamed(base, base.campaigns[DEMO]).sort().join() === "edwin,jieru,kelly",
         cohortNamed(base, base.campaigns[DEMO]));
+  // The acquisition pool on its own — the pool the pipeline allocated for, and the one the
+  // reach, outlet and suppression checks below are about.
+  const acqBase = pick(base, ["Non-customers"]);
+  check("target groups: the acquisition pool alone reaches Kelly and Edwin, not Jieru or Joel",
+        cohortTagsFor(acqBase.campaigns[DEMO]).join() === "hanami_acquisition_cohort"
+        && cohortNamed(acqBase, acqBase.campaigns[DEMO]).sort().join() === "edwin,kelly",
+        cohortNamed(acqBase, acqBase.campaigns[DEMO]));
 
   const champions = pick(base, ["Champions"]);
-  check("target groups: selecting Champions re-points the send at Alvin and away from the acquisition pair",
-        cohortTagsFor(champions.campaigns[DEMO]).join() === "soujourner_rfm:Champions"
-        && cohortNamed(champions, champions.campaigns[DEMO]).join() === "alvin",
+  check("target groups: selecting Champions re-points the send at Joel and away from the acquisition pair",
+        cohortTagsFor(champions.campaigns[DEMO]).join() === "hanami_rfm:Champions"
+        && cohortNamed(champions, champions.campaigns[DEMO]).join() === "joel",
         cohortNamed(champions, champions.campaigns[DEMO]));
 
   const both = pick(base, ["Non-customers", "Champions"]);
   check("target groups: selecting both pools reaches all three, with no cardholder counted twice",
-        cohortNamed(both, both.campaigns[DEMO]).sort().join() === "alvin,bernice,edwin",
+        cohortNamed(both, both.campaigns[DEMO]).sort().join() === "edwin,joel,kelly",
         cohortNamed(both, both.campaigns[DEMO]));
 
   // Reach follows the selection through the same derivation the screen draws from.
@@ -460,8 +467,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 
   live = reduce(live, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
   check("target groups: the send reaches the selected pool's cardholder and not the deselected ones",
-        Boolean(live.offers[offerId(DEMO, "alvin")])
-        && !live.offers[offerId(DEMO, "bernice")] && !live.offers[offerId(DEMO, "edwin")],
+        Boolean(live.offers[offerId(DEMO, "joel")])
+        && !live.offers[offerId(DEMO, "kelly")] && !live.offers[offerId(DEMO, "edwin")],
         Object.keys(live.offers).filter((k) => k.startsWith(DEMO)));
   check("target groups: a campaign aimed off its allocated pool does not borrow the allocation's suppression expectation",
         onAllocatedPool(live.campaigns[DEMO]) === false && live.campaigns[DEMO].pushes.at(-1).aggregate.suppressed === 0,
@@ -471,7 +478,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   // The count beside each outlet follows the selected pool, and the two kinds of pool are counted
   // by different measures: catchment for people who have never been in, the outlets they actually
   // use for people who already come in.
-  const acqOutlets = perOutletFromSelection(base.campaigns[DEMO]);
+  const acqOutlets = perOutletFromSelection(acqBase.campaigns[DEMO]);
   check("outlets: the acquisition pool reports its own catchment count at each outlet",
         acqOutlets.length === seed.campaigns[DEMO].segment.per_outlet.length
         && acqOutlets.filter((o) => o.state === "ok").every((o, i) => o.count === seed.campaigns[DEMO].segment.per_outlet.filter((p) => p.suppressed === false)[i].count),
@@ -504,14 +511,14 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   // contactable is what survives consent and the frequency cap, and it is what the send delivers
   // to and what the dashboards print as Reach. Committing the qualifying figure into `reach` would
   // have had the RM's column read 550 for a send that reaches 400.
-  const acq = reachFromSelection(base.campaigns[DEMO]);
+  const acq = reachFromSelection(acqBase.campaigns[DEMO]);
   check("reach: qualifying is the segment, contactable is the pipeline's allocation after consent and the cap",
         acq.total === seed.campaigns[DEMO].segment.reach
         && acq.contactable === data.allocationSummary.final_allocation.count
         && acq.contactable < acq.total && acq.contactable_exact === true,
         { qualifying: acq.total, contactable: acq.contactable });
 
-  let acqLive = reduce(base, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(4), seq: 4, configuration: CONFIG });
+  let acqLive = reduce(acqBase, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(4), seq: 4, configuration: CONFIG });
   check("reach: submit commits contactable as reach, and keeps qualifying beside it",
         acqLive.campaigns[DEMO].reach === data.allocationSummary.final_allocation.count
         && acqLive.campaigns[DEMO].qualifying_reach === seed.campaigns[DEMO].segment.reach,
@@ -554,7 +561,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     holderProfile: (data.showcasePersonas.find((p) => p.id === "charles") ?? {}).profile,
     clock: f.clock, adjacency: data.constants.district_adjacency ?? null,
   });
-  check("pull: Charles finds the pushed Soujourner programme he was never targeted for",
+  check("pull: Charles finds the pushed Hanami programme he was never targeted for",
         found.results.some((r) => r.campaign.id === DEMO),
         { results: found.results.map((r) => r.merchant?.name), funnel: { open: found.open, in_category: found.in_category } });
 
@@ -592,13 +599,13 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   let q = atCap(seed, "edwin");
   q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   q = reduce(q, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: LIMIT2 });
-  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
+  q = reduce(q, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
 
-  const bId = offerId(DEMO, "bernice"), eId = offerId(DEMO, "edwin"), cId = offerId(DEMO, "charles");
+  const bId = offerId(DEMO, "kelly"), eId = offerId(DEMO, "edwin"), cId = offerId(DEMO, "charles");
   q = reduce(q, { type: "CLAIMED", offer_id: bId, at: at(4), seq: 4 });
   check("claim: locks the voucher in — status claimed, code issued, one of N spent",
         q.offers[bId].status === "claimed" && Boolean(q.offers[bId].code) && Boolean(q.offers[bId].claimed_at)
-        && q.campaigns[DEMO].counters.claims === 1 && q.campaigns[DEMO].counters.claimers.includes("bernice"),
+        && q.campaigns[DEMO].counters.claims === 1 && q.campaigns[DEMO].counters.claimers.includes("kelly"),
         { status: q.offers[bId].status, code: q.offers[bId].code, claims: q.campaigns[DEMO].counters.claims });
   check("claim: claiming is not redeeming — the merchant has not paid for it yet",
         q.campaigns[DEMO].counters.redemptions === 0 && q.offers[bId].redeemed_at === undefined,
@@ -634,22 +641,22 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   let v = atCap(seed, "edwin");
   v = reduce(v, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm", at: at(1), seq: 1 });
   v = reduce(v, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "merchant", at: at(2), seq: 2, configuration: LIMIT2 });
-  v = reduce(v, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
+  v = reduce(v, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin", "charles"], by: "rm", at: at(3), seq: 3 });
   v = reduce(v, { type: "CLAIMED", offer_id: bId, at: at(4), seq: 4 });   // claimed, not yet redeemed
   v = reduce(v, { type: "CLAIMED", offer_id: eId, at: at(5), seq: 5 });   // second claim takes it to N
   check("claim: a claimed voucher is NOT closed by the cap — the slot is already spent on it",
         v.offers[bId].status === "claimed" && v.offers[eId].status === "claimed" && v.offers[cId].status === "closed",
-        { bernice: v.offers[bId].status, edwin: v.offers[eId].status, charles: v.offers[cId].status });
+        { kelly: v.offers[bId].status, edwin: v.offers[eId].status, charles: v.offers[cId].status });
   const late = reduce(v, { type: "REDEEMED", offer_id: bId, at: at(6), seq: 6 });
   check("claim: a voucher claimed before the cap can still be redeemed after it",
         late.offers[bId].status === "redeemed" && late.campaigns[DEMO].post_freeze.redemptions === 1,
         late.ledger.at(-1));
 
   // Turning offers off stops marketing; it does not confiscate what they already took.
-  const off = reduce(v, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(6), seq: 6 });
+  const off = reduce(v, { type: "OFFERS_OFF", cardholder_id: "kelly", at: at(6), seq: 6 });
   check("claim: turning offers off keeps a claimed voucher and withdraws only unclaimed cards",
-        off.offers[bId].status === "claimed" && off.cardholders.bernice.feed.includes(bId),
-        { status: off.offers[bId].status, feed: off.cardholders.bernice.feed });
+        off.offers[bId].status === "claimed" && off.cardholders.kelly.feed.includes(bId),
+        { status: off.offers[bId].status, feed: off.cardholders.kelly.feed });
 }
 
 // ---------------------------------------------------------------- maximum cost counts claims, not sends
@@ -696,8 +703,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   k = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", push_granted: true, at: at(3), seq: 3 });
   k = reduce(k, { type: "PUSH_COHORT", campaign_id: DEMO, by: "rm", at: at(4), seq: 4 });
   const p = k.campaigns[DEMO].pushes[0], cnt = k.campaigns[DEMO].counters;
-  check("cohort push: delivers to every named cohort persona individually (Bernice pushed, Edwin feed-only)",
-        k.offers[offerId(DEMO, "bernice")]?.via === "push" && k.offers[offerId(DEMO, "edwin")]?.via === "feed_only");
+  check("cohort push: delivers to every named cohort persona individually (Kelly pushed, Edwin feed-only)",
+        k.offers[offerId(DEMO, "kelly")]?.via === "push" && k.offers[offerId(DEMO, "edwin")]?.via === "feed_only");
   check("cohort push: counters advance by the allocation figure — delivered == reach, and reconcile",
         cnt.feed_delivered === data.allocationSummary.final_allocation.count && p.reconciles && p.delivered === p.sent + p.suppressed, { p, cnt });
   check("cohort push: suppressed total equals the pipeline's suppressed_count (Edwin is the one)",
@@ -706,8 +713,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         k.campaigns[DEMO].status === "capped" && k.campaigns[DEMO].capped.why === "reach cap reached" && k.campaigns[DEMO].frozen != null);
   k = reduce(k, { type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["farah"], by: "rm", at: at(5), seq: 5 });
   check("cohort push: no further pushes after the reach cap", k.ledger.at(-1).type === "REJECTED");
-  k = reduce(k, { type: "REDEEMED", offer_id: offerId(DEMO, "bernice"), at: at(6), seq: 6 });
-  check("cohort push: Bernice's card is still honoured after the reach cap", k.offers[offerId(DEMO, "bernice")].status === "redeemed");
+  k = reduce(k, { type: "REDEEMED", offer_id: offerId(DEMO, "kelly"), at: at(6), seq: 6 });
+  check("cohort push: Kelly's card is still honoured after the reach cap", k.offers[offerId(DEMO, "kelly")].status === "redeemed");
   check("cohort push: audit clean", audit(k).length === 0, audit(k));
 }
 
@@ -788,39 +795,39 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 // ---------------------------------------------------------------- customer §5: the preference controls
 {
   let c = seed;
-  const cat = Object.keys(seed.cardholders.bernice.profile.category_weights)[0];
+  const cat = Object.keys(seed.cardholders.kelly.profile.category_weights)[0];
   check("preferences: a cardholder starts with no standing interest, and location relevance on",
-        Object.keys(seed.cardholders.bernice.profile.interests ?? {}).length === 0 && seed.cardholders.bernice.consent.location === true);
+        Object.keys(seed.cardholders.kelly.profile.interests ?? {}).length === 0 && seed.cardholders.kelly.consent.location === true);
 
-  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: cat, direction: "less", at: at(1), seq: 1 });
+  c = reduce(c, { type: "INTEREST", cardholder_id: "kelly", category: cat, direction: "less", at: at(1), seq: 1 });
   check("preferences: 'less of this' is recorded as a standing preference, not only as a nudge to the weights",
-        c.cardholders.bernice.profile.interests[cat] === "less"
-        && c.cardholders.bernice.profile.category_weights[cat] < seed.cardholders.bernice.profile.category_weights[cat],
-        c.cardholders.bernice.profile.interests);
+        c.cardholders.kelly.profile.interests[cat] === "less"
+        && c.cardholders.kelly.profile.category_weights[cat] < seed.cardholders.kelly.profile.category_weights[cat],
+        c.cardholders.kelly.profile.interests);
   check("preferences: the weights still sum to 1 after a preference change",
-        Math.abs(Object.values(c.cardholders.bernice.profile.category_weights).reduce((a, b) => a + b, 0) - 1) < 0.001);
+        Math.abs(Object.values(c.cardholders.kelly.profile.category_weights).reduce((a, b) => a + b, 0) - 1) < 0.001);
 
-  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: cat, direction: "clear", at: at(2), seq: 2 });
+  c = reduce(c, { type: "INTEREST", cardholder_id: "kelly", category: cat, direction: "clear", at: at(2), seq: 2 });
   check("preferences: clearing removes the preference and leaves the weights where they are — undo is not a rewind",
-        !(cat in c.cardholders.bernice.profile.interests)
-        && c.cardholders.bernice.profile.category_weights[cat] < seed.cardholders.bernice.profile.category_weights[cat]);
+        !(cat in c.cardholders.kelly.profile.interests)
+        && c.cardholders.kelly.profile.category_weights[cat] < seed.cardholders.kelly.profile.category_weights[cat]);
 
-  c = reduce(c, { type: "LOCATION_PREF", cardholder_id: "bernice", location: false, at: at(3), seq: 3 });
+  c = reduce(c, { type: "LOCATION_PREF", cardholder_id: "kelly", location: false, at: at(3), seq: 3 });
   check("preferences: location relevance is a real control that moves state and is logged",
-        c.cardholders.bernice.consent.location === false && c.ledger.at(-1).type === "LOCATION_PREF" && /future segments/.test(c.ledger.at(-1).note));
+        c.cardholders.kelly.consent.location === false && c.ledger.at(-1).type === "LOCATION_PREF" && /future segments/.test(c.ledger.at(-1).note));
   check("preferences: turning location off does not touch a card already held",
-        Object.values(c.offers).filter((o) => o.cardholder_id === "bernice" && o.status === "delivered").length
-        === Object.values(seed.offers).filter((o) => o.cardholder_id === "bernice" && o.status === "delivered").length);
+        Object.values(c.offers).filter((o) => o.cardholder_id === "kelly" && o.status === "delivered").length
+        === Object.values(seed.offers).filter((o) => o.cardholder_id === "kelly" && o.status === "delivered").length);
 
-  c = reduce(c, { type: "INTEREST", cardholder_id: "bernice", category: "not_a_category", direction: "more", at: at(4), seq: 4 });
+  c = reduce(c, { type: "INTEREST", cardholder_id: "kelly", category: "not_a_category", direction: "more", at: at(4), seq: 4 });
   check("preferences: an unknown category is refused, not silently created", c.ledger.at(-1).type === "REJECTED");
   check("preferences: audit clean", audit(c).length === 0, audit(c));
 }
 
 // ---------------------------------------------------------------- customer §4: the feed has something to filter
 {
-  const mine = Object.values(seed.offers).filter((o) => o.cardholder_id === "bernice");
-  check("feed: Bernice holds about a dozen cards, so the filters have something to bite on", mine.length >= 10, mine.length);
+  const mine = Object.values(seed.offers).filter((o) => o.cardholder_id === "kelly");
+  check("feed: Kelly holds about a dozen cards, so the filters have something to bite on", mine.length >= 10, mine.length);
   check("feed: at least one is expired and at least one is still redeemable",
         mine.some((o) => o.status === "expired") && mine.some((o) => o.status === "delivered"),
         mine.map((o) => o.status));
@@ -829,8 +836,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         { types: [...new Set(mine.map((o) => o.reward_type))], merchants: new Set(mine.map((o) => o.merchant_id)).size });
   check("feed: every card carries the window and expiry the list and the filters read",
         mine.every((o) => Array.isArray(o.days_of_week) && Array.isArray(o.hours) && o.expires_at));
-  check("feed: Bernice is still at zero pushes this week, so the RM's push reaches her",
-        seed.cardholders.bernice.pushes_this_week === 0);
+  check("feed: Kelly is still at zero pushes this week, so the RM's push reaches her",
+        seed.cardholders.kelly.pushes_this_week === 0);
 }
 
 // ---------------------------------------------------------------- the System Trace reads state, not a copy of it
@@ -899,8 +906,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 
   // ---- the merchant view follows the account on screen and the last choice made
   const tm = traceOf({ state: k, data, view: "merchant" });
-  check("trace (merchant): Soujourner's target group is Brew & Co.'s lookalikes at 2.98× lift, and the pick opens with its score table",
-        line(tm, "lift").startsWith("Brew & Co. → 2.98× lift") && tm.focus.join() === "lift,recommender"
+  check("trace (merchant): Hanami's target group is Green Whisk Matcha's lookalikes at 2.90× lift, and the pick opens with its score table",
+        line(tm, "lift").startsWith("Green Whisk Matcha → 2.90× lift") && tm.focus.join() === "lift,recommender"
         && tm.nodes.find((n) => n.key === "recommender").facts.filter((f) => /^\d\. /.test(f.k)).length === 6, [line(tm, "lift"), tm.focus]);
   const tFail = traceOf({ state: k, data, view: "merchant", merchantId: "M0010" });
   check("trace (merchant): a merchant the gate refuses stops there — lift, reward and allocation marked not run",
@@ -910,9 +917,12 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("trace (merchant): a cold-start merchant gets the category-catchment fallback instead of a lift pair",
         line(tCold, "lift").startsWith("No lift pair yet") && line(tCold, "sme").startsWith("Cold start"), [line(tCold, "lift"), line(tCold, "sme")]);
   let kc = reduce(k, { type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "merchant", at: at(1), seq: 1 });
-  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "reward_type", value: "cashback", by: "merchant", at: at(2), seq: 2 });
+  // Lookalikes only: the prefill also carries Promising (existing customers), and a returning-
+  // customer reward aimed at a mixed pool is not the mismatch this check is about.
+  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "target_segments", value: ["Non-customers"], by: "merchant", at: at(2), seq: 2 });
+  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "reward_type", value: "cashback", by: "merchant", at: at(3), seq: 3 });
   const tr1 = traceOf({ state: kc, data, view: "merchant", route: "/reward-configuration" });
-  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "hours", value: [11, 14], by: "merchant", at: at(3), seq: 3 });
+  kc = reduce(kc, { type: "CONFIGURE", campaign_id: DEMO, field: "hours", value: [11, 14], by: "merchant", at: at(4), seq: 4 });
   const tr2 = traceOf({ state: kc, data, view: "merchant", route: "/reward-configuration" });
   check("trace (merchant): choosing a reward opens the Reward Agent on it (and flags a returning-customer reward aimed at lookalikes); moving the window opens the SME Analysis Agent on the trough",
         tr1.focus.join() === "recommender" && line(tr1, "recommender").startsWith("Chosen: Cashback #3 (64) vs Discount #1")
@@ -922,7 +932,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 
   // Consent moves the funnel only while the campaign is open — the reducer stops counting
   // departures once it is terminal, and liveReach with it — so this is checked before the send.
-  const off = reduce(k, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(1), seq: 1 });
+  const off = reduce(k, { type: "OFFERS_OFF", cardholder_id: "kelly", at: at(1), seq: 1 });
   const fOff = allocatorFunnel(off, off.campaigns[DEMO]);
   const chipOff = traceOf({ state: off, data, view: "consolidated" }).chips[1];
   check("trace: a cardholder turning offers off moves the consent count live and flips her chip to the Consent stage",
@@ -947,21 +957,21 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 4",
         line(t2, "delivery") === `Push · ${held} of ${t2.chips.length} notified` && held === 2, line(t2, "delivery"));
 
-  k = reduce(k, { type: "OFFERS_OFF", cardholder_id: "bernice", at: at(5), seq: 5 });
+  k = reduce(k, { type: "OFFERS_OFF", cardholder_id: "kelly", at: at(5), seq: 5 });
   const t3 = traceOf({ state: k, data, view: "consolidated" });
   check("trace: a card withdrawn by turning offers off stops counting as held, on the chip and in the count",
-        t3.chips[1].mark === "no" && t3.chips[1].node === "consent" && !heldOffer(k, DEMO, "bernice")
+        t3.chips[1].mark === "no" && t3.chips[1].node === "consent" && !heldOffer(k, DEMO, "kelly")
         && line(t3, "delivery") === `Push · 1 of ${t3.chips.length} notified`, { chip: t3.chips[1], line: line(t3, "delivery") });
 
   // The pull payload exactly as RewardChat builds it, from the same searchPull() result.
-  const q = "coffee deals near me", intent = matchIntent(q), holder = k.cardholders.bernice;
+  const q = "coffee deals near me", intent = matchIntent(q), holder = k.cardholders.kelly;
   const found = searchPull({ intent, campaigns: k.campaigns, profiles: data.merchantProfiles, holderProfile: holder.profile, clock: k.clock,
                              adjacency: data.constants.district_adjacency ?? null });
-  const pull = { id: 1, holderId: "bernice", q, intent: intent.id, phrase: matchedPhrase(q, intent),
+  const pull = { id: 1, holderId: "kelly", q, intent: intent.id, phrase: matchedPhrase(q, intent),
                  location: found.districts.map((d) => `D${d}`).join("/"), count: found.results.length, searched: found.searched, open: found.open,
                  in_category: found.in_category, open_now: found.open_now, exact_only: found.exact_only,
                  results: found.results.map((r) => ({ name: r.merchant?.name, near: r.near.length, of: r.districts.length, open_now: r.open_now })) };
-  const t4 = traceOf({ state: k, data, view: "individual", cardholderId: "bernice", pull });
+  const t4 = traceOf({ state: k, data, view: "individual", cardholderId: "kelly", pull });
   check("trace: a chatbot answer takes the Pull path — intent, search, catchment — and greys lift, reward and allocation as skipped",
         t4.mode === "pull" && line(t4, "delivery") === `Query → {coffee, ${pull.location}} → ${found.results.length} programme${found.results.length === 1 ? "" : "s"}`
         && line(t4, "intent") === `"${q}" → coffee` && fact(t4, "intent", "Matched on") === '"coffee"'
@@ -971,7 +981,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("trace: the Pull line belongs to the phone that asked — another phone stays on Push",
         traceOf({ state: k, data, view: "individual", cardholderId: "charles", pull }).mode === "push");
   check("trace: a reset is a fresh seed, so the trace starts over with it",
-        traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "bernice", "Lookalike").mark === "wait");
+        traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "kelly", "Lookalike").mark === "wait");
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges
@@ -981,7 +991,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   a.dispatch({ type: "ADVANCE", campaign_id: DEMO, to: "draft", by: "rm" });
   a.dispatch({ type: "ADVANCE", campaign_id: DEMO, to: "pending", by: "rm", configuration: CONFIG });
   a.dispatch({ type: "ADVANCE", campaign_id: DEMO, to: "active", by: "ocbc", window: WINDOW });
-  a.dispatch({ type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["bernice", "edwin"], by: "rm" });
+  a.dispatch({ type: "PUSH_FIRED", campaign_id: DEMO, recipients: ["kelly", "edwin"], by: "rm" });
   const b = createBus({ seed, storage, channelFactory: () => null });   // a second tab opened late
   check("bus: a tab opened later derives the same state from the log",
         JSON.stringify(b.getState()) === JSON.stringify(a.getState()) && b.getLog().length === 4);

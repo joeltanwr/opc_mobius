@@ -71,7 +71,7 @@ export function merchantById(profiles, merchantId) {
 }
 
 // A display name for any merchant id, including one with no profile (a lift-pair candidate such
-// as Brew & Co. is a comparable merchant, not an OCBC customer). Falls back to the id.
+// as Green Whisk Matcha is a comparable merchant, not an OCBC customer). Falls back to the id.
 export function merchantName(data, merchantId) {
   const profile = data?.merchantProfiles?.[merchantId];
   if (profile) return profile.name;

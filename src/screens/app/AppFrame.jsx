@@ -140,7 +140,7 @@ export default function AppFrame() {
                 there is nothing to choose between there.
 
                 Two cardholders because the build now has two distribution channels, and one
-                persona cannot show both: Bernice is reached by the campaign without asking, and
+                persona cannot show both: Kelly is reached by the campaign without asking, and
                 Charles is the one the targeting engine excluded, who holds nothing until he
                 searches. Swapping between them is how the push/pull distinction gets demonstrated
                 rather than asserted. */}

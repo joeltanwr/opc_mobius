@@ -297,11 +297,15 @@ def _rfv_blocks(src):
 
 
 def _hourly(src):
+    """Share of sales by hour, across the merchant's own trading hours (first to last hour it has
+    ever rung a sale), so a shop that shuts at 6pm is not drawn with six empty evening bars."""
     hours = src["dt"].dt.hour
-    counts = hours.value_counts().reindex(range(7, 24), fill_value=0)
+    seen = sorted(h for h in hours.unique() if 7 <= h <= 23)
+    span = list(range(seen[0], seen[-1] + 1)) if seen else list(range(7, 24))
+    counts = hours.value_counts().reindex(span, fill_value=0)
     total = counts.sum()
     share = [round(float(c / total), 4) if total else 0.0 for c in counts]
-    return dict(hours=list(range(7, 24)), share=share, peak_hour=int(counts.idxmax()) if total else None)
+    return dict(hours=span, share=share, peak_hour=int(counts.idxmax()) if total else None)
 
 
 def _customer_profile(raw, src, card_ids_all, card_ids_top, group_cats):
@@ -409,7 +413,7 @@ def analyse_merchant(raw, mid, tags):
         # The same days, split by daypart.
         #
         # The merchant view charts a reward programme's own targeted window before and after it
-        # launched — for Soujourner, the Tue–Thu afternoon trough. Answering that needs sales
+        # launched — for Hanami, the Tue–Thu afternoon trough. Answering that needs sales
         # resolved by hour *over time*, which nothing shipped before: `slots` is a single twelve
         # week aggregate and the hourly `share` array is a fixed distribution, so neither can say
         # whether the trough moved. Multiplying the overall daily curve by a fixed share would

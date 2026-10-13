@@ -61,12 +61,12 @@ Refused narrowings never report their count.
 
 | ID | Name | Role |
 |---|---|---|
-| M0001 | **Soujourner Coffee** | Primary demo merchant. OCBC-acquired, Tue–Thu 14:00–17:00 trough |
-| M0055 | **Brew & Co.** | Rival café, NOT OCBC-acquired. Lift source for the H1 cohort. Data only, no login |
+| M0001 | **Hanami Matcha** | Primary demo merchant. OCBC-acquired, Tue–Thu 14:00–17:00 trough |
+| M0055 | **Green Whisk Matcha** | Rival café, NOT OCBC-acquired. Lift source for the H1 cohort. Data only, no login |
 | M0002 | **Boba Lane** | Thin history — degrades to category/district benchmarks (merchant prompt §3 profile 3) |
-| M0004 | **Tanjong Kopi House** | NOT OCBC-acquired, OCBC business customer. Same district as Soujourner. Drives the reduced card-mix state (merchant prompt §2.2, §3 profile 2). Was the spec's H4 prospect; M0010 is retired |
+| M0004 | **Tanjong Kopi House** | NOT OCBC-acquired, OCBC business customer. Same district as Hanami. Drives the reduced card-mix state (merchant prompt §2.2, §3 profile 2). Was the spec's H4 prospect; M0010 is retired |
 
-Three selectable at login: Soujourner, Boba Lane, Tanjong Kopi House.
+Three selectable at login: Hanami, Boba Lane, Tanjong Kopi House.
 
 **Pipeline boundary.** The generator writes `data/raw/` only and plants patterns. The pipeline
 reads `data/raw/`, detects them, and is the only thing that writes `public/data/`. If the
@@ -80,12 +80,12 @@ is the display sequence, not a second set of keys.
 
 **One reward per campaign, everywhere.** RM §2 supersedes merchant §7.2. No stacking logic.
 
-**M0055 sits in the same district as M0001.** Bernice's line says 200 metres, so the spec's
+**M0055 sits in the same district as M0001.** Kelly's line says 200 metres, so the spec's
 "two districts over" was the error.
 
 **Cardholders** — the six showcase personas from `mock_data_spec.md` §5a stand. Two are load-bearing:
 
-- **Bernice** is the logged-in cardholder in the customer view. The push she receives must be the
+- **Kelly** is the logged-in cardholder in the customer view. The push she receives must be the
   campaign the merchant configured — one campaign seen from three sides is the demo.
 - **Edwin** is the suppressed recipient. RM prompt §3.4 requires the push confirmation to show a
   suppression count; Edwin is already at his two pushes this week, so he gets the feed card and no
@@ -123,12 +123,12 @@ Apply to `generate.py`, then re-run `validate.py`.
    per priority tier, at least one suppressed demographic band below 250, and one past campaign
    that did not clear its reward cost.
 10. **`MIN_SEGMENT_SIZE = 250`**; add rounding-to-50 to every aggregate writer.
-11. **Campaigns carry no OCBC contribution.** The shipped Soujourner campaign is rewritten to the
+11. **Campaigns carry no OCBC contribution.** The shipped Hanami campaign is rewritten to the
     §5 figures: merchant's full reward cost ≈ S$220, no `ocbc_funded` field anywhere. The split
     is deleted from `mock_data_spec.md` §9 as well. Both completed campaigns (winner and loser)
     are planted as `campaigns.parquet` + `allocations.parquet` + tagged redemption transactions,
     and `pipeline/campaign.py` measures them.
-12. **Merchant names per the §2 table:** M0001 Soujourner Coffee, M0055 Brew & Co., M0002 Boba
+12. **Merchant names per the §2 table:** M0001 Hanami Matcha, M0055 Green Whisk Matcha, M0002 Boba
     Lane, M0004 Tanjong Kopi House.
 13. **M0001 has a full 12-month acquiring history:** `acquiring_start_date` precedes
     `PERIOD_START`.
@@ -218,7 +218,7 @@ apply it consistently.
 **Lift cohort filters:** catchment = home or work district equal or adjacent (hand-authored adjacency
 dict for SG districts 1–28); `|cardholder.price_band_pref − merchant.price_band| ≤ 1`;
 `daypart_availability[gap_daypart] ≥ 0.15`. Band tolerance of 1 excludes Charles (band 4 vs
-Soujourner's band 2) while keeping Bernice.
+Hanami's band 2) while keeping Kelly.
 
 Exclusion reasons recorded per cardholder, one of: `already_customer`, `aggregator_source`,
 `catchment`, `price_band`, `daypart`, `consent`, `frequency_cap`, `dormant`.
@@ -227,7 +227,7 @@ Exclusion reasons recorded per cardholder, one of: `already_customer`, `aggregat
 Slot = weekday × daypart (35 slots). Gap if slot volume ≤ 75% of the merchant's own mean slot volume
 in ≥ 8 of the trailing 12 weeks, and/or slot share below the peer median (same category, same or
 adjacent district). Confidence: **high** if both tests pass and the own-baseline holds ≥ 10/12 weeks;
-**medium** if own-baseline alone; **low** if peer alone. Soujourner must land high. Under 4 weeks of
+**medium** if own-baseline alone; **low** if peer alone. Hanami must land high. Under 4 weeks of
 history → cold-start branch, peer daypart shape only, labelled as such.
 
 **RFM lookup** — R, F, M each quintile-scored 1–5 (R inverted); `FM = round(mean(F, M))`. Evaluate
@@ -246,11 +246,11 @@ top-down; complete and disjoint.
 | Hibernating | 2 | 1–2 |
 | Lost | 1 | 1–2 |
 
-Alvin (127 visits, R5 F5 M5) → Champions. Retention pools: Champions, Loyal, Potential Loyalists,
+Joel (127 visits, R5 F5 M5) → Champions. Retention pools: Champions, Loyal, Potential Loyalists,
 Need Attention, At Risk, Can't Lose Them. New/Promising are acquisition archetypes, not send lists.
 Hibernating/Lost reported, not targeted.
 
-**Completed campaign — Soujourner** (`campaign.py`; `validate.py` asserts it reconciles):
+**Completed campaign — Hanami** (`campaign.py`; `validate.py` asserts it reconciles):
 
 | Field | Value |
 |---|---|
@@ -302,11 +302,11 @@ carrying most of the pitch's credibility.
 - Merchant master contains one balance failure, one both-bands failure, one per priority tier
 - Computed dormancy reproduces `engagement_tier == "dormant"` for ≥ 95% of cardholders
 - `marketing_consent` opt-out between 15% and 25%
-- Frequency cap removes ≥ 1 from the Soujourner cohort, and Edwin is among them
-- Bernice in the Soujourner lift cohort; Alvin in Champions and not in the cohort; Charles excluded
+- Frequency cap removes ≥ 1 from the Hanami cohort, and Edwin is among them
+- Kelly in the Hanami lift cohort; Joel in Champions and not in the cohort; Charles excluded
   with reason `price_band`
-- Boba Lane below 100 OCBC acquiring transactions (gate fires); Soujourner above (gate doesn't)
-- Soujourner and the losing campaign both present; net contribution signs opposite
+- Boba Lane below 100 OCBC acquiring transactions (gate fires); Hanami above (gate doesn't)
+- Hanami and the losing campaign both present; net contribution signs opposite
 - At least one demographic band renders suppressed
 - Every `signature_pattern` figure equals the generated data
 - No cost-split or OCBC-contribution figure appears anywhere in `public/data/`

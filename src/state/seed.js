@@ -131,7 +131,7 @@ export function buildSeed(data) {
   }
 
   // ------------------------------------------------------------ the live demo campaign
-  // Soujourner's next campaign: the one the merchant applies for on Tab 3 and the RM walks up the
+  // Hanami's next campaign: the one the merchant applies for on Tab 3 and the RM walks up the
   // ladder during the pitch. Its reach and push-cap picture are allocation_summary.json; its
   // recommended reward and window are reward_recommendations.json and demand_gaps.json. It has no
   // configuration until the RM writes one — that is the point of the ladder.
@@ -182,7 +182,12 @@ export function buildSeed(data) {
         : null,
       // The pool the recommendation targets. Selecting a pool is choosing one Mobius proposed;
       // prefilling it is Mobius proposing it, which is the same act with the same audit entry.
-      target_segments: top?.target_pool === "non_customers" ? ["Non-customers"] : null,
+      // Promising rides along when it is one of the reward's own target segments and its pool clears
+      // the floor: recent first-timers are the existing customers a trough discount is most likely
+      // to bring back, and the consolidated view's in-scope existing customer (Jieru) is one.
+      target_segments: top?.target_pool === "non_customers"
+        ? ["Non-customers", ...(top?.target_segments?.some((t) => (t?.segment ?? t) === "Promising") && alloc.retention_pools?.Promising?.suppressed === false ? ["Promising"] : [])]
+        : null,
     };
     const basisFrom = lastSame ? `prefilled from your last ${top?.label?.toLowerCase() ?? "reward"} campaign (${lastSame.name}, campaign_results.json)` : "no prior campaign of this type; left for the merchant";
     const prefillBasis = {
@@ -197,7 +202,7 @@ export function buildSeed(data) {
       push_requested: "push is a request, not a setting — off until the merchant asks",
       offer_headline: basisFrom, offer_terms: basisFrom,
       push_body: "a draft built from the headline and the trough window — the push copy is a different artefact from the feed card and is meant to be rewritten",
-      target_segments: "the pool reward_recommendations.json targets for this gap",
+      target_segments: "the pool reward_recommendations.json targets for this gap, plus Promising where the reward's target segments name it and its pool clears the floor",
     };
     state.campaigns["C-SJ-03"] = campaignShell({
       id: "C-SJ-03", merchant_id: alloc.merchant_id, merchant_name: nameOf(alloc.merchant_id), merchant_category: categoryOf(alloc.merchant_id),
@@ -242,13 +247,13 @@ export function buildSeed(data) {
       // `cohort_tag` stays the allocated pool: it is what the allocation's own figures describe,
       // and onAllocatedPool() uses it to refuse lending them to a campaign aimed elsewhere.
       // ------------------------------------------------------------------------------------
-      cohort_tag: "soujourner_acquisition_cohort",
+      cohort_tag: "hanami_acquisition_cohort",
       cohort_tags_by_pool: {
-        "Non-customers": "soujourner_acquisition_cohort",
+        "Non-customers": "hanami_acquisition_cohort",
         ...Object.fromEntries(
           Object.keys(alloc.retention_pools ?? {})
             .filter((k) => !k.startsWith("_"))
-            .map((name) => [name, `soujourner_rfm:${name}`])
+            .map((name) => [name, `hanami_rfm:${name}`])
         ),
       },
       prefill: { fields: Object.fromEntries(Object.entries(prefillFields).filter(([, v]) => v != null)), basis: prefillBasis },
