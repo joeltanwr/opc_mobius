@@ -1003,7 +1003,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   check("trace: the Pull line belongs to the phone that asked — another phone stays on Push",
         traceOf({ state: k, data, view: "individual", cardholderId: "jieru", pull }).mode === "push");
   check("trace: a reset is a fresh seed, so the trace starts over with it",
-        traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "kelly", "Lookalike").mark === "wait");
+        traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "kelly", "Joel's twin").mark === "wait");
 }
 
 // ---------------------------------------------------------------- the bus: log replay converges

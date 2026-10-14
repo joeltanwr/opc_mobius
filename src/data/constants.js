@@ -298,9 +298,9 @@ export const QUEUED_DISPLAY = "In queue";
 // cardholder who turns offers off, or a campaign re-aimed at another pool, flips the mark without
 // anybody editing this list.
 export const CONSOLIDATED_CARDHOLDERS = [
-  { id: "joel", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
+  { id: "joel", caption: "Champion · existing customer", chip: "Champion · existing customer" },
   { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
-  { id: "kelly", caption: "Lookalike · not yet a customer", chip: "Lookalike" },
+  { id: "kelly", caption: "Joel's twin · not yet a customer", chip: "Joel's twin" },
 ];
 
 // ----------------------------------------------------------------------------------------------
