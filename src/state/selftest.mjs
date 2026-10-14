@@ -973,8 +973,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         { fact: fact(t1, "delivery", "Push"), sent });
   const t2 = traceOf({ state: k, data, view: "consolidated" });
   const held = t2.chips.filter((x) => heldOffer(k, DEMO, x.id)).length;
-  check("trace: consolidated chips — Joel out on the target pool, Jieru and Kelly allocated",
-        t2.chips.map((x) => `${x.id}:${x.mark}:${x.node}`).join() === "joel:no:recommender,jieru:yes:allocator,kelly:yes:allocator", t2.chips);
+  check("trace: consolidated chips — Joel out on the target pool, Kelly and Jieru allocated",
+        t2.chips.map((x) => `${x.id}:${x.mark}:${x.node}`).join() === "joel:no:recommender,kelly:yes:allocator,jieru:yes:allocator", t2.chips);
   check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 3",
         line(t2, "delivery") === `Push · ${held} of ${t2.chips.length} notified` && held === 2, line(t2, "delivery"));
 
