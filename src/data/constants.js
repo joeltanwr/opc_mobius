@@ -200,6 +200,11 @@ export const RFM_SEGMENT_GLOSSARY = {
 // The data, cohort tags and lookups keep the key; only the label changes.
 export const RFM_DISPLAY_NAMES = { "New Customers": "Newly acquired" };
 export const rfmLabel = (segment) => RFM_DISPLAY_NAMES[segment] ?? segment;
+// The acquisition pool's key is "Non-customers" (store.js ACQUISITION_POOL, cohort tags, saved
+// selections). On screen it is "New customers": people who have never bought from the merchant
+// (Joel, 14 Oct). Distinct from RFM's "Newly acquired", who have just bought for the first time.
+export const NEW_CUSTOMERS_LABEL = "New customers";
+export const poolLabel = (pool) => (pool === "Non-customers" ? NEW_CUSTOMERS_LABEL : rfmLabel(pool));
 
 export const HERO_MERCHANT_ID = "M0001";
 export const HERO_RIVAL_MERCHANT_ID = "M0055";

@@ -24,7 +24,7 @@
 
 import { ACQUISITION_POOL, cohortTagsFor, liveReach, offerId, reachFromSelection, perOutletFromSelection } from "./store.js";
 import { num, sgd, pctOf } from "../data/format.js";
-import { DEMO_CAMPAIGN_ID, TRACE, CONSOLIDATED_CARDHOLDERS, REWARD_SCORE } from "../data/constants.js";
+import { DEMO_CAMPAIGN_ID, TRACE, CONSOLIDATED_CARDHOLDERS, REWARD_SCORE, poolLabel } from "../data/constants.js";
 import { catchmentOf, INTENTS } from "../screens/app/chatbot.js";
 
 const MINUS = "−";
@@ -332,12 +332,12 @@ export function traceOf({ state, data, view, cardholderId = null, pull = null, m
     const pools = isCampaignMerchant && cfg.target_segments?.length ? cfg.target_segments
       : isCampaignMerchant && campaign.prefill?.fields?.target_segments ? campaign.prefill.fields.target_segments
       : chosen.target_pool === "non_customers" ? [ACQUISITION_POOL] : chosen.target_segments.filter((t) => t.reach?.suppressed === false).map((t) => t.segment);
-    const poolText = pools.length ? pools.map((p) => (p === ACQUISITION_POOL ? `${p} (lookalike)` : p)).join(" + ") : "no pool clears the floor";
+    const poolText = pools.length ? pools.map((p) => (p === ACQUISITION_POOL ? `${poolLabel(p)} (lookalike)` : poolLabel(p))).join(" + ") : "no pool clears the floor";
     const parts = (r) => { const p = scoreParts(r); return p.disabled ? "disabled · 0" : `${p.rank} + ${p.uplift} + ${p.floor} = ${p.total}`; };
     const ordering = ranked.map((r) => r.label + (r.disabled ? " (disabled)" : "")).join(" › ");
     const cp = scoreParts(chosen);
     // The headline names the pool plainly so it fits one line; the facts say where it came from.
-    const poolShort = pools.length ? pools.join(" + ") : "no pool";
+    const poolShort = pools.length ? pools.map(poolLabel).join(" + ") : "no pool";
     recommender = node("recommender", chosen.type === top.type
       ? `Top pick: ${chosen.label} → ${poolShort} · ${chosen.score}`
       : `Chosen: ${chosen.label} #${chosen.rank} (${chosen.score}) vs ${top.label} #${top.rank} (${top.score})`, {

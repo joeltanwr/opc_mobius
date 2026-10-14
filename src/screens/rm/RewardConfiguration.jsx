@@ -6,7 +6,7 @@ import { useMobiusState } from "../../state/StateProvider";
 import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS, reachFromSelection, perOutletFromSelection,
          onAllocatedPool, FIELD_OWNERS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
-import { CONSTANTS, screenNum } from "../../data/constants";
+import { CONSTANTS, screenNum, NEW_CUSTOMERS_LABEL } from "../../data/constants";
 import { sgd, num, pctOf } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame, REWARD_TYPE_LABELS } from "../../components/RewardCard";
@@ -256,7 +256,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-light mb-0.5">Mobius recommends</div>
-                  <div className="text-[13px] font-semibold text-ink">{seg?.label ?? "Non-customers from the lookalike pool"}</div>
+                  <div className="text-[13px] font-semibold text-ink">{seg?.label ?? `${NEW_CUSTOMERS_LABEL} from the lookalike pool`}</div>
                   <p className="text-[12px] text-ink-secondary max-w-xl mt-0.5">{seg?.description}</p>
                 </div>
                 <div className="text-right">
@@ -286,9 +286,9 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                        onChange={() => {
                          const on = (cfg.target_segments ?? []).includes("Non-customers");
                          set("target_segments", on ? cfg.target_segments.filter((x) => x !== "Non-customers") : [...(cfg.target_segments ?? []), "Non-customers"],
-                             on ? "non-customer pool removed" : "non-customer pool added — the lift cohort");
+                             on ? "new-customer pool removed" : "new-customer pool added — the lift cohort");
                        }} />
-                <span className="flex-1 text-ink font-semibold">Non-customers</span>
+                <span className="flex-1 text-ink font-semibold">{NEW_CUSTOMERS_LABEL}</span>
                 <span className="font-num tabular-nums text-[12px]">{num(seg?.reach)}</span>
               </label>
             </div>
@@ -706,7 +706,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                     : `${reachSel.label} · ${num(qualifying)} qualify, contacting ${num(contacted)}`}
               />
               {reachSel.prospective != null && reachSel.existing != null && (
-                <Row k="— of which" v={`${num(reachSel.prospective)} prospective, ${num(reachSel.existing)} existing customers`} />
+                <Row k="— of which" v={`${num(reachSel.prospective)} new, ${num(reachSel.existing)} existing customers`} />
               )}
               <Row k="Reward" v={reward ? `${reward.label} — ${cfg.discount_pct ?? "—"}% up to ${sgd(cfg.max_reward_value_sgd, 2)}` : "not chosen"} />
               <Row k="Window" v={`${(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} ${fmtHours(cfg.hours)}`} />
@@ -917,7 +917,7 @@ function CombinedReach({ reach, rounding }) {
           <span className="text-ink-secondary">cardholders across {selected.length} pool{selected.length > 1 ? "s" : ""}</span>
           {reach.prospective != null && reach.existing != null && (
             <span className="block text-[12px] text-ink-secondary mt-0.5">
-              {num(reach.prospective)} prospective · {num(reach.existing)} existing customers
+              {num(reach.prospective)} new · {num(reach.existing)} existing customers
             </span>
           )}
         </p>
