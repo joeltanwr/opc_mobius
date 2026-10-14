@@ -204,6 +204,9 @@ export const rfmLabel = (segment) => RFM_DISPLAY_NAMES[segment] ?? segment;
 // selections). On screen it is "Prospects": people who have never bought from the merchant
 // (Joel, 15 Oct). Distinct from RFM's "Newly acquired", who have just bought for the first time.
 export const NEW_CUSTOMERS_LABEL = "Prospects";
+// The reward-type tag ("New customer" / "Returning customer" in reward_recommendations.json)
+// reads "Prospect" for the never-visited side, to match the pool label.
+export const audienceLabel = (v) => (v === "New customer" ? "Prospect" : v);
 export const poolLabel = (pool) => (pool === "Non-customers" ? NEW_CUSTOMERS_LABEL : rfmLabel(pool));
 
 export const HERO_MERCHANT_ID = "M0001";

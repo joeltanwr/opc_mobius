@@ -24,7 +24,7 @@
 
 import { ACQUISITION_POOL, cohortTagsFor, liveReach, offerId, reachFromSelection, perOutletFromSelection } from "./store.js";
 import { num, sgd, pctOf } from "../data/format.js";
-import { DEMO_CAMPAIGN_ID, TRACE, CONSOLIDATED_CARDHOLDERS, REWARD_SCORE, poolLabel } from "../data/constants.js";
+import { DEMO_CAMPAIGN_ID, TRACE, CONSOLIDATED_CARDHOLDERS, REWARD_SCORE, poolLabel, audienceLabel } from "../data/constants.js";
 import { catchmentOf, INTENTS } from "../screens/app/chatbot.js";
 
 const MINUS = "−";
@@ -346,11 +346,11 @@ export function traceOf({ state, data, view, cardholderId = null, pull = null, m
         fact("Score", "rank points + uplift + floor bonus"),
         ...ranked.map((r) => fact(`${r.rank}. ${r.label}`, parts(r), r.type === chosen.type)),
         fact("Uplift, chosen", `${REWARD_SCORE.uplift_weight} × ${chosen.expected_incremental_share} incremental share = ${cp.uplift}${chosen.incremental_share_provisional ? " (share provisional)" : ""}`),
-        fact("Target", `${chosen.new_or_returning} → ${poolText}`, true),
+        fact("Target", `${audienceLabel(chosen.new_or_returning)} → ${poolText}`, true),
         ...poolSources(pools),
         // The reward is ranked for one kind of customer and the pool on the page may be the other:
         // say so, rather than let the two lines above quietly disagree.
-        ...(poolMismatch(chosen, pools) ? [fact("Mismatch", `${chosen.label} is ranked for ${chosen.new_or_returning.toLowerCase()}s; the pool selected is ${poolShort}`, true)] : []),
+        ...(poolMismatch(chosen, pools) ? [fact("Mismatch", `${chosen.label} is ranked for ${audienceLabel(chosen.new_or_returning).toLowerCase()}s; the pool selected is ${poolShort}`, true)] : []),
       ],
     });
   }

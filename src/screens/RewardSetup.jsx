@@ -5,7 +5,7 @@ import { useDemoData, merchantById } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { FIELD_OWNERS, REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS } from "../state/store.js";
 import { expectedOutcome, windowLoad } from "../state/expected.js";
-import { CONSTANTS, screenNum } from "../data/constants";
+import { CONSTANTS, screenNum, audienceLabel } from "../data/constants";
 import { sgd, num, pct, pctOf, cellText } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../components/ui";
 
@@ -177,7 +177,7 @@ export default function RewardSetup() {
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`text-[13px] font-semibold ${r.disabled ? "text-ink-light" : "text-ink"}`}>{r.rank}. {r.label}</span>
-                        {r.disabled ? <Badge tone="neutral"><Ban size={10} /> ranked and rejected</Badge> : <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{r.new_or_returning}</Badge>}
+                        {r.disabled ? <Badge tone="neutral"><Ban size={10} /> ranked and rejected</Badge> : <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{audienceLabel(r.new_or_returning)}</Badge>}
                         {!r.disabled && (
                           <span className="text-[11.5px] text-ink-secondary">
                             incremental share <span className="font-num font-semibold text-ink">{pct(r.expected_incremental_share, 0)}</span>
@@ -341,7 +341,7 @@ export default function RewardSetup() {
             <h3 className="text-[15px] font-bold text-ink mb-3">Summary — what you are about to spend, and what you expect back</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-[13px]">
               <Row k="Segment" v={`${seg.description} ${Object.keys(seg.constraints).length ? "Narrowed: " + Object.entries(seg.constraints).map(([k, v]) => `${k.replace("_", " ")} ${v}`).join(", ") + "." : ""} Reach ${num(seg.reach)}.`} />
-              <Row k="Reward" v={outcome.reward ? `${outcome.reward.label} — ${outcome.reward.new_or_returning}, incremental share ${pct(outcome.incremental_share, 0)}${outcome.incremental_share_provisional ? " (provisional)" : ""}; ${cfg.discount_pct ?? "—"}% off up to ${sgd(cfg.max_reward_value_sgd, 2)}` : "not chosen"} />
+              <Row k="Reward" v={outcome.reward ? `${outcome.reward.label} — ${audienceLabel(outcome.reward.new_or_returning)}, incremental share ${pct(outcome.incremental_share, 0)}${outcome.incremental_share_provisional ? " (provisional)" : ""}; ${cfg.discount_pct ?? "—"}% off up to ${sgd(cfg.max_reward_value_sgd, 2)}` : "not chosen"} />
               <Row k="Window" v={`${(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} ${fmtHours(cfg.hours)} · ${cfg.window_start ?? "—"} to ${cfg.window_end ?? "—"}`} />
               <Row k="Outlets" v={(cfg.outlets ?? []).map((id) => seg.per_outlet.find((o) => o.outlet_id === id)?.name ?? id).join(", ") || "none"} />
               <Row k="Channel" v={`In-app feed${cfg.push_requested ? " + push requested (granted at approval)" : "; push not requested"}`} />

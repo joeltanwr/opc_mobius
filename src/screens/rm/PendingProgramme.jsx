@@ -5,7 +5,7 @@ import { useDemoData, merchantById, categoryFor } from "../../data/DataProvider"
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num, pct, pctOf, cellText, cellCount } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
-import { rfmLabel, NEW_CUSTOMERS_LABEL } from "../../data/constants";
+import { rfmLabel, NEW_CUSTOMERS_LABEL, audienceLabel } from "../../data/constants";
 import { PriorityCell, priorityReading, daysBetween, daysWaiting, isOverdue, CONTACT_PROMISE_DAYS, Th, Td } from "./rmCommon";
 
 // ---------------------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ export default function PendingProgramme() {
                       <Td>
                         <span className={`font-semibold ${r.disabled ? "text-ink-light" : "text-ink"}`}>{r.label}</span>
                         {r.disabled && <Badge tone="neutral" className="ml-2"><Ban size={10} /> ranked and rejected</Badge>}
-                        {!r.disabled && <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"} className="ml-2">{r.new_or_returning}</Badge>}
+                        {!r.disabled && <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"} className="ml-2">{audienceLabel(r.new_or_returning)}</Badge>}
                       </Td>
                       <Td className="text-ink-secondary">
                         {r.target_pool === "non_customers"

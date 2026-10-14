@@ -6,7 +6,7 @@ import { useMobiusState } from "../../state/StateProvider";
 import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS, reachFromSelection, perOutletFromSelection,
          onAllocatedPool, FIELD_OWNERS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
-import { CONSTANTS, screenNum, NEW_CUSTOMERS_LABEL } from "../../data/constants";
+import { CONSTANTS, screenNum, NEW_CUSTOMERS_LABEL, audienceLabel } from "../../data/constants";
 import { sgd, num, pctOf } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame, REWARD_TYPE_LABELS } from "../../components/RewardCard";
@@ -438,7 +438,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                              and the reason are what a merchant chooses on — the share is the
                              model's working, and a percentage they cannot audit reads as precision
                              they are being asked to take on trust. It still ranks the list. */
-                          <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{r.new_or_returning}</Badge>}
+                          <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{audienceLabel(r.new_or_returning)}</Badge>}
                     </div>
                     {!r.disabled && <p className="text-[12px] text-ink-secondary mt-0.5">{r.reason}</p>}
                   </div>

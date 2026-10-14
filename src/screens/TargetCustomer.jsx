@@ -7,7 +7,7 @@ import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
-import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER, rfmLabel } from "../data/constants";
+import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER, rfmLabel, audienceLabel } from "../data/constants";
 import { useTrace } from "../components/SystemTrace";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard, InfoTip } from "../components/ui";
@@ -848,7 +848,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, da
             {!r.disabled && (
               <>
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-secondary">
-                  <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{r.new_or_returning}</Badge>
+                  <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{audienceLabel(r.new_or_returning)}</Badge>
                 </div>
                 <TargetGroups r={r} lag={recs.lag} />
               </>
