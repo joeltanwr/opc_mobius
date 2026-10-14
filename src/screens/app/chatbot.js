@@ -33,7 +33,7 @@ export const INTENTS = [
     label: "Matcha & coffee deals near me",
     phrasings: ["matcha", "green tea", "hojicha", "coffee", "cafe", "café", "latte", "flat white", "espresso", "brew"],
     categories: ["cafe", "bubble_tea", "bakery_dessert"],
-    reply: "Here's what's running near you for matcha, coffee and drinks.",
+    reply: "Here's what you can redeem near you right now for matcha, coffee and drinks.",
     empty: "Nothing on matcha or coffee near you right now.",
   },
   {
@@ -41,7 +41,7 @@ export const INTENTS = [
     label: "Somewhere to eat",
     phrasings: ["eat", "food", "lunch", "dinner", "hungry", "meal", "restaurant", "sushi", "zichar"],
     categories: ["cafe", "hawker_kopitiam", "zichar_chinese_casual", "japanese", "fast_food", "bakery_dessert"],
-    reply: "Here's what's running near you to eat.",
+    reply: "Here's what you can redeem near you right now for something to eat.",
     empty: "Nothing on food near you right now.",
   },
   {
@@ -49,7 +49,7 @@ export const INTENTS = [
     label: "Gym and fitness",
     phrasings: ["gym", "fitness", "workout", "train", "exercise"],
     categories: ["gym_fitness"],
-    reply: "Here's what's running near you for fitness.",
+    reply: "Here's what you can redeem near you right now for fitness.",
     empty: "Nothing on fitness near you right now.",
   },
   {
@@ -57,7 +57,7 @@ export const INTENTS = [
     label: "Hair and nails",
     phrasings: ["hair", "nails", "salon", "barber", "manicure"],
     categories: ["hair_nail_salon", "beauty_cosmetics"],
-    reply: "Here's what's running near you for hair and nails.",
+    reply: "Here's what you can redeem near you right now for hair and nails.",
     empty: "Nothing on hair or nails near you right now.",
   },
 ];
@@ -65,7 +65,7 @@ export const INTENTS = [
 // What the assistant says when it does not recognise the ask. It names what it can do rather than
 // guessing: a canned matcher that bluffs is the one failure mode that would embarrass this on
 // stage, because the follow-up question is always "what else can it do".
-export const FALLBACK = "I can look up live rewards near you by what you're after — try matcha, somewhere to eat, fitness, or hair and nails.";
+export const FALLBACK = "I can look up rewards you can redeem near you right now by what you're after — try matcha, somewhere to eat, fitness, or hair and nails.";
 
 export function matchIntent(text) {
   const q = String(text ?? "").toLowerCase();
@@ -186,26 +186,24 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
   // asking. A search that answered "you are not in the target segment" would be refusing to tell
   // somebody what is publicly on offer near them, and a frequency cap applied to a question the
   // customer asked is not a frequency cap, it is a broken search. Wiring any of them in here
-  // would also quietly break the demo's whole point: Charles finds the Hanami programme he
-  // was never targeted for, and that is the moment the two channels are shown to be different.
+  // would also quietly break the demo's whole point: a cardholder can find a programme they
+  // were never targeted for, and that is the moment the two channels are shown to be different.
   //
   // What DOES belong: isFindable() above, which drops a programme whose N are all claimed —
   // offering something nobody can claim is the one dishonest result this list could return.
   // --------------------------------------------------------------------------------------------
   // --------------------------------------------------------------------------------------------
-  // HOW "WHEN" IS APPLIED, and why it labels rather than hides.
+  // HOW "WHEN" IS APPLIED: hidden, not labelled (Joel, 14 Oct).
   //
   // A programme whose run has not started or has already ended is not an offer, so it is dropped
-  // outright. A programme that is running but is outside its redemption hours right now is a
-  // different thing: it is real, it is claimable, and the cardholder can lock a voucher in today
-  // and use it tomorrow. Those stay in the list, ranked below the ones open now and labelled with
-  // when they come back.
+  // outright. A programme that is running but outside its redemption hours right now is dropped
+  // too: the answer to "what can I use" is only what can be redeemed at this moment, so every
+  // result carries a working Redeem. The funnel line still reports how many were near the
+  // cardholder before the time filter, so a judge can see that something was filtered out.
   //
-  // This is deliberate and it is load-bearing for the demo. The hero programme's window is
-  // Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so hiding what is shut right now
-  // would take Hanami Matcha out of the pull list at exactly the moment the pitch searches
-  // for coffee. To hide them instead, move openNow() into the filter below and drop `open_now`
-  // from the sort — one line each, and the funnel line already reports both counts either way.
+  // Consequence for the demo: the hero programme's window is Tue-Thu 14:00-17:00 and the demo
+  // clock is Friday 15:12, so Hanami Matcha is not among the results at the clock. To label shut
+  // programmes instead of hiding them, drop the open_now filter below.
   // --------------------------------------------------------------------------------------------
   const open = live.filter((c) => {
     const start = c.window?.start ?? c.configuration?.window_start ?? null;
@@ -218,25 +216,25 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
 
   const inCategory = open.filter((c) => intent.categories.includes(profiles?.[c.merchant_id]?.category));
   const { districts: catchment, exact_only } = catchmentOf(holderProfile, adjacency);
-  const results = inCategory
+  const nearby = inCategory
     .map((c) => {
       const mp = profiles?.[c.merchant_id] ?? null;
       const districts = outletDistricts(mp);
       const near = districts.filter((d) => catchment.has(d));
       return { campaign: c, merchant: mp, districts, near, nearest: near[0] ?? null,
-               open_now: openNow(c, clock) };            // 2. WHEN — see the filter note above
+               open_now: openNow(c, clock) };
     })
-    .filter((r) => r.near.length > 0)                    // 1. WHERE — see the filter note above
-    // Open right now first, then most outlets the cardholder can reach, then by name so the order
-    // is stable between renders. Nothing here is ranked by propensity: that is the push channel's
-    // question.
-    .sort((a, b) => Number(b.open_now) - Number(a.open_now)
-                    || b.near.length - a.near.length
+    .filter((r) => r.near.length > 0);                   // 1. WHERE — see the filter note above
+  const results = nearby
+    .filter((r) => r.open_now)                           // 2. WHEN — redeemable right now only
+    // Most outlets the cardholder can reach first, then by name so the order is stable between
+    // renders. Nothing here is ranked by propensity: that is the push channel's question.
+    .sort((a, b) => b.near.length - a.near.length
                     || String(a.merchant?.name).localeCompare(String(b.merchant?.name)));
 
   return {
-    searched: live.length, open: open.length, in_category: inCategory.length, results,
-    open_now: results.filter((r) => r.open_now).length,
+    searched: live.length, open: open.length, in_category: inCategory.length,
+    near_you: nearby.length, results, open_now: results.length,
     districts: districtsOf(holderProfile), exact_only,
   };
 }

@@ -198,7 +198,7 @@ export default function Rewards() {
             {/* Two different empties, and they were one. A cardholder nobody has sent anything to
                 was being told "nothing matches those filters" and offered a Clear filters button
                 for filters they had not set — the list blaming a control for a state that has
-                nothing to do with it. Charles is exactly that cardholder, and his empty Rewards
+                nothing to do with it. Jieru starts as exactly that cardholder, and an empty Rewards
                 tab is the moment the pull channel earns its place, so it points at the assistant
                 rather than at a button that would do nothing. */}
             {all.length === 0 ? (
@@ -228,7 +228,7 @@ export default function Rewards() {
                   highlight={o.source === "live" && ["delivered", "claimed"].includes(o.status)}
                   // Everything in this list was allocated to her: the pipeline matched her to it,
                   // or the RM pushed it during the demo. Nothing found by searching lands here.
-                  origin="matched"
+                  origin={o.via === "search" ? "found" : "matched"}
                   availableNow={o.availableNow}
                   onDetails={() => navigate(`/app/rewards/${encodeURIComponent(o.id)}`)}
                   // Claiming takes one of the merchant's N and is allowed whenever the card is

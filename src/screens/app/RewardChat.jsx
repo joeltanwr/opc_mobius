@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, Send, MapPin, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, Send, MapPin } from "lucide-react";
 import { useDemoData } from "../../data/DataProvider";
 import { useMobiusState } from "../../state/StateProvider";
 import { RewardFeedCard } from "../../components/RewardCard";
@@ -7,10 +8,6 @@ import { INTENTS, FALLBACK, matchIntent, matchedPhrase, searchPull } from "./cha
 import { enrich } from "./offers";
 import { useTrace } from "../../components/SystemTrace";
 import { InfoTip } from "../../components/ui";
-import { formatDays, formatHours } from "../../components/RewardCard";
-
-// The programme's own window, in the words the feed card uses for it.
-const windowLabel = (offer) => [formatDays(offer.days_of_week), formatHours(offer.hours)].filter(Boolean).join(" ");
 
 // ---------------------------------------------------------------------------------------------
 // Ask for a reward — the pull channel, inside the cardholder's own Rewards tab.
@@ -137,7 +134,7 @@ export default function RewardChat({ cardholderId, holder }) {
                 preview, and would have implied these are a different kind of reward. They are
                 not: same programme, same terms, reached a different way. */}
             {t.intent && t.found.results.map((r) => (
-              <PullResult key={r.campaign.id} result={r} />
+              <PullResult key={r.campaign.id} result={r} cardholderId={cardholderId} />
             ))}
           </div>
         ))}
@@ -190,8 +187,8 @@ function Funnel({ found }) {
   return (
     <p className="text-[11px] text-ink-light mt-1.5 leading-snug">
       {found.open} live programme{found.open === 1 ? "" : "s"} · {found.in_category} matching what you asked for ·{" "}
-      <span className="font-semibold text-ink-secondary">{found.results.length} near you</span>
-      {found.results.length > 0 && <>, {found.open_now} open right now</>}
+      {found.near_you ?? found.results.length} near you ·{" "}
+      <span className="font-semibold text-ink-secondary">{found.results.length} redeemable right now</span>
       {found.districts.length > 0 && (
         <> — district{found.districts.length > 1 ? "s" : ""} {found.districts.join(" and ")}
           {found.exact_only ? ", exact match only" : " and the ones next to them"}</>
@@ -201,11 +198,21 @@ function Funnel({ found }) {
   );
 }
 
-function PullResult({ result, onOpen }) {
+function PullResult({ result, cardholderId }) {
   const { data } = useDemoData();
   const m = useMobiusState();
+  const navigate = useNavigate();
   const c = result.campaign;
   const cfg = c.configuration ?? {};
+  // Every result is redeemable at this moment (searchPull keeps only those), so Redeem is live.
+  // The card the cardholder may already hold for this programme is the one redeemed; otherwise
+  // FOUND puts one in their feed first, and the redemption screen fires the ordinary REDEEMED.
+  const held = m.state.offers[`${c.id}:${cardholderId}`] ?? null;
+  const redeemable = !held || ["delivered", "claimed"].includes(held.status);
+  const redeem = () => {
+    if (!held) m.dispatch({ type: "FOUND", campaign_id: c.id, cardholder_id: cardholderId });
+    navigate(`/app/redeem/${encodeURIComponent(`${c.id}:${cardholderId}`)}`);
+  };
 
   // Built into the shape the shared card expects, from the campaign the pipeline shipped. Nothing
   // here is written for the chatbot: the headline, the terms and the window are the merchant's own
@@ -221,30 +228,22 @@ function PullResult({ result, onOpen }) {
     days_of_week: cfg.days_of_week ?? null,
     hours: cfg.hours ?? null,
     expires_at: c.window?.end ? `${c.window.end}T23:59:59+08:00` : null,
-    status: "delivered",
+    status: held?.status ?? "delivered",
     via: "search",
     source: "pull",
   }, { profiles: data.merchantProfiles, taxonomy: data.taxonomy, clock: m.state.clock }),
-  [c, cfg, data, m.state.clock]);
+  [c, cfg, data, m.state.clock, held]);
 
   return (
     <div>
-      <RewardFeedCard offer={offer} clock={m.state.clock} origin="found" />
+      <RewardFeedCard offer={offer} clock={m.state.clock} origin="found" redeemTone="success"
+                      onRedeem={redeemable ? redeem : undefined} availableNow={result.open_now} />
       <p className="text-[10.5px] text-ink-light mt-1 px-1 flex items-center gap-1">
         <MapPin size={10} className="shrink-0" />
         {result.near.length} outlet{result.near.length === 1 ? "" : "s"} in your area
         {result.districts.length > result.near.length && ` of ${result.districts.length}`}
         {" · found by searching, not sent to you"}
       </p>
-      {/* A programme that is running but shut at this hour is still worth claiming — the voucher
-          is locked in now and used inside the window. Saying so is the honest version of the
-          time filter: it is applied and visible, not hidden. */}
-      {!result.open_now && (
-        <p className="text-[10.5px] text-ink-light mt-0.5 px-1 flex items-center gap-1">
-          <Clock size={10} className="shrink-0" />
-          Not open right now — redeem {windowLabel(offer) || "inside its window"}
-        </p>
-      )}
     </div>
   );
 }

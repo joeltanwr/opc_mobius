@@ -694,6 +694,37 @@ export function reduce(state, event) {
       return next;
     }
 
+    // ---------------------------------------------------------------- pull: a programme found
+    // The cardholder asked the assistant and tapped Redeem on a programme nobody sent them. That
+    // puts a card for it in their own feed — source "live", via "search" — so redeeming it runs
+    // the ordinary REDEEMED path: the same per-customer limit, the same claim against the
+    // redemption limit, the same counters. No push is sent and nothing here touches the push
+    // counters, consent or the frequency cap, which bound contact OCBC initiates, not a search.
+    // A cardholder who already holds a card for the programme keeps it; there is one per campaign.
+    case "FOUND": {
+      const c = state.campaigns[event.campaign_id];
+      const ch = state.cardholders[event.cardholder_id];
+      if (!c) return reject(state, event, "unknown campaign");
+      if (!ch) return reject(state, event, "unknown cardholder");
+      const findable = c.status === "active" || (c.status === "capped" && c.capped?.why === "reach cap reached");
+      if (!findable) return reject(state, event, `campaign is ${c.status}, not findable`);
+      const oid = offerId(c.id, ch.id);
+      if (state.offers[oid]) return reject(state, event, "cardholder already holds this offer");
+      const next = clone(state);
+      const campaign = next.campaigns[c.id];
+      next.offers[oid] = {
+        id: oid, campaign_id: campaign.id, cardholder_id: ch.id, merchant_id: campaign.merchant_id, merchant_name: campaign.merchant_name,
+        reward_type: campaign.configuration?.reward_type ?? campaign.recommended?.reward_type ?? null,
+        offer_headline: campaign.configuration?.offer_headline ?? null, offer_terms: campaign.configuration?.offer_terms ?? null,
+        days_of_week: campaign.configuration?.days_of_week ?? null, hours: campaign.configuration?.hours ?? null,
+        delivered_at: event.at, expires_at: endOfDay(campaign.window?.end ?? campaign.configuration?.window_end ?? null),
+        status: "delivered", via: "search", source: "live",
+      };
+      next.cardholders[ch.id].feed.push(oid);
+      log(next, event, { offer_id: oid, campaign_id: campaign.id, cardholder_id: ch.id });
+      return next;
+    }
+
     // ---------------------------------------------------------------- event 2a: claim, limit
     // Claiming locks the voucher in. It is the step that spends one of the N, issues the code the
     // cardholder will show at the counter, and — once N are gone — closes the programme to

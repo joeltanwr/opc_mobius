@@ -108,7 +108,7 @@ export default function AppFrame() {
               <Smartphone size={14} />
               <span className="text-[12px] font-semibold uppercase tracking-wide">Prototype</span>
               <span className="hidden sm:inline text-[12px] text-white/55">
-                {consolidated ? "· cardholder app · four cardholders" : `· cardholder app · ${holder?.name}'s phone`}
+                {consolidated ? "· cardholder app · all cardholders" : `· cardholder app · ${holder?.name}'s phone`}
               </span>
             </div>
 
@@ -139,11 +139,9 @@ export default function AppFrame() {
             {/* Whose phone. Individual view only — the consolidated view shows four at once, so
                 there is nothing to choose between there.
 
-                Two cardholders because the build now has two distribution channels, and one
-                persona cannot show both: Kelly is reached by the campaign without asking, and
-                Charles is the one the targeting engine excluded, who holds nothing until he
-                searches. Swapping between them is how the push/pull distinction gets demonstrated
-                rather than asserted. */}
+                Two cardholders: Kelly, the lookalike the campaign reaches without her asking, and
+                Jieru, a recent first-time customer who holds no other offers and can ask the
+                assistant for what is redeemable near her right now. */}
             {!consolidated && (
               <div className="flex items-center gap-1 text-[12px]" role="group" aria-label="Cardholder">
                 {INDIVIDUAL_CARDHOLDERS.map((p) => {

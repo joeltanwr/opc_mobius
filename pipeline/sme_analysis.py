@@ -305,7 +305,11 @@ def _hourly(src):
     counts = hours.value_counts().reindex(span, fill_value=0)
     total = counts.sum()
     share = [round(float(c / total), 4) if total else 0.0 for c in counts]
-    return dict(hours=span, share=share, peak_hour=int(counts.idxmax()) if total else None)
+    # Counts, not shares, per weekday, so the screen can add any set of days together (weekdays,
+    # one day, Tue–Thu) and normalise the sum itself. The merchant's own transactions only.
+    wd = src["dt"].dt.weekday
+    by_weekday = {WEEKDAY_NAMES[d]: [int(x) for x in hours[wd == d].value_counts().reindex(span, fill_value=0)] for d in range(7)}
+    return dict(hours=span, share=share, peak_hour=int(counts.idxmax()) if total else None, counts_by_weekday=by_weekday)
 
 
 def _customer_profile(raw, src, card_ids_all, card_ids_top, group_cats):
