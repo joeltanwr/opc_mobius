@@ -865,7 +865,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, da
 
       {acquisition && (
         <Card className="p-6 mt-4">
-          <h4 className="text-[15px] font-bold text-ink mb-2">Prospect customers (post-consent)</h4>
+          <h4 className="text-[15px] font-bold text-ink mb-2">New customers (post-consent)</h4>
           <div className="flex flex-wrap items-end gap-8">
             <div>
               <div className="font-num text-[44px] font-extrabold text-brand leading-none">
@@ -873,7 +873,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, da
               </div>
               <div className="text-[13px] text-ink-secondary mt-1 max-w-sm">
                 Spend at comparable merchants; never transacted with you.
-                <InfoTip title="What you see about prospects" className="ml-1">
+                <InfoTip title="What you see about new customers" className="ml-1">
                   Counted after consent and the frequency cap. You get a count and a description only — no age split, spend or map
                   for people who've never walked in.
                 </InfoTip>
@@ -903,7 +903,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, da
 const PROSPECTS = "Prospect customers";
 
 function GroupChip({ name, cell, tone = "neutral", big = false }) {
-  const label = name === PROSPECTS ? "Prospect customers" : rfmLabel(name);
+  const label = name === PROSPECTS ? "New customers (pre-consent)" : rfmLabel(name);
   return (
     <Badge tone={tone} className={big ? "text-[12.5px] px-2.5 py-1 font-semibold" : ""}>
       {label}{" "}
