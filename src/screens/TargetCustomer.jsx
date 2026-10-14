@@ -124,8 +124,8 @@ export default function TargetCustomer() {
       ) : (
         <>
           <TradingSummary profile={profile} trailingMonths={trailingMonths} />
-          <RecencyFrequencyValue profile={profile} />
           <TradingPattern profile={profile} gap={gap} trailingWeeks={trailingWeeks} floor={floor} />
+          <RecencyFrequencyValue profile={profile} />
           <CustomerAnalysis
             profile={profile}
             gap={gap}
@@ -413,7 +413,6 @@ function RecencyFrequencyValue({ profile }) {
     { label: "Bottom 50%", share: r.revenue_by_percentile.bottom_50_pct },
   ];
   const repeatShare = r.one_time_vs_repeat.repeat_customer_share_pct;
-  const repeatTxnShare = r.one_time_vs_repeat.repeat_txn_share_pct;
 
   return (
     <>
@@ -458,10 +457,6 @@ function RecencyFrequencyValue({ profile }) {
             rightLabel={`One-time ${pctOf(r.one_time_vs_repeat.one_time_customer_share_pct, 1)}`}
             leftShare={repeatShare}
           />
-          <p className="text-[12.5px] text-ink-secondary mt-2">
-            Repeat buyers: {pctOf(repeatShare, 1)} of customers, {pctOf(repeatTxnShare, 1)} of transactions.
-            <InfoTip title="What the gap means" className="ml-1">Your trade is carried by the people who come back.</InfoTip>
-          </p>
           <div className="mt-3 mb-1 text-[12px] font-medium text-ink-secondary">Visits, repeat customers only</div>
           <ShareBars rows={freq} />
           <BasisNote>merchant_profiles.json rfv — a repeat customer is one with two or more purchases in the period.</BasisNote>
@@ -483,17 +478,47 @@ function RecencyFrequencyValue({ profile }) {
 
 // --------------------------------------------------------------------------- §6 trading pattern
 
+// Day filter presets for the hourly chart. Any combination of single days can also be toggled.
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_PRESETS = [
+  { id: "all", label: "All days", days: WEEKDAYS },
+  { id: "weekdays", label: "Weekdays", days: WEEKDAYS.slice(0, 5) },
+  { id: "weekends", label: "Weekends", days: WEEKDAYS.slice(5) },
+];
+
 function TradingPattern({ profile, gap, trailingWeeks, floor }) {
   const hourly = profile.trading_pattern.hourly;
+  const byDay = hourly.counts_by_weekday ?? null;
+  const [days, setDays] = useState(WEEKDAYS);
   const trough = profile.trading_pattern.trough ?? null;
-  const troughHours = trough ? gap?.hours ?? null : null;
+  // The trough is a Tue–Thu finding: it is only drawn when the selection includes one of its days.
+  const troughDays = trough?.weekdays ?? [];
+  const troughShown = Boolean(trough) && troughDays.some((d) => days.includes(d));
+  const troughHours = troughShown ? gap?.hours ?? null : null;
+
+  // Shares of the selected days' own transactions: their counts summed hour by hour, then
+  // normalised. Without per-day counts (an older dataset) the chart falls back to all days.
+  const shares = useMemo(() => {
+    if (!byDay) return hourly.share;
+    const sums = hourly.hours.map((_, i) => days.reduce((a, d) => a + (byDay[d]?.[i] ?? 0), 0));
+    const total = sums.reduce((a, b) => a + b, 0);
+    return sums.map((c) => (total ? c / total : 0));
+  }, [byDay, hourly, days]);
+  const peakIdx = shares.reduce((best, v, i) => (v > shares[best] ? i : best), 0);
+  const peakHour = hourly.hours[peakIdx];
   const rows = hourly.hours.map((h, i) => ({
     hour: h,
     label: `${String(h).padStart(2, "0")}`,
-    share: hourly.share[i],
-    isPeak: h === hourly.peak_hour,
+    share: shares[i],
+    isPeak: i === peakIdx,
     inTrough: Boolean(troughHours && h >= troughHours[0] && h < troughHours[1]),
   }));
+  const toggle = (d) => setDays((cur) => {
+    const next = cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d];
+    return next.length ? WEEKDAYS.filter((x) => next.includes(x)) : cur;   // never an empty selection
+  });
+  const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+  const selectionLabel = DAY_PRESETS.find((p) => same(p.days, days))?.label ?? days.join(", ");
   const cardMix = profile.card_mix;
   const ageTotal = AGE_BANDS.reduce((a, b) => a + (cellCount(profile.age_bands[b]) ?? 0), 0);
 
@@ -503,9 +528,40 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
 
       <Card className="p-5 mb-4">
         <h4 className="text-[14px] font-semibold text-ink mb-1">Hourly transaction intensity</h4>
+        {byDay && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-3" role="group" aria-label="Days of the week">
+            {DAY_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={same(p.days, days)}
+                onClick={() => setDays(p.days)}
+                className={`rounded-full border px-2.5 py-1 text-[11.5px] font-semibold ${
+                  same(p.days, days) ? "border-ink bg-ink text-white" : "border-border bg-white text-ink-secondary hover:text-ink"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+            <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+            {WEEKDAYS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={days.includes(d)}
+                onClick={() => toggle(d)}
+                className={`rounded-md border px-2 py-1 text-[11.5px] font-medium ${
+                  days.includes(d) ? "border-brand/40 bg-[#FDECEC] text-brand" : "border-border bg-white text-ink-light hover:text-ink"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        )}
         {trough ? (
           <p className="text-[13px] text-ink-secondary mb-3 max-w-3xl">
-            Peak <span className="font-semibold text-ink">{String(hourly.peak_hour).padStart(2, "0")}:00</span> · trough{" "}
+            {selectionLabel}: peak <span className="font-semibold text-ink">{String(peakHour).padStart(2, "0")}:00</span> · trough{" "}
             <span className="font-semibold text-brand">{trough.window}</span>,{" "}
             {pctOf(Math.abs(trough.magnitude_vs_own_baseline_pct), 1)} below your baseline ({trough.confidence} confidence).
             <InfoTip title="How the trough is measured" className="ml-1">
@@ -515,7 +571,7 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
           </p>
         ) : (
           <p className="text-[13px] text-ink-secondary mb-3">
-            Peak is {String(hourly.peak_hour).padStart(2, "0")}:00. No recurring trough was detected for this merchant —
+            {selectionLabel}: peak is {String(peakHour).padStart(2, "0")}:00. No recurring trough was detected for this merchant —
             a negative finding, and the reason no off-peak window is proposed below.
           </p>
         )}
@@ -535,11 +591,12 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
         <div className="flex flex-wrap items-center gap-4 mt-2 text-[11.5px] text-ink-secondary">
           <LegendSwatch color="#1E293B" label="Peak hour" />
           {troughHours && <LegendSwatch color="#ED1C24" label={`Trough — ${trough.window}`} />}
+          {trough && !troughShown && <span className="text-ink-light">Trough ({trough.window}) not in the selected days</span>}
           <LegendSwatch color="#CBD5E1" label="Other hours" />
         </div>
         <BasisNote>
-          merchant_profiles.json trading_pattern.hourly, trailing {trailingWeeks} weeks · demand_gaps.json for the trough
-          window.
+          merchant_profiles.json trading_pattern.hourly — share of the selected days' transactions in each hour
+          (counts_by_weekday) · demand_gaps.json for the trough window.
         </BasisNote>
       </Card>
 

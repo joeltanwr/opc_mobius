@@ -8,22 +8,19 @@ export const CARDHOLDER_ID = "kelly";
 // ----------------------------------------------------------------------------------------------
 // The two phones the individual view can be shown as.
 //
-// Kelly is the push story: she is in the Hanami acquisition cohort, so the campaign reaches
-// her without her asking. Charles is the pull story, and he is the right second phone precisely
-// because the targeting engine excluded him — he is out of the segment on price band and holds no
-// offers at all. His Rewards tab is empty until he asks for something.
-//
-// That contrast is the whole argument for having two channels. A second cardholder who was also
-// targeted would have demonstrated nothing the first did not.
+// Kelly is the lookalike: she is in the Hanami acquisition cohort, so the campaign reaches her
+// without her asking. Jieru is a recent first-time Hanami customer (RFM Promising). She holds no
+// other offers, so her Rewards tab is empty until the campaign reaches her or she asks the
+// assistant for something redeemable near her.
 // ----------------------------------------------------------------------------------------------
 export const INDIVIDUAL_CARDHOLDERS = [
   { id: "kelly", label: "Kelly", note: "In the target segment — the campaign reached her" },
-  { id: "charles", label: "Charles", note: "Not targeted — holds nothing until he asks" },
+  { id: "jieru", label: "Jieru", note: "Recent first-time customer — holds nothing until the campaign or a search finds her something" },
 ];
 
 // Module-level, for the same reason the persona switcher's route memory is: hopping to the RM view
 // to fire the allocator and back unmounts this whole chrome, and a presenter who was halfway
-// through Charles's story should not land back on Kelly's phone.
+// through Jieru's story should not land back on Kelly's phone.
 let currentCardholder = CARDHOLDER_ID;
 export const getCardholderId = () => currentCardholder;
 export const setCardholderId = (id) => { currentCardholder = id; };

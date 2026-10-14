@@ -561,9 +561,9 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     holderProfile: (data.showcasePersonas.find((p) => p.id === "charles") ?? {}).profile,
     clock: f.clock, adjacency: data.constants.district_adjacency ?? null,
   });
-  check("pull: Charles finds the pushed Hanami programme he was never targeted for",
-        found.results.some((r) => r.campaign.id === DEMO),
-        { results: found.results.map((r) => r.merchant?.name), funnel: { open: found.open, in_category: found.in_category } });
+  check("pull: a cardholder the allocator never picked still finds programmes near them",
+        found.results.length > 0,
+        { results: found.results.map((r) => r.merchant?.name), funnel: { open: found.open, in_category: found.in_category, near_you: found.near_you } });
 
   // The other cap closes every delivered card, so nothing can be claimed and nothing should show.
   const redeemed = { ...f, campaigns: { ...f.campaigns,
@@ -572,21 +572,42 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         !isFindable(redeemed.campaigns[DEMO]));
 
   // ------------------------------------------------------------------ the time filter
-  // The hero programme runs Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so it is
-  // genuinely shut at the moment the pitch searches for coffee. The filter is applied and
-  // reported — open_now is false and the funnel line says so — but it does not hide the
-  // programme, because the voucher can be claimed now and redeemed inside the window. If that
-  // ever becomes a hide, this check is the one that should fail first.
+  // The answer is only what can be redeemed right now (Joel, 14 Oct). The hero programme runs
+  // Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so it is near the cardholder but shut:
+  // left out of the results, and still counted in the funnel's "near you" so the filter shows.
   check("pull: the demo clock is outside the hero programme's own window",
         !openNow(f.campaigns[DEMO], f.clock),
         { clock: f.clock, days: f.campaigns[DEMO].configuration?.days_of_week, hours: f.campaigns[DEMO].configuration?.hours });
-  const hero = found.results.find((r) => r.campaign.id === DEMO);
-  check("pull: a programme shut right now is still listed, flagged shut rather than hidden",
-        Boolean(hero) && hero.open_now === false && found.open_now < found.results.length,
-        { open_now_count: found.open_now, results: found.results.length, hero_open_now: hero?.open_now });
-  check("pull: results are ordered open-now first",
-        found.results.every((r, i) => i === 0 || Number(found.results[i - 1].open_now) >= Number(r.open_now)),
+  check("pull: every result is redeemable right now",
+        found.results.every((r) => r.open_now === true) && found.open_now === found.results.length,
         found.results.map((r) => ({ name: r.merchant?.name, open_now: r.open_now })));
+  check("pull: a programme shut right now is left out, and the funnel still counts it as near you",
+        !found.results.some((r) => r.campaign.id === DEMO) && found.near_you > found.results.length,
+        { near_you: found.near_you, results: found.results.length });
+
+  // ------------------------------------------------------------------ redeeming what was found
+  // Redeem on a found result puts a card in the asker's feed (FOUND, via "search") and redeems it
+  // through the ordinary REDEEMED path, so the limit, the counters and the audit all see it.
+  const pick = found.results[0]?.campaign;
+  if (pick) {
+    let g = reduce(f, { type: "FOUND", campaign_id: pick.id, cardholder_id: "charles", at: at(4), seq: 4 });
+    const gid = offerId(pick.id, "charles");
+    check("pull: FOUND puts a search card in the asker's feed and sends no push",
+          g.offers[gid]?.via === "search" && g.offers[gid]?.status === "delivered" && g.cardholders.charles.feed.includes(gid)
+          && g.cardholders.charles.notifications.length === f.cardholders.charles.notifications.length
+          && g.campaigns[pick.id].counters.pushes_sent === f.campaigns[pick.id].counters.pushes_sent,
+          g.offers[gid]);
+    const again = reduce(g, { type: "FOUND", campaign_id: pick.id, cardholder_id: "charles", at: at(5), seq: 5 });
+    check("pull: a second FOUND for the same programme is refused — one card per campaign",
+          again.ledger.at(-1).type === "REJECTED" && /already holds/.test(again.ledger.at(-1).reason)
+          && JSON.stringify(again.offers[gid]) === JSON.stringify(g.offers[gid]),
+          again.ledger.at(-1));
+    g = reduce(g, { type: "REDEEMED", offer_id: gid, at: at(6), seq: 6 });
+    check("pull: a found programme redeems through the ordinary path, and the audit reconciles",
+          g.offers[gid].status === "redeemed" && Boolean(g.offers[gid].code) && audit(g).length === 0, { status: g.offers[gid].status, audit: audit(g) });
+  } else {
+    check("pull: FOUND puts a search card in the asker's feed and sends no push", false, "no redeemable result to test with");
+  }
 }
 
 // ---------------------------------------------------------------- claim locks the voucher in
@@ -867,7 +888,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         line(t0, "gate").endsWith(k.campaigns[DEMO].eligibility.passed ? "pass" : "fail")
         && line(t0, "sme").includes(data.merchantProfiles[k.campaigns[DEMO].merchant_id].trading_pattern.trough.window)
         && line(t0, "recommender").includes(k.campaigns[DEMO].recommended.label), [line(t0, "gate"), line(t0, "sme"), line(t0, "recommender")]);
-  check("trace: nothing has been sent, and the trace says so", line(t0, "delivery") === "Push · 0 of 4 notified" && t0.runKey === "push:0", line(t0, "delivery"));
+  check("trace: nothing has been sent, and the trace says so", line(t0, "delivery") === `Push · 0 of ${t0.chips.length} notified` && t0.runKey === "push:0", line(t0, "delivery"));
   check("trace: the RM view carries no trace — nothing on its screens recommends anything (TRACE_VIEWS, round 8)",
         (await import("../data/constants.js")).TRACE_VIEWS.rm === false);
 
@@ -934,7 +955,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
   // departures once it is terminal, and liveReach with it — so this is checked before the send.
   const off = reduce(k, { type: "OFFERS_OFF", cardholder_id: "kelly", at: at(1), seq: 1 });
   const fOff = allocatorFunnel(off, off.campaigns[DEMO]);
-  const chipOff = traceOf({ state: off, data, view: "consolidated" }).chips[1];
+  const chipOff = traceOf({ state: off, data, view: "consolidated" }).chips.find((x) => x.id === "kelly");
   check("trace: a cardholder turning offers off moves the consent count live and flips her chip to the Consent stage",
         fOff.optedOut === f0.optedOut + 1 && fOff.afterCap === f0.afterCap - 1
         && fOff.reach === liveReach(off.campaigns[DEMO], off.caps.reach_rounding)
@@ -952,16 +973,17 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         { fact: fact(t1, "delivery", "Push"), sent });
   const t2 = traceOf({ state: k, data, view: "consolidated" });
   const held = t2.chips.filter((x) => heldOffer(k, DEMO, x.id)).length;
-  check("trace: consolidated chips — #1 and #2 allocated, #3 out on the target pool, #4 out on the Lift Agent's price-band filter",
-        t2.chips.map((x) => `${x.mark}:${x.node}`).join() === "yes:allocator,yes:allocator,no:recommender,no:lift", t2.chips);
-  check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 4",
+  check("trace: consolidated chips — Joel out on the target pool, Jieru and Kelly allocated",
+        t2.chips.map((x) => `${x.id}:${x.mark}:${x.node}`).join() === "joel:no:recommender,jieru:yes:allocator,kelly:yes:allocator", t2.chips);
+  check("trace: the consolidated count is the tiles' own — holding the offer, 2 of 3",
         line(t2, "delivery") === `Push · ${held} of ${t2.chips.length} notified` && held === 2, line(t2, "delivery"));
 
   k = reduce(k, { type: "OFFERS_OFF", cardholder_id: "kelly", at: at(5), seq: 5 });
   const t3 = traceOf({ state: k, data, view: "consolidated" });
+  const kChip = t3.chips.find((x) => x.id === "kelly");
   check("trace: a card withdrawn by turning offers off stops counting as held, on the chip and in the count",
-        t3.chips[1].mark === "no" && t3.chips[1].node === "consent" && !heldOffer(k, DEMO, "kelly")
-        && line(t3, "delivery") === `Push · 1 of ${t3.chips.length} notified`, { chip: t3.chips[1], line: line(t3, "delivery") });
+        kChip.mark === "no" && kChip.node === "consent" && !heldOffer(k, DEMO, "kelly")
+        && line(t3, "delivery") === `Push · 1 of ${t3.chips.length} notified`, { chip: kChip, line: line(t3, "delivery") });
 
   // The pull payload exactly as RewardChat builds it, from the same searchPull() result.
   const q = "coffee deals near me", intent = matchIntent(q), holder = k.cardholders.kelly;
@@ -979,7 +1001,7 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
         && t4.nodes.filter((n) => n.greyed).map((n) => n.key).join() === "lift,recommender,allocator"
         && !t4.sequence.includes("allocator") && !t4.sequence.includes("recommender"), t4.nodes.map((n) => [n.key, n.line]));
   check("trace: the Pull line belongs to the phone that asked — another phone stays on Push",
-        traceOf({ state: k, data, view: "individual", cardholderId: "charles", pull }).mode === "push");
+        traceOf({ state: k, data, view: "individual", cardholderId: "jieru", pull }).mode === "push");
   check("trace: a reset is a fresh seed, so the trace starts over with it",
         traceOf({ state: seed, data, view: "consolidated" }).runKey === "push:0" && verdictFor(seed, seed.campaigns[DEMO], "kelly", "Lookalike").mark === "wait");
 }

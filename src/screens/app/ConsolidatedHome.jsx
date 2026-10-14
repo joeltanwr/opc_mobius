@@ -57,8 +57,8 @@ export default function ConsolidatedHome() {
     const chip = campaign && holder ? { n: i + 1, ...verdictFor(state, campaign, entry.id, entry.chip) } : null;
     return { ...entry, holder, inScope, offer, chip };
   });
-  // Four phones in a row need the full width; with the trace docked beside them they go two by two
-  // until the screen is wide enough for both.
+  // Three phones in a row need the full width; with the trace docked beside them they wrap until
+  // the screen is wide enough for both.
   const docked = DEMO_LAYER && trace.open;
 
   const reached = tiles.filter((t) => t.offer).length;
@@ -71,12 +71,12 @@ export default function ConsolidatedHome() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <Badge tone="warning"><FlaskConical size={11} /> Demonstration view</Badge>
-            <h2 className="text-[18px] font-bold text-ink mt-2">Four cardholders, one campaign</h2>
+            <h2 className="text-[18px] font-bold text-ink mt-2">{tiles.length === 3 ? "Three" : num(tiles.length)} cardholders, one campaign</h2>
             <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
               {campaign
                 ? <>Fire the allocator from the RM view; watch who hears about it.
                    <InfoTip title="What this screen is" className="ml-1">
-                     Four real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
+                     Real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
                    </InfoTip></>
                 : "The demo campaign is not loaded, so there is nothing to allocate."}
             </p>
@@ -92,7 +92,7 @@ export default function ConsolidatedHome() {
       </div>
 
       {/* ------------------------------------------------------------------ the four screens */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-4" : "xl:grid-cols-4"} gap-4 items-start`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-3" : "lg:grid-cols-3"} gap-4 items-start max-w-5xl mx-auto`}>
         {tiles.map((t) => <Tile key={t.id} tile={t} />)}
       </div>
     </div>

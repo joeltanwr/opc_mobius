@@ -115,7 +115,7 @@ const ORIGIN_LABEL = {
  *                  rendering of what will be sent and nothing on it should be operable.
  * @param onDetails fired by View details.
  */
-export function RewardFeedCard({ offer, clock, highlight = false, origin = null, onClaim, onRedeem, onDetails, availableNow = null }) {
+export function RewardFeedCard({ offer, clock, highlight = false, origin = null, onClaim, onRedeem, onDetails, availableNow = null, redeemTone = "brand" }) {
   const days = daysRemaining(offer.expires_at, clock);
   const base = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
   // "Available" is reserved for a card that can be used at this moment. One the cardholder holds
@@ -220,7 +220,7 @@ export function RewardFeedCard({ offer, clock, highlight = false, origin = null,
             type="button"
             onClick={onRedeem}
             disabled={!["delivered", "claimed"].includes(offer.status) || !onRedeem}
-            className="flex-1 rounded-lg bg-brand text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border"
+            className={`flex-1 rounded-lg ${redeemTone === "success" ? "bg-success hover:bg-success/90" : "bg-brand"} text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border`}
           >
             {["delivered", "claimed"].includes(offer.status) ? "Redeem" : status.label}
           </button>

@@ -277,18 +277,17 @@ export const QUEUED_DISPLAY = "In queue";
 // ----------------------------------------------------------------------------------------------
 // DEMO PRESENTATION LAYER — not the product's information architecture.
 //
-// The consolidated cardholder view is a pitch device: four cardholders' home screens side by side
-// so a judge can watch the allocator reach two of them and not the other two. No real cardholder
-// app shows four people's phones at once, and nothing about this belongs in a shipped IA. It is
+// The consolidated cardholder view is a pitch device: three cardholders' home screens side by side
+// so a judge can watch the allocator reach two of them and leave the third alone. No real cardholder
+// app shows several people's phones at once, and nothing about this belongs in a shipped IA. It is
 // kept behind its own toggle, labelled as a demo control on screen, and every part of it reads the
 // same state as the individual view rather than a parallel fixture.
 //
-// The four, and why each is here:
+// The three, in the order they are shown, and why each is here:
+//   joel     Champions, not a target group — an existing regular the allocator leaves be
 //   jieru    Promising — an existing customer who has been in once, recently; the campaign aims
 //            at Promising alongside the lookalikes, so she is in scope
 //   kelly    the lookalike who has never walked in (the acquisition case)
-//   joel     Champions, not a target group — an existing regular the allocator leaves be
-//   charles  excluded on price band — a non-customer who does not match, and is not contacted
 //
 // Scope is decided by cohort_membership against the campaign's cohort_tag, in store.js — the same
 // rule the RM's dialog and the reducer use. This screen has no targeting logic of its own, which
@@ -299,10 +298,9 @@ export const QUEUED_DISPLAY = "In queue";
 // cardholder who turns offers off, or a campaign re-aimed at another pool, flips the mark without
 // anybody editing this list.
 export const CONSOLIDATED_CARDHOLDERS = [
+  { id: "joel", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
   { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
   { id: "kelly", caption: "Lookalike · not yet a customer", chip: "Lookalike" },
-  { id: "joel", caption: "Champion · outside this segment", chip: "Champion · existing customer" },
-  { id: "charles", caption: "No match · not a customer", chip: "No lookalike match" },
 ];
 
 // ----------------------------------------------------------------------------------------------
