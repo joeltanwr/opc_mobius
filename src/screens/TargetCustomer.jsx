@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
-import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
+import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles, UserPlus, Repeat } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
@@ -825,60 +825,38 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
         <h3 className="text-[17px] font-bold text-ink">Reward options</h3>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {recs.ranked.map((r) => (
-          <Card key={r.type} className={`p-5 ${r.disabled ? "border-dashed bg-canvas/60" : r.rank === 1 ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className={`text-[15px] font-bold ${r.disabled ? "text-ink-light" : "text-ink"}`}>
-                {r.rank}. {r.label}
-              </h4>
-              {r.disabled ? (
-                <Badge tone="neutral">
-                  <Ban size={10} /> Ranked and rejected
-                </Badge>
-              ) : r.rank === 1 ? (
-                <Badge tone="brand">Recommended</Badge>
-              ) : null}
-            </div>
-            <p className={`text-[13px] ${r.disabled ? "text-ink-light" : "text-ink-secondary"}`}>
-              {r.disabled ? r.rejected_reason : r.reason}
-            </p>
-            {!r.disabled && (
-              <>
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-secondary">
-                  <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{r.new_or_returning}</Badge>
+      {/* Two groups by who the reward is for (Joel, 14 Oct): winning people who have never come in,
+          and keeping the ones who already do. Rank numbers are the recommender's and are kept, so a
+          column can read 1, 2, 4. Overseas/FX is for neither and sits under both. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {REWARD_GROUPS.map((g) => {
+          const cards = recs.ranked.filter((r) => !r.disabled && g.pools.includes(r.target_pool));
+          return (
+            <section key={g.id} aria-label={g.title}>
+              <div className={`rounded-xl border px-4 py-3 mb-3 ${g.headCls}`}>
+                <div className="flex items-center gap-2">
+                  <g.icon size={15} className="shrink-0" />
+                  <h4 className="text-[14px] font-bold">{g.title}</h4>
                 </div>
-                <div className="mt-3">
-                  <div className="text-[11.5px] font-medium text-ink-secondary mb-1">
-                    Target segments ·{" "}
-                    {r.target_pool === "non_customers"
-                      ? "cardholders who have never visited you"
-                      : "your own customers, by RFM segment"}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {r.target_pool === "non_customers" && r.non_customer_reach && (
-                      <Badge tone="brand">Prospect customers (pre-consent) {cellText(r.non_customer_reach)}</Badge>
-                    )}
-                    {(r.target_segments ?? []).map((t) => (
-                      <Badge key={t.segment} tone="neutral">
-                        {t.segment}{" "}
-                        {isSuppressed(t.reach) ? (
-                          <span className="italic text-ink-light">below threshold</span>
-                        ) : (
-                          <span className="font-num font-semibold text-ink">{num(cellCount(t.reach))}</span>
-                        )}
-                      </Badge>
-                    ))}
-                    {(r.target_segments ?? []).length === 0 && (
-                      <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </Card>
-        ))}
+                <p className="text-[12px] mt-0.5 opacity-90">{g.sub}</p>
+              </div>
+              <div className="space-y-3">
+                {cards.map((r) => <RewardCardOption key={r.type} r={r} group={g} />)}
+                {cards.length === 0 && <p className="text-[12.5px] text-ink-light px-1">No reward type ranks in this group for this gap.</p>}
+              </div>
+            </section>
+          );
+        })}
       </div>
+      {recs.ranked.filter((r) => r.disabled).map((r) => (
+        <Card key={r.type} className="p-4 mt-4 border-dashed bg-canvas/60">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-[14px] font-bold text-ink-light">{r.rank}. {r.label}</h4>
+            <Badge tone="neutral"><Ban size={10} /> Ranked and rejected</Badge>
+          </div>
+          <p className="text-[12.5px] text-ink-light mt-1">{r.rejected_reason}</p>
+        </Card>
+      ))}
       <BasisNote>Score: {recs.score_basis}</BasisNote>
 
       {acquisition && (
@@ -911,6 +889,64 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
           numbers the merchant can no longer see — which breaks the adjacency rule from the other
           direction. rationales.json still carries it, pre-computed, for the deck and for Q&A. */}
     </>
+  );
+}
+
+const REWARD_GROUPS = [
+  { id: "new", title: "Win new customers", sub: "Rewards built to get a first visit from people who have never come in.",
+    pools: ["non_customers"], icon: UserPlus, headCls: "border-info/30 bg-info-bg text-info", chipTone: "info" },
+  { id: "existing", title: "Keep existing customers", sub: "Rewards built for people who already buy from you, picked by RFM segment.",
+    pools: ["existing_customers"], icon: Repeat, headCls: "border-success/30 bg-success-bg text-success", chipTone: "success" },
+];
+
+function SegmentChip({ t }) {
+  return (
+    <Badge tone="neutral">
+      {t.segment}{" "}
+      {isSuppressed(t.reach) ? (
+        <span className="italic text-ink-light">below threshold</span>
+      ) : (
+        <span className="font-num font-semibold text-ink">{num(cellCount(t.reach))}</span>
+      )}
+    </Badge>
+  );
+}
+
+function RewardCardOption({ r, group }) {
+  const segs = r.target_segments ?? [];
+  const isNew = r.target_pool === "non_customers";
+  return (
+    <Card className={`p-5 ${r.rank === 1 ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h4 className="text-[15px] font-bold text-ink">{r.rank}. {r.label}</h4>
+        {r.rank === 1 && <Badge tone="brand">Recommended</Badge>}
+      </div>
+      <p className="text-[13px] text-ink-secondary">{r.reason}</p>
+      {isNew ? (
+        <>
+          {r.non_customer_reach && (
+            <div className="mt-3">
+              <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Main target · cardholders who have never visited you</div>
+              <Badge tone={group.chipTone}>Prospect customers (pre-consent) {cellText(r.non_customer_reach)}</Badge>
+            </div>
+          )}
+          {segs.length > 0 && (
+            <div className="mt-2.5">
+              <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Also reaches · your own customers, by RFM segment</div>
+              <div className="flex flex-wrap gap-1.5">{segs.map((t) => <SegmentChip key={t.segment} t={t} />)}</div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="mt-3">
+          <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Target · your own customers, by RFM segment</div>
+          <div className="flex flex-wrap gap-1.5">
+            {segs.map((t) => <SegmentChip key={t.segment} t={t} />)}
+            {segs.length === 0 && <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
