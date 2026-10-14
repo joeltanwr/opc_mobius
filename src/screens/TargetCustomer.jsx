@@ -903,7 +903,7 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, da
 const PROSPECTS = "Prospect customers";
 
 function GroupChip({ name, cell, tone = "neutral", big = false }) {
-  const label = name === PROSPECTS ? "Prospect customers (pre-consent)" : rfmLabel(name);
+  const label = name === PROSPECTS ? "Prospect customers" : rfmLabel(name);
   return (
     <Badge tone={tone} className={big ? "text-[12.5px] px-2.5 py-1 font-semibold" : ""}>
       {label}{" "}
@@ -942,8 +942,8 @@ function TargetGroups({ r, lag }) {
                     your customers, against <span className="font-semibold text-ink">{pct(fig.peer_pct)}</span> at theirs.</>
                 : main.name === PROSPECTS
                   ? <>None of these groups is behind similar businesses nearby — you already win more first-time customers than
-                      they do ({pct(fig.own_pct)} of your customers, against {pct(fig.peer_pct)}). So this reward goes to the people
-                      it is built for: cardholders who have never visited you.</>
+                      they do ({pct(fig.own_pct)} of your customers, against {pct(fig.peer_pct)}). So this reward will target new
+                      customers.</>
                   : <>None of these groups is behind similar businesses nearby, so this reward goes to the group it is built
                       for ({what}: {pct(fig.own_pct)} of your customers, against {pct(fig.peer_pct)} at theirs).</>}
             </p>
