@@ -7,7 +7,7 @@ import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
-import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER } from "../data/constants";
+import { TAB3_ACCOUNTS, screenNum, RFM_SEGMENT_GLOSSARY, DEMO_LAYER, rfmLabel } from "../data/constants";
 import { useTrace } from "../components/SystemTrace";
 import { sgd, num, pct, pctOf, cellText, cellCount, isSuppressed, monthLabel, completeMonths } from "../data/format";
 import { Card, SectionTitle, StatTile, Badge, BasisNote, SuppressedCard, InfoTip } from "../components/ui";
@@ -143,6 +143,7 @@ export default function TargetCustomer() {
           campaign={campaign}
           reachOf={reachOf}
           rounding={rounding}
+          floor={floor}
           data={data}
         />
       )}
@@ -749,7 +750,8 @@ function RfmDistribution({ rfm, hasRecommendation }) {
         const count = cellCount(rfm.segments[k]);
         return {
           segment: k,
-          short: k.replace("Customers", "Cust.").replace("Potential Loyalists", "Potential"),
+          label: rfmLabel(k),
+          short: rfmLabel(k).replace("Customers", "Cust.").replace("Potential Loyalists", "Potential"),
           suppressed: count === null,
           share: count === null || !scored ? 0 : Math.round((count / scored) * 1000) / 10,
         };
@@ -767,7 +769,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
             {rows.map((r) => (
               <div key={r.segment} className="flex gap-2 text-[12.5px]">
-                <dt className="font-semibold text-ink shrink-0 min-w-[9.5rem]">{r.segment}</dt>
+                <dt className="font-semibold text-ink shrink-0 min-w-[9.5rem]">{r.label}</dt>
                 <dd className="text-ink-secondary">{RFM_SEGMENT_GLOSSARY[r.segment] ?? "—"}</dd>
               </div>
             ))}
@@ -782,7 +784,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
                  tick={{ fontSize: 11, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
           <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={44} />
           <Tooltip
-            formatter={(v, _n, p) => (p?.payload?.suppressed ? ["Below threshold", p.payload.segment] : [`${v}%`, p.payload.segment])}
+            formatter={(v, _n, p) => (p?.payload?.suppressed ? ["Below threshold", p.payload.label] : [`${v}%`, p.payload.label])}
             labelFormatter={() => ""}
             contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E2E8F0" }}
           />
@@ -797,7 +799,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
       {suppressed.length > 0 && (
         <p className="flex items-center gap-1.5 text-[12px] text-ink-light mt-1">
           <Lock size={11} />
-          Below threshold: {suppressed.map((r) => r.segment).join(", ")}.
+          Below threshold: {suppressed.map((r) => r.label).join(", ")}.
         </p>
       )}
 
@@ -813,7 +815,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
 
 // ------------------------------------------- §6 reward options — /reward-programme-recommendation
 
-function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
+function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, data }) {
   // Post-consent, post-frequency-cap reach lives in the state module, because a cardholder turning
   // offers off in the customer view moves it while this page is open.
   const liveReach = campaign ? reachOf(campaign) : null;
@@ -848,38 +850,18 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-secondary">
                   <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{r.new_or_returning}</Badge>
                 </div>
-                <div className="mt-3">
-                  <div className="text-[11.5px] font-medium text-ink-secondary mb-1">
-                    Target segments ·{" "}
-                    {r.target_pool === "non_customers"
-                      ? "cardholders who have never visited you"
-                      : "your own customers, by RFM segment"}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {r.target_pool === "non_customers" && r.non_customer_reach && (
-                      <Badge tone="brand">Prospect customers (pre-consent) {cellText(r.non_customer_reach)}</Badge>
-                    )}
-                    {(r.target_segments ?? []).map((t) => (
-                      <Badge key={t.segment} tone="neutral">
-                        {t.segment}{" "}
-                        {isSuppressed(t.reach) ? (
-                          <span className="italic text-ink-light">below threshold</span>
-                        ) : (
-                          <span className="font-num font-semibold text-ink">{num(cellCount(t.reach))}</span>
-                        )}
-                      </Badge>
-                    ))}
-                    {(r.target_segments ?? []).length === 0 && (
-                      <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>
-                    )}
-                  </div>
-                </div>
+                <TargetGroups r={r} lag={recs.lag} />
               </>
             )}
           </Card>
         ))}
       </div>
-      <BasisNote>Score: {recs.score_basis}</BasisNote>
+      <BasisNote>
+        Score: {recs.score_basis}.
+        {recs.lag && <> Main target: of the groups each reward reaches (and that clear the {num(floor)} floor), the one furthest
+          behind comparable merchants — at least {recs.lag.threshold_pts} point — on the {recs.lag.basis}; {recs.lag.peers_used} comparable
+          merchants, {recs.lag.peer_basis}. Where none lags, the reward's own pool.</>}
+      </BasisNote>
 
       {acquisition && (
         <Card className="p-6 mt-4">
@@ -911,6 +893,71 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
           numbers the merchant can no longer see — which breaks the adjacency rule from the other
           direction. rationales.json still carries it, pre-computed, for the deck and for Q&A. */}
     </>
+  );
+}
+
+// ------------------------------------------------------------------ main target + also reaches
+// Every group a reward can reach, with one picked out as the main target: the group that lags
+// comparable merchants most (reward_recommendations.json main_target, computed in reward.py). The
+// sentence under it is built from the same shipped shares, so it cannot disagree with the pick.
+const PROSPECTS = "Prospect customers";
+
+function GroupChip({ name, cell, tone = "neutral", big = false }) {
+  const label = name === PROSPECTS ? "Prospect customers" : rfmLabel(name);
+  return (
+    <Badge tone={tone} className={big ? "text-[12.5px] px-2.5 py-1 font-semibold" : ""}>
+      {label}{" "}
+      {isSuppressed(cell) ? (
+        <span className="italic text-ink-light">below threshold</span>
+      ) : (
+        <span className="font-num font-semibold">{num(cellCount(cell))}</span>
+      )}
+    </Badge>
+  );
+}
+
+function TargetGroups({ r, lag }) {
+  const groups = [
+    ...(r.target_pool === "non_customers" && r.non_customer_reach ? [{ name: PROSPECTS, cell: r.non_customer_reach }] : []),
+    ...(r.target_segments ?? []).map((t) => ({ name: t.segment, cell: t.reach })),
+  ];
+  const main = r.main_target ? groups.find((g) => g.name === r.main_target.group) ?? null : null;
+  const rest = groups.filter((g) => g !== main);
+  const fig = main ? lag?.groups?.[main.name] : null;
+  const what = main?.name === PROSPECTS ? "first-time customers" : rfmLabel(main?.name ?? "");
+  const pct = (v) => `${Math.round(v)}%`;
+  return (
+    <div className="mt-3 space-y-2.5">
+      {main && (
+        <div className={`rounded-lg border px-3 py-2.5 ${r.main_target.lagging ? "border-brand/30 bg-[#FFF8F8]" : "border-border bg-canvas/50"}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11.5px] font-semibold text-ink">Main target</span>
+            <GroupChip name={main.name} cell={main.cell} tone={r.main_target.lagging ? "brand" : "info"} big />
+            {r.main_target.lagging && <Badge tone="warning">Lagging</Badge>}
+          </div>
+          {fig && (
+            <p className="text-[12px] text-ink-secondary mt-1.5 leading-snug">
+              {r.main_target.lagging
+                ? <>Behind similar businesses nearby: {what} are <span className="font-semibold text-ink">{pct(fig.own_pct)}</span> of
+                    your customers, against <span className="font-semibold text-ink">{pct(fig.peer_pct)}</span> at theirs.</>
+                : main.name === PROSPECTS
+                  ? <>None of these groups is behind similar businesses nearby — you already win more first-time customers than
+                      they do ({pct(fig.own_pct)} of your customers, against {pct(fig.peer_pct)}). So this reward will target new
+                      customers.</>
+                  : <>None of these groups is behind similar businesses nearby, so this reward goes to the group it is built
+                      for ({what}: {pct(fig.own_pct)} of your customers, against {pct(fig.peer_pct)} at theirs).</>}
+            </p>
+          )}
+        </div>
+      )}
+      {rest.length > 0 && (
+        <div>
+          <div className="text-[11.5px] font-medium text-ink-secondary mb-1">{main ? "Also reaches" : "Target groups"}</div>
+          <div className="flex flex-wrap gap-1.5">{rest.map((g) => <GroupChip key={g.name} name={g.name} cell={g.cell} />)}</div>
+        </div>
+      )}
+      {groups.length === 0 && <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>}
+    </div>
   );
 }
 

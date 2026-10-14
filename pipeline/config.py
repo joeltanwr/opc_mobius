@@ -85,6 +85,12 @@ CONSTANTS = {
                            "Expected share of redemptions that would not have happened anyway, by target pool. "
                            "Ordered by the reward skill's caution column; the acquisition figure is the winner campaign's "
                            "(16% − 4%) / 16% = 0.75; the rest are assumptions", provisional=True),
+    # Main target on each reward card: the customer group that lags comparable merchants the most.
+    "LAG_THRESHOLD_PTS": C(1.0, "A group counts as lagging only when its share of OCBC customers is at least 1 percentage point worse "
+                                "than the median of comparable merchants (worse = lower for healthy segments, higher for lapsing ones); "
+                                "below that it is read as noise", provisional=True),
+    "LAG_PEER_CUSTOMERS": C(100, "A comparable merchant enters the benchmark only with at least 100 OCBC customers, so its RFM quintiles "
+                                 "are not cut from a handful of people"),
 }
 
 # Plain values for code
@@ -127,6 +133,8 @@ RETURN_WINDOW_DAYS = CONSTANTS["RETURN_WINDOW_DAYS"].value
 RECENT_REPEATER_DAYS = CONSTANTS["RECENT_REPEATER_DAYS"].value
 TRAILING_MONTHS = CONSTANTS["TRAILING_MONTHS"].value
 INCREMENTAL_SHARE = CONSTANTS["INCREMENTAL_SHARE"].value
+LAG_THRESHOLD_PTS = CONSTANTS["LAG_THRESHOLD_PTS"].value
+LAG_PEER_CUSTOMERS = CONSTANTS["LAG_PEER_CUSTOMERS"].value
 
 LOGIN_MERCHANTS = ["M0001", "M0002", "M0004"]          # brief §2 — three selectable at login
 HERO_ACQUIRING_MERCHANTS = ["M0001", "M0002", "M0003"]  # transaction-level acquiring data exists for these
