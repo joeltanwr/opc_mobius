@@ -193,6 +193,26 @@ def main(rerun=True):
     check("merchant master contains a balance failure", len(bal_fail) >= 1, str(bal_fail))
     check("merchant master contains a both-bands failure", len(band_fail) >= 1, str(band_fail))
     check("Hanami passes eligibility", elig["M0001"]["passed"])
+    # Main target on each reward card: one of the card's own groups that clears the floor; when it is
+    # flagged lagging, it is the furthest behind peers of those groups and at least the threshold behind.
+    bad_main = []
+    for mid_, rec in recs.items():
+        lag = rec.get("lag")
+        for r in rec.get("ranked") or []:
+            mt = r.get("main_target")
+            if not mt or not lag:
+                continue
+            groups = ([("Prospect customers", r["non_customer_reach"])] if r["target_pool"] == "non_customers" and r.get("non_customer_reach") else []) + \
+                     [(t["segment"], t["reach"]) for t in r["target_segments"]]
+            ok_groups = [n for n, c in groups if not c.get("suppressed")]
+            behind = {n: lag["groups"][n]["behind_pts"] for n in ok_groups if n in lag["groups"]}
+            if mt["group"] not in ok_groups:
+                bad_main.append((mid_, r["type"], "not a targetable group of the card"))
+            elif mt["lagging"] and (behind[mt["group"]] < lag["threshold_pts"] or behind[mt["group"]] < max(behind.values())):
+                bad_main.append((mid_, r["type"], "lagging pick is not the furthest behind"))
+            elif not mt["lagging"] and any(v >= lag["threshold_pts"] for v in behind.values()):
+                bad_main.append((mid_, r["type"], "a lagging group was passed over"))
+    check("reward main targets: a card's own targetable group, and the furthest-behind one when flagged lagging", not bad_main, str(bad_main[:5]))
     priority = load_pub("merchant_priority.json")
     tiers = {p["tier"] for p in priority.values()}
     check("one merchant per priority tier (high/medium/low/insufficient_data)", {"high", "medium", "low", "insufficient_data"} <= tiers, str(tiers))

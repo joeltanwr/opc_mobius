@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from "recharts";
-import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles, UserPlus, Repeat } from "lucide-react";
+import { ShieldCheck, ShieldX, Lock, Ban, Check, Clock, Sparkles } from "lucide-react";
 import { useDemoData, merchantById, categoryFor, constantOf, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
 import { rewardConfigUnlocked } from "../state/store.js";
@@ -143,6 +143,7 @@ export default function TargetCustomer() {
           campaign={campaign}
           reachOf={reachOf}
           rounding={rounding}
+          floor={floor}
           data={data}
         />
       )}
@@ -813,7 +814,7 @@ function RfmDistribution({ rfm, hasRecommendation }) {
 
 // ------------------------------------------- §6 reward options — /reward-programme-recommendation
 
-function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
+function RewardOptions({ recs, rationale, campaign, reachOf, rounding, floor, data }) {
   // Post-consent, post-frequency-cap reach lives in the state module, because a cardholder turning
   // offers off in the customer view moves it while this page is open.
   const liveReach = campaign ? reachOf(campaign) : null;
@@ -825,39 +826,41 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
         <h3 className="text-[17px] font-bold text-ink">Reward options</h3>
       </div>
 
-      {/* Two groups by who the reward is for (Joel, 14 Oct): winning people who have never come in,
-          and keeping the ones who already do. Rank numbers are the recommender's and are kept, so a
-          column can read 1, 2, 4. Overseas/FX is for neither and sits under both. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {REWARD_GROUPS.map((g) => {
-          const cards = recs.ranked.filter((r) => !r.disabled && g.pools.includes(r.target_pool));
-          return (
-            <section key={g.id} aria-label={g.title}>
-              <div className={`rounded-xl border px-4 py-3 mb-3 ${g.headCls}`}>
-                <div className="flex items-center gap-2">
-                  <g.icon size={15} className="shrink-0" />
-                  <h4 className="text-[14px] font-bold">{g.title}</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {recs.ranked.map((r) => (
+          <Card key={r.type} className={`p-5 ${r.disabled ? "border-dashed bg-canvas/60" : r.rank === 1 ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h4 className={`text-[15px] font-bold ${r.disabled ? "text-ink-light" : "text-ink"}`}>
+                {r.rank}. {r.label}
+              </h4>
+              {r.disabled ? (
+                <Badge tone="neutral">
+                  <Ban size={10} /> Ranked and rejected
+                </Badge>
+              ) : r.rank === 1 ? (
+                <Badge tone="brand">Recommended</Badge>
+              ) : null}
+            </div>
+            <p className={`text-[13px] ${r.disabled ? "text-ink-light" : "text-ink-secondary"}`}>
+              {r.disabled ? r.rejected_reason : r.reason}
+            </p>
+            {!r.disabled && (
+              <>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-secondary">
+                  <Badge tone={r.new_or_returning === "New customer" ? "info" : "neutral"}>{r.new_or_returning}</Badge>
                 </div>
-                <p className="text-[12px] mt-0.5 opacity-90">{g.sub}</p>
-              </div>
-              <div className="space-y-3">
-                {cards.map((r) => <RewardCardOption key={r.type} r={r} group={g} />)}
-                {cards.length === 0 && <p className="text-[12.5px] text-ink-light px-1">No reward type ranks in this group for this gap.</p>}
-              </div>
-            </section>
-          );
-        })}
+                <TargetGroups r={r} lag={recs.lag} />
+              </>
+            )}
+          </Card>
+        ))}
       </div>
-      {recs.ranked.filter((r) => r.disabled).map((r) => (
-        <Card key={r.type} className="p-4 mt-4 border-dashed bg-canvas/60">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-[14px] font-bold text-ink-light">{r.rank}. {r.label}</h4>
-            <Badge tone="neutral"><Ban size={10} /> Ranked and rejected</Badge>
-          </div>
-          <p className="text-[12.5px] text-ink-light mt-1">{r.rejected_reason}</p>
-        </Card>
-      ))}
-      <BasisNote>Score: {recs.score_basis}</BasisNote>
+      <BasisNote>
+        Score: {recs.score_basis}.
+        {recs.lag && <> Main target: of the groups each reward reaches (and that clear the {num(floor)} floor), the one furthest
+          behind comparable merchants — at least {recs.lag.threshold_pts} point — on the {recs.lag.basis}; {recs.lag.peers_used} comparable
+          merchants, {recs.lag.peer_basis}. Where none lags, the reward's own pool.</>}
+      </BasisNote>
 
       {acquisition && (
         <Card className="p-6 mt-4">
@@ -892,61 +895,63 @@ function RewardOptions({ recs, rationale, campaign, reachOf, rounding, data }) {
   );
 }
 
-const REWARD_GROUPS = [
-  { id: "new", title: "Win new customers", sub: "Rewards built to get a first visit from people who have never come in.",
-    pools: ["non_customers"], icon: UserPlus, headCls: "border-info/30 bg-info-bg text-info", chipTone: "info" },
-  { id: "existing", title: "Keep existing customers", sub: "Rewards built for people who already buy from you, picked by RFM segment.",
-    pools: ["existing_customers"], icon: Repeat, headCls: "border-success/30 bg-success-bg text-success", chipTone: "success" },
-];
+// ------------------------------------------------------------------ main target + also reaches
+// Every group a reward can reach, with one picked out as the main target: the group that lags
+// comparable merchants most (reward_recommendations.json main_target, computed in reward.py). The
+// sentence under it is built from the same shipped shares, so it cannot disagree with the pick.
+const PROSPECTS = "Prospect customers";
 
-function SegmentChip({ t }) {
+function GroupChip({ name, cell, tone = "neutral", big = false }) {
+  const label = name === PROSPECTS ? "Prospect customers (pre-consent)" : name;
   return (
-    <Badge tone="neutral">
-      {t.segment}{" "}
-      {isSuppressed(t.reach) ? (
+    <Badge tone={tone} className={big ? "text-[12.5px] px-2.5 py-1 font-semibold" : ""}>
+      {label}{" "}
+      {isSuppressed(cell) ? (
         <span className="italic text-ink-light">below threshold</span>
       ) : (
-        <span className="font-num font-semibold text-ink">{num(cellCount(t.reach))}</span>
+        <span className="font-num font-semibold">{num(cellCount(cell))}</span>
       )}
     </Badge>
   );
 }
 
-function RewardCardOption({ r, group }) {
-  const segs = r.target_segments ?? [];
-  const isNew = r.target_pool === "non_customers";
+function TargetGroups({ r, lag }) {
+  const groups = [
+    ...(r.target_pool === "non_customers" && r.non_customer_reach ? [{ name: PROSPECTS, cell: r.non_customer_reach }] : []),
+    ...(r.target_segments ?? []).map((t) => ({ name: t.segment, cell: t.reach })),
+  ];
+  const main = r.main_target ? groups.find((g) => g.name === r.main_target.group) ?? null : null;
+  const rest = groups.filter((g) => g !== main);
+  const fig = main ? lag?.groups?.[main.name] : null;
+  const what = main?.name === PROSPECTS ? "first-time customers" : main?.name;
   return (
-    <Card className={`p-5 ${r.rank === 1 ? "border-brand/30 ring-1 ring-brand/10" : ""}`}>
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <h4 className="text-[15px] font-bold text-ink">{r.rank}. {r.label}</h4>
-        {r.rank === 1 && <Badge tone="brand">Recommended</Badge>}
-      </div>
-      <p className="text-[13px] text-ink-secondary">{r.reason}</p>
-      {isNew ? (
-        <>
-          {r.non_customer_reach && (
-            <div className="mt-3">
-              <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Main target · cardholders who have never visited you</div>
-              <Badge tone={group.chipTone}>Prospect customers (pre-consent) {cellText(r.non_customer_reach)}</Badge>
-            </div>
-          )}
-          {segs.length > 0 && (
-            <div className="mt-2.5">
-              <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Also reaches · your own customers, by RFM segment</div>
-              <div className="flex flex-wrap gap-1.5">{segs.map((t) => <SegmentChip key={t.segment} t={t} />)}</div>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="mt-3">
-          <div className="text-[11.5px] font-medium text-ink-secondary mb-1">Target · your own customers, by RFM segment</div>
-          <div className="flex flex-wrap gap-1.5">
-            {segs.map((t) => <SegmentChip key={t.segment} t={t} />)}
-            {segs.length === 0 && <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>}
+    <div className="mt-3 space-y-2.5">
+      {main && (
+        <div className={`rounded-lg border px-3 py-2.5 ${r.main_target.lagging ? "border-brand/30 bg-[#FFF8F8]" : "border-border bg-canvas/50"}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11.5px] font-semibold text-ink">Main target</span>
+            <GroupChip name={main.name} cell={main.cell} tone={r.main_target.lagging ? "brand" : "info"} big />
+            {r.main_target.lagging && <Badge tone="warning">Lagging</Badge>}
           </div>
+          {fig && (
+            <p className="text-[12px] text-ink-secondary mt-1.5 leading-snug">
+              {r.main_target.lagging
+                ? <>{what} are <span className="font-semibold text-ink">{fig.own_pct}%</span> of your OCBC customers against{" "}
+                    <span className="font-semibold text-ink">{fig.peer_pct}%</span> at comparable merchants.</>
+                : <>No group this reward reaches is behind comparable merchants, so it is aimed at the pool it is ranked for
+                    ({what} {fig.own_pct}% here, {fig.peer_pct}% at peers).</>}
+            </p>
+          )}
         </div>
       )}
-    </Card>
+      {rest.length > 0 && (
+        <div>
+          <div className="text-[11.5px] font-medium text-ink-secondary mb-1">{main ? "Also reaches" : "Target groups"}</div>
+          <div className="flex flex-wrap gap-1.5">{rest.map((g) => <GroupChip key={g.name} name={g.name} cell={g.cell} />)}</div>
+        </div>
+      )}
+      {groups.length === 0 && <span className="text-[12px] text-ink-light">No segment clears the floor for this type.</span>}
+    </div>
   );
 }
 
