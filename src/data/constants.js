@@ -194,6 +194,13 @@ export const RFM_SEGMENT_GLOSSARY = {
   "Hibernating": "Few visits, low spend, and a long time since the last one.",
   "Lost": "The lowest spend and frequency, and away the longest.",
 };
+// How an RFM segment is named on screen, where that differs from its key in the data. "New
+// Customers" read as the same thing as the New customer tag on a reward (cardholders who have
+// never visited), when it means somebody who has just bought for the first time (Joel, 14 Oct).
+// The data, cohort tags and lookups keep the key; only the label changes.
+export const RFM_DISPLAY_NAMES = { "New Customers": "Newly acquired" };
+export const rfmLabel = (segment) => RFM_DISPLAY_NAMES[segment] ?? segment;
+
 export const HERO_MERCHANT_ID = "M0001";
 export const HERO_RIVAL_MERCHANT_ID = "M0055";
 export const COLD_START_MERCHANT_ID = "M0002";

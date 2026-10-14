@@ -5,6 +5,7 @@ import { useDemoData, merchantById, categoryFor } from "../../data/DataProvider"
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num, pct, pctOf, cellText, cellCount } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote } from "../../components/ui";
+import { rfmLabel } from "../../data/constants";
 import { PriorityCell, priorityReading, daysBetween, daysWaiting, isOverdue, CONTACT_PROMISE_DAYS, Th, Td } from "./rmCommon";
 
 // ---------------------------------------------------------------------------------------------
@@ -309,7 +310,7 @@ export default function PendingProgramme() {
                       <Td className="text-ink-secondary">
                         {r.target_pool === "non_customers"
                           ? `Non-customers — ${cellText(r.non_customer_reach)} from the lookalike pool`
-                          : (r.target_segments ?? []).map((t) => `${t.segment} ${cellText(t.reach)}`).join(", ") || "—"}
+                          : (r.target_segments ?? []).map((t) => `${rfmLabel(t.segment)} ${cellText(t.reach)}`).join(", ") || "—"}
                       </Td>
                       <Td align="right">{num(r.score)}</Td>
                       <Td align="right">
