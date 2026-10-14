@@ -290,11 +290,11 @@ export const QUEUED_DISPLAY = "In queue";
 // kept behind its own toggle, labelled as a demo control on screen, and every part of it reads the
 // same state as the individual view rather than a parallel fixture.
 //
-// The three, in the order they are shown, and why each is here:
+// The three, in the order they are shown (Kelly in the middle), and why each is here:
 //   joel     Champions, not a target group — an existing regular the allocator leaves be
+//   kelly    Joel's twin, the lookalike who has never walked in (the acquisition case)
 //   jieru    Promising — an existing customer who has been in once, recently; the campaign aims
 //            at Promising alongside the lookalikes, so she is in scope
-//   kelly    the lookalike who has never walked in (the acquisition case)
 //
 // Scope is decided by cohort_membership against the campaign's cohort_tag, in store.js — the same
 // rule the RM's dialog and the reducer use. This screen has no targeting logic of its own, which
@@ -306,8 +306,8 @@ export const QUEUED_DISPLAY = "In queue";
 // anybody editing this list.
 export const CONSOLIDATED_CARDHOLDERS = [
   { id: "joel", caption: "Champion · existing customer", chip: "Champion · existing customer" },
-  { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
   { id: "kelly", caption: "Joel's twin · not yet a customer", chip: "Joel's twin" },
+  { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
 ];
 
 // ----------------------------------------------------------------------------------------------

@@ -94,7 +94,7 @@ export default function ConsolidatedHome() {
       {/* ------------------------------------------------------------------ the phones
           Full banner width, phones kept at a phone's width and spread edge to edge, so the
           first lines up with the banner's left edge and the last with its right. */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-[repeat(3,18rem)]" : "lg:grid-cols-[repeat(3,18rem)]"} justify-between gap-4 items-start`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-[repeat(3,minmax(0,22rem))]" : "lg:grid-cols-[repeat(3,minmax(0,22rem))]"} justify-between gap-4 items-start`}>
         {tiles.map((t) => <Tile key={t.id} tile={t} />)}
       </div>
     </div>
@@ -118,16 +118,16 @@ function Tile({ tile }) {
           them, and it must never look like something their own app is telling them. */}
       <div className="flex items-start justify-between gap-2 mb-2 px-0.5">
         <div className="min-w-0">
-          <div className="text-[13px] font-bold text-ink truncate">{holder.name}</div>
-          <div className="text-[11px] text-ink-light leading-tight">{caption}</div>
+          <div className="text-[17px] font-bold text-ink truncate">{holder.name}</div>
+          <div className="text-[13px] text-ink-secondary leading-snug">{caption}</div>
         </div>
         {offer ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[10.5px] font-bold text-success">
-            <Bell size={10} /> Notified
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2.5 py-1 text-[12px] font-bold text-success">
+            <Bell size={12} /> Notified
           </span>
         ) : (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10.5px] font-semibold text-ink-light">
-            <BellOff size={10} /> {inScope ? (holder.consent.offers ? "Waiting" : "Offers off") : "Not targeted"}
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[12px] font-semibold text-ink-light">
+            <BellOff size={12} /> {inScope ? (holder.consent.offers ? "Waiting" : "Offers off") : "Not targeted"}
           </span>
         )}
       </div>
@@ -136,13 +136,13 @@ function Tile({ tile }) {
 
       {/* A smaller bezel than the individual view's, because four of those do not fit a slide and
           the point here is the contrast between the screens, not the hardware around them. */}
-      <div className="rounded-[22px] border-4 border-ink bg-white overflow-hidden shadow-card">
+      <div className="rounded-[26px] border-[5px] border-ink bg-white overflow-hidden shadow-card">
         {/* Scrollable but not clickable. A tile is something to look at during a two-minute
             stretch of the pitch, and every control inside a real home screen goes somewhere —
             one stray click on Joel's tile and the presenter is on a reward detail page for
             somebody else's offer. The wheel still reaches the scroll container, so the screens
             can be read in full; only the children stop taking pointer events. */}
-        <div className="rounded-[18px] overflow-hidden h-[30rem] overflow-y-auto no-scrollbar">
+        <div className="rounded-[18px] overflow-hidden h-[40rem] overflow-y-auto no-scrollbar">
           <div className="pointer-events-none select-none">
             <BankingHome cardholderId={holder.id} compact />
           </div>
