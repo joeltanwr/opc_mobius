@@ -71,15 +71,15 @@ export default function ConsolidatedHome() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <Badge tone="warning"><FlaskConical size={11} /> Demonstration view</Badge>
-            <h2 className="text-[18px] font-bold text-ink mt-2">{tiles.length === 3 ? "Three" : num(tiles.length)} cardholders, one campaign</h2>
-            <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">
-              {campaign
-                ? <>Fire the allocator from the RM view; watch who hears about it.
-                   <InfoTip title="What this screen is" className="ml-1">
-                     Real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
-                   </InfoTip></>
-                : "The demo campaign is not loaded, so there is nothing to allocate."}
-            </p>
+            <h2 className="text-[18px] font-bold text-ink mt-2">
+              {tiles.length === 3 ? "Three" : num(tiles.length)} cardholders, one campaign
+              <InfoTip title="What this screen is" className="ml-1">
+                Real home screens reading the same state. This screen picks nobody; it shows what the allocator decided.
+              </InfoTip>
+            </h2>
+            {!campaign && (
+              <p className="text-[13px] text-ink-secondary mt-1 max-w-3xl">The demo campaign is not loaded, so there is nothing to allocate.</p>
+            )}
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[11.5px] text-ink-secondary">Holding this offer</div>
@@ -91,8 +91,10 @@ export default function ConsolidatedHome() {
         </div>
       </div>
 
-      {/* ------------------------------------------------------------------ the four screens */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-3" : "lg:grid-cols-3"} gap-4 items-start max-w-5xl mx-auto`}>
+      {/* ------------------------------------------------------------------ the phones
+          Full banner width, phones kept at a phone's width and spread edge to edge, so the
+          first lines up with the banner's left edge and the last with its right. */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${docked ? "2xl:grid-cols-[repeat(3,18rem)]" : "lg:grid-cols-[repeat(3,18rem)]"} justify-between gap-4 items-start`}>
         {tiles.map((t) => <Tile key={t.id} tile={t} />)}
       </div>
     </div>
