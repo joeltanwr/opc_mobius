@@ -39,7 +39,7 @@ def load_raw():
     with open(os.path.join(RAW_DIR, "cohorts.json")) as f:
         raw["cohorts"] = json.load(f)
 
-    # As-of the demo clock: nothing after 2026-09-11 15:12 exists for any computation.
+    # As-of the demo clock (config DEMO_CLOCK): nothing after it exists for any computation.
     for key in ("card_txns", "acquiring"):
         df = raw[key]
         raw[key] = df[df["txn_datetime"] <= DEMO_CLOCK_NAIVE].reset_index(drop=True)

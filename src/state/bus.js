@@ -6,7 +6,7 @@
 // ever applies an event twice or out of order, and a page opened late sees the same state as one
 // that was open all along. Replay is cheap: a demo produces dozens of events, not thousands.
 //
-// Timestamps: the demo clock is fixed (2026-09-11 15:12 SGT), so live events are stamped demo
+// Timestamps: the demo clock is fixed (constants DEMO_CLOCK, Thu 10 Sep 2026 16:00 SGT), so live events are stamped demo
 // clock + time elapsed since this tab loaded. Ordering across tabs comes from the log, not the
 // stamp.
 

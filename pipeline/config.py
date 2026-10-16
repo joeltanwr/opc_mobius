@@ -26,7 +26,7 @@ class C:
 
 
 CONSTANTS = {
-    "DEMO_CLOCK": C("2026-09-11T15:12:00+08:00", "Brief §2 — one exported clock for all views and all as-of computation"),
+    "DEMO_CLOCK": C("2026-09-10T16:00:00+08:00", "One exported clock for all views and all as-of computation. Thursday 10 Sep 2026, 4pm (Joel, 16 Oct) — inside Hanami's Tue–Thu 2–5pm window, so its offer is redeemable at the clock"),
     # The hero merchant's own application, which the RM queue must not depend on someone having
     # clicked earlier in the demo. Two days before the demo clock, matching the other applications
     # the generator plants, so the pending row ages like a real one and is still inside the week

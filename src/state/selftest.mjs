@@ -561,8 +561,8 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
     holderProfile: (data.showcasePersonas.find((p) => p.id === "charles") ?? {}).profile,
     clock: f.clock, adjacency: data.constants.district_adjacency ?? null,
   });
-  check("pull: a cardholder the allocator never picked still finds programmes near them",
-        found.results.length > 0,
+  check("pull: a cardholder the allocator never picked finds the pushed Hanami programme — open at the demo clock",
+        found.results.some((r) => r.campaign.id === DEMO),
         { results: found.results.map((r) => r.merchant?.name), funnel: { open: found.open, in_category: found.in_category, near_you: found.near_you } });
 
   // The other cap closes every delivered card, so nothing can be claimed and nothing should show.
@@ -573,17 +573,25 @@ check("event 3: audit clean after capped", audit(s).length === 0, audit(s));
 
   // ------------------------------------------------------------------ the time filter
   // The answer is only what can be redeemed right now (Joel, 14 Oct). The hero programme runs
-  // Tue-Thu 14:00-17:00 and the demo clock is Friday 15:12, so it is near the cardholder but shut:
-  // left out of the results, and still counted in the funnel's "near you" so the filter shows.
-  check("pull: the demo clock is outside the hero programme's own window",
-        !openNow(f.campaigns[DEMO], f.clock),
+  // Tue-Thu 14:00-17:00 and the demo clock is Thursday 16:00, so it is open and found. To prove the
+  // filter, the same programme is moved to a weekend-only window: then it is near but shut, left
+  // out of the results, and still counted in the funnel's "near you".
+  check("pull: the demo clock is inside the hero programme's own window",
+        openNow(f.campaigns[DEMO], f.clock),
         { clock: f.clock, days: f.campaigns[DEMO].configuration?.days_of_week, hours: f.campaigns[DEMO].configuration?.hours });
+  const shutCampaigns = { ...f.campaigns, [DEMO]: { ...f.campaigns[DEMO],
+    configuration: { ...f.campaigns[DEMO].configuration, days_of_week: [5, 6] } } };
+  const shut = searchPull({
+    intent: coffee, campaigns: shutCampaigns, profiles: data.merchantProfiles,
+    holderProfile: (data.showcasePersonas.find((p) => p.id === "charles") ?? {}).profile,
+    clock: f.clock, adjacency: data.constants.district_adjacency ?? null,
+  });
   check("pull: every result is redeemable right now",
         found.results.every((r) => r.open_now === true) && found.open_now === found.results.length,
         found.results.map((r) => ({ name: r.merchant?.name, open_now: r.open_now })));
   check("pull: a programme shut right now is left out, and the funnel still counts it as near you",
-        !found.results.some((r) => r.campaign.id === DEMO) && found.near_you > found.results.length,
-        { near_you: found.near_you, results: found.results.length });
+        !shut.results.some((r) => r.campaign.id === DEMO) && shut.near_you > shut.results.length,
+        { near_you: shut.near_you, results: shut.results.length });
 
   // ------------------------------------------------------------------ redeeming what was found
   // Redeem on a found result puts a card in the asker's feed (FOUND, via "search") and redeems it

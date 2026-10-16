@@ -269,7 +269,7 @@ export function portfolioGate(portfolio, delivered) {
 // unknown window reads as live, which is what the campaign's own state says.
 //
 // Date-only comparison against the clock's own date. The window's start is a calendar day, not an
-// instant, so a campaign starting today is live from the top of the day rather than at 15:12.
+// instant, so a campaign starting today is live from the top of the day rather than at the clock's own hour.
 // ----------------------------------------------------------------------------------------------
 export function isQueued(campaign, clock) {
   if (!campaign || campaign.status !== "active") return false;
