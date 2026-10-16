@@ -33,7 +33,16 @@ export default function RewardChat({ cardholderId, holder }) {
   const m = useMobiusState();
   const [turns, setTurns] = useState([]);
   const [draft, setDraft] = useState("");
-  const endRef = useRef(null);
+  const threadRef = useRef(null);
+  const latestRef = useRef(null);
+  // After each answer, scroll the thread so the newest question sits at its top and the answer
+  // reads from its start — not to the last result card (Joel, 16 Oct). Runs after the new turn
+  // has rendered, and only the thread scrolls; the page stays where it is.
+  useEffect(() => {
+    const box = threadRef.current, el = latestRef.current;
+    if (!box || !el) return;
+    box.scrollTop += el.getBoundingClientRect().top - box.getBoundingClientRect().top - 12;
+  }, [turns.length]);
   // Demo layer: the latest answer is what the System Trace's Pull line reads, so it is handed over
   // from here — the same result the funnel line under the answer prints — and withdrawn when the
   // chat leaves the screen, so the trace never describes a conversation nobody can see.
@@ -73,9 +82,6 @@ export default function RewardChat({ cardholderId, holder }) {
       results: (found?.results ?? []).map((r) => ({ name: r.merchant?.name ?? r.campaign.merchant_name, near: r.near.length, of: r.districts.length, open_now: r.open_now })),
     });
     setDraft("");
-    // The newest answer, not the top of the thread: on a phone-sized panel the question the
-    // presenter just asked has to be the thing on screen.
-    requestAnimationFrame(() => endRef.current?.scrollIntoView({ block: "nearest" }));
   }
 
   if (!m) return null;
@@ -100,15 +106,15 @@ export default function RewardChat({ cardholderId, holder }) {
       </div>
 
       {/* ------------------------------------------------------------------ thread */}
-      <div className="px-4 py-3 space-y-3 max-h-[26rem] overflow-y-auto">
+      <div ref={threadRef} className="px-4 py-3 space-y-3 max-h-[26rem] overflow-y-auto">
         {turns.length === 0 && (
           <p className="text-[12px] text-ink-light">
             {holder?.name ? `Hi ${holder.name}. ` : ""}Ask me about a deal, or pick one below.
           </p>
         )}
 
-        {turns.map((t) => (
-          <div key={t.id} className="space-y-2">
+        {turns.map((t, i) => (
+          <div key={t.id} ref={i === turns.length - 1 ? latestRef : null} className="space-y-2">
             <div className="flex justify-end">
               <p className="rounded-2xl rounded-br-sm bg-ink px-3 py-2 text-[12.5px] text-white max-w-[85%]">{t.q}</p>
             </div>
@@ -138,7 +144,6 @@ export default function RewardChat({ cardholderId, holder }) {
             ))}
           </div>
         ))}
-        <div ref={endRef} />
       </div>
 
       {/* ------------------------------------------------------------------ input */}
