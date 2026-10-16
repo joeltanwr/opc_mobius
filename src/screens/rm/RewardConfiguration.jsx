@@ -6,7 +6,7 @@ import { useMobiusState } from "../../state/StateProvider";
 import { REQUIRED_TO_SUBMIT, PER_CUSTOMER_OPTIONS, PER_CUSTOMER_LIMITS, reachFromSelection, perOutletFromSelection,
          onAllocatedPool, FIELD_OWNERS } from "../../state/store.js";
 import { expectedOutcome, windowLoad } from "../../state/expected.js";
-import { CONSTANTS, screenNum, NEW_CUSTOMERS_LABEL } from "../../data/constants";
+import { CONSTANTS, screenNum, NEW_CUSTOMERS_LABEL, audienceLabel } from "../../data/constants";
 import { sgd, num, pctOf } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
 import { RewardFeedCard, PushNotificationCard, PhoneFrame, REWARD_TYPE_LABELS } from "../../components/RewardCard";
@@ -286,7 +286,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                        onChange={() => {
                          const on = (cfg.target_segments ?? []).includes("Non-customers");
                          set("target_segments", on ? cfg.target_segments.filter((x) => x !== "Non-customers") : [...(cfg.target_segments ?? []), "Non-customers"],
-                             on ? "new-customer pool removed" : "new-customer pool added — the lift cohort");
+                             on ? "prospect pool removed" : "prospect pool added — the lift cohort");
                        }} />
                 <span className="flex-1 text-ink font-semibold">{NEW_CUSTOMERS_LABEL}</span>
                 <span className="font-num tabular-nums text-[12px]">{num(seg?.reach)}</span>
@@ -438,7 +438,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                              and the reason are what a merchant chooses on — the share is the
                              model's working, and a percentage they cannot audit reads as precision
                              they are being asked to take on trust. It still ranks the list. */
-                          <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{r.new_or_returning}</Badge>}
+                          <Badge tone={r.new_or_returning === "New customer" ? "success" : "info"}>{audienceLabel(r.new_or_returning)}</Badge>}
                     </div>
                     {!r.disabled && <p className="text-[12px] text-ink-secondary mt-0.5">{r.reason}</p>}
                   </div>
@@ -706,7 +706,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
                     : `${reachSel.label} · ${num(qualifying)} qualify, contacting ${num(contacted)}`}
               />
               {reachSel.prospective != null && reachSel.existing != null && (
-                <Row k="— of which" v={`${num(reachSel.prospective)} new, ${num(reachSel.existing)} existing customers`} />
+                <Row k="— of which" v={`${num(reachSel.prospective)} prospects, ${num(reachSel.existing)} existing customers`} />
               )}
               <Row k="Reward" v={reward ? `${reward.label} — ${cfg.discount_pct ?? "—"}% up to ${sgd(cfg.max_reward_value_sgd, 2)}` : "not chosen"} />
               <Row k="Window" v={`${(cfg.days_of_week ?? []).map((i) => WEEKDAYS[i]).join("/") || "—"} ${fmtHours(cfg.hours)}`} />
@@ -917,7 +917,7 @@ function CombinedReach({ reach, rounding }) {
           <span className="text-ink-secondary">cardholders across {selected.length} pool{selected.length > 1 ? "s" : ""}</span>
           {reach.prospective != null && reach.existing != null && (
             <span className="block text-[12px] text-ink-secondary mt-0.5">
-              {num(reach.prospective)} new · {num(reach.existing)} existing customers
+              {num(reach.prospective)} prospects · {num(reach.existing)} existing customers
             </span>
           )}
         </p>

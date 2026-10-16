@@ -6,7 +6,7 @@ import { useDemoData, merchantById, usePrivacyRules } from "../../data/DataProvi
 import { useMobiusState } from "../../state/StateProvider";
 import { sgd, num, pct, pctOf, cellText, cellCount } from "../../data/format";
 import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../../components/ui";
-import { SHOW_BASIS_NOTES, ALL_RM_SCREENS } from "../../data/constants";
+import { SHOW_BASIS_NOTES, ALL_RM_SCREENS, audienceLabel } from "../../data/constants";
 import { PER_CUSTOMER_LIMITS } from "../../state/store.js";
 import PushTrigger, { PushTriggerProvider } from "./PushTrigger";
 import { StatusPill, Th, Td, daysBetween } from "./rmCommon";
@@ -177,7 +177,7 @@ export default function RMCampaignDetail() {
           <ConfigItem label="Window" value={cfg.days_of_week ? `${cfg.days_of_week.map((d) => WEEKDAYS[d]).join("/")} ${fmtHours(cfg.hours)}` : "—"} />
           <ConfigItem label="Outlets" value={`${(cfg.outlets ?? []).length} included`} />
           <ConfigItem label="Channel" value={`Feed${cfg.channel?.push_granted || cfg.push_granted ? " + push" : ", no push"}`} />
-          <ConfigItem label="Target" value={cfg.new_or_returning ?? (cfg.target_segments ?? []).join(", ") ?? "—"} />
+          <ConfigItem label="Target" value={(cfg.new_or_returning && audienceLabel(cfg.new_or_returning)) ?? (cfg.target_segments ?? []).join(", ") ?? "—"} />
           <ConfigItem label="Redemption limit" value={cfg.redemption_limit == null ? "none" : num(cfg.redemption_limit)} />
           <ConfigItem label="Per customer" value={PER_CUSTOMER_LIMITS[cfg.per_customer_limit]?.label ?? String(cfg.per_customer_limit ?? "—").replace(/_/g, " ")} />
           <ConfigItem label="Maximum cost — the merchant's whole cost" value={cfg.max_cost_sgd != null ? sgd(cfg.max_cost_sgd) : (cfg.redemption_limit && cfg.max_reward_value_sgd ? sgd(cfg.redemption_limit * cfg.max_reward_value_sgd) : "—")} />

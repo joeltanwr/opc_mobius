@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { CheckCircle2, XCircle, Lock, ChevronRight, Radio } from "lucide-react";
 import { useDemoData, merchantById, usePrivacyRules } from "../data/DataProvider";
 import { useMobiusState } from "../state/StateProvider";
-import { HERO_MERCHANT_ID, screenNum, SHOW_BASIS_NOTES } from "../data/constants";
+import { HERO_MERCHANT_ID, screenNum, SHOW_BASIS_NOTES, audienceLabel } from "../data/constants";
 import { sgd, num, pctOf, cellText, cellCount } from "../data/format";
 import { Card, SectionTitle, Badge, BasisNote, InfoTip } from "../components/ui";
 import ProgrammeCharts, { buildBeforeAfter } from "../components/BeforeAfterCharts";
@@ -424,7 +424,7 @@ function CampaignDetail({ campaign, rationale, merchantName }) {
             label="Channel"
             value={`Feed${c.configuration.channel.push_granted ? " + push" : ", no push"}`}
           />
-          <ConfigItem label="Target" value={c.configuration.new_or_returning} />
+          <ConfigItem label="Target" value={audienceLabel(c.configuration.new_or_returning)} />
           <ConfigItem label="Redemption limit" value={num(c.configuration.redemption_limit)} />
           <ConfigItem label="Per customer" value={String(c.configuration.per_customer_limit).replace(/_/g, " ")} />
           <ConfigItem label="Maximum cost (whole cost)" value={sgd(c.configuration.max_cost_sgd)} />
