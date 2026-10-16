@@ -201,9 +201,9 @@ export function searchPull({ intent, campaigns, profiles, holderProfile, clock, 
   // result carries a working Redeem. The funnel line still reports how many were near the
   // cardholder before the time filter, so a judge can see that something was filtered out.
   //
-  // Consequence for the demo: the hero programme's window is Tue-Thu 14:00-17:00 and the demo
-  // clock is Friday 15:12, so Hanami Matcha is not among the results at the clock. To label shut
-  // programmes instead of hiding them, drop the open_now filter below.
+  // The hero programme's window is Tue-Thu 14:00-17:00 and the demo clock is Thursday 16:00, so
+  // Hanami Matcha is open, and found, at the clock. To label shut programmes instead of hiding
+  // them, drop the open_now filter below.
   // --------------------------------------------------------------------------------------------
   const open = live.filter((c) => {
     const start = c.window?.start ?? c.configuration?.window_start ?? null;

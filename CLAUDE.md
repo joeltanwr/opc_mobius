@@ -36,7 +36,7 @@ Anything in `docs/archive/` is superseded. Don't build from it.
   shown to a merchant is that merchant's whole cost. Cost-sharing is a future phase.
 - **Six reward types:** discount, cashback, voucher, spend-and-save, bundle / 1-for-1,
   overseas/FX-linked. Overseas/FX is always shown ranked and disabled. Points is not a type.
-- **Demo clock:** 2026-09-11 15:12 SGT, one exported constant used by all three views.
+- **Demo clock:** 2026-09-10 16:00 SGT (Thursday, inside Hanami's Tue–Thu 2–5pm window), one exported constant used by all three views.
 - **Data period:** 2025-10-01 to 2026-09-30.
 - **Segment floor 250**, reach rounded to the nearest 50, refused narrowings never report their
   count. Floor and rounding together close the differencing attack; either alone does not.

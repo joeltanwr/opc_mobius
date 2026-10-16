@@ -8,6 +8,17 @@ import { useCardholderId } from "./cardholder";
 import { enrich } from "./offers";
 import { InfoTip } from "../../components/ui";
 
+// The demo clock as the phone shows it, e.g. "Thursday 10 September, 4:00pm" — read from shared
+// state so it can never disagree with the clock every rule runs against.
+const clockLine = (clock) => {
+  if (!clock) return "";
+  const d = new Date(Date.parse(clock));
+  const day = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Singapore", weekday: "long", day: "numeric", month: "long" }).format(d);
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Singapore", hour: "numeric", minute: "2-digit", hour12: true }).format(d)
+    .replace(/[\s\u202f]+/g, "").toLowerCase();
+  return `${day}, ${time}`;
+};
+
 // ---------------------------------------------------------------------------------------------
 // Screen 1 — banking home (customer §3).
 //
@@ -70,7 +81,7 @@ export default function BankingHome({ cardholderId: cardholderIdProp, compact = 
           <Bell size={17} className="text-white/70" />
         </div>
         <h1 className="mt-5 text-[22px] font-bold leading-tight">Good afternoon, {holder?.name}</h1>
-        <p className="text-[12.5px] text-white/60 mt-0.5">Friday 11 September, 3:12pm</p>
+        <p className="text-[12.5px] text-white/60 mt-0.5">{clockLine(m?.state?.clock)}</p>
       </header>
 
       <div className="px-4 -mt-4 space-y-3">
