@@ -207,7 +207,9 @@ export function RewardFeedCard({ offer, clock, highlight = false, origin = null,
             View details
           </button>
         )}
-        {offer.status === "delivered" && onClaim ? (
+        {/* Claim is offered only when the card cannot be redeemed at this moment; when it can, the
+            one action is Redeem (Joel, 16 Oct), which claims and redeems in a single event. */}
+        {offer.status === "delivered" && onClaim && !(availableNow && onRedeem) ? (
           <button
             type="button"
             onClick={onClaim}

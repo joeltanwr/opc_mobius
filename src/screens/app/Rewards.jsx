@@ -235,6 +235,7 @@ export default function Rewards() {
                   // held; redeeming is what the window gates, so it is only offered inside it.
                   onClaim={() => m.dispatch({ type: "CLAIMED", offer_id: o.id })}
                   onRedeem={o.availableNow ? () => navigate(`/app/redeem/${encodeURIComponent(o.id)}`) : undefined}
+                  redeemTone="success"
                 />
               ))
             )}
