@@ -106,6 +106,9 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
   // that has nothing configured opens the draft, as the merchant — the same logged, attributed
   // ADVANCE the old button fired, once per campaign. The RM side keeps its pending-brief route.
   const pendingStatus = m?.state?.campaigns?.[campaignId]?.status;
+  // The form opens at its top. The app is a single page, so arriving from the bottom of Customer
+  // Profile (where the sign-up button sits) used to keep that scroll and land on the end of the form.
+  useEffect(() => { window.scrollTo(0, 0); }, [campaignId]);
   const opened = useRef(new Set());
   useEffect(() => {
     if (actor !== "merchant" || pendingStatus !== "applied" || opened.current.has(campaignId)) return;
