@@ -154,11 +154,28 @@ export const ALL_MERCHANT_SCREENS = [
 // unlocks, so the lock is enforced in one place rather than in every consumer of SCREENS.
 export const SCREENS = ALL_MERCHANT_SCREENS.filter((s) => s.show !== "extra" || MERCHANT_EXTRA_SCREENS);
 
+// ----------------------------------------------------------------------------------------------
+// DEMO LAYER — one switch for everything that exists for the pitch rather than for a user.
+//
+// Three things sit behind it: the consolidated cardholder view (its toggle and its route), the
+// reset control in every chrome, and the System Trace drawer (views per TRACE_VIEWS). On
+// by default, so flipping it changes nothing today; off, the build shows only the three products
+// themselves. Nothing behind it is deleted or commented out — same convention as the EXTRA_SCREENS
+// flags above. Declared here, ahead of the screen tables, because the cardholder
+// entry below reads it.
+// ----------------------------------------------------------------------------------------------
+export const DEMO_LAYER = true;
+
+// Where "Cardholder view" opens (Joel, 16 Oct): the consolidated three-phone view while the demo
+// layer is on, so the pitch lands on it directly; the single phone (/app) when it is off. The
+// Individual / Consolidated toggle inside the cardholder chrome moves between them as before.
+export const CARDHOLDER_ENTRY = DEMO_LAYER ? "/app/all" : "/app";
+
 // The cardholder's app is a build of its own, not a fourth merchant tab — it has its own
 // chrome, its own nav and its own audience. The merchant nav keeps a link across to it, which is
 // what this entry is: a way out of the merchant view, numbered so the keyboard can reach it.
 export const OPTIONAL_SCREENS = [
-  { key: "consumer", num: 5, label: "Cardholder", path: "/app" },
+  { key: "consumer", num: 5, label: "Cardholder", path: CARDHOLDER_ENTRY },
 ];
 
 // The screen number a view prints in its eyebrow. Read off the full table, not the filtered nav,
@@ -271,7 +288,7 @@ export const RM_SCREENS = ALL_RM_SCREENS.filter((s) => s.show !== "extra" || RM_
 export const PERSONAS = [
   { key: "merchant", label: "Merchant view", note: "SME dashboard", entry: SCREENS[0].path, prefix: null },
   { key: "rm", label: "RM view", note: "OCBC internal", entry: "/rm", prefix: "/rm" },
-  { key: "cardholder", label: "Cardholder view", note: "Consumer app", entry: "/app", prefix: "/app" },
+  { key: "cardholder", label: "Cardholder view", note: "Consumer app", entry: CARDHOLDER_ENTRY, prefix: "/app" },
 ];
 
 // Merchant first: the pitch opens there, and so does a cold load.
@@ -317,17 +334,6 @@ export const CONSOLIDATED_CARDHOLDERS = [
   { id: "kelly", caption: "Joel's twin · not yet a customer", chip: "Joel's twin" },
   { id: "jieru", caption: "Promising · existing customer", chip: "Promising · existing customer" },
 ];
-
-// ----------------------------------------------------------------------------------------------
-// DEMO LAYER — one switch for everything that exists for the pitch rather than for a user.
-//
-// Three things sit behind it: the consolidated cardholder view (its toggle and its route), the
-// reset control in every chrome, and the System Trace drawer (views per TRACE_VIEWS). On
-// by default, so flipping it changes nothing today; off, the build shows only the three products
-// themselves. Nothing behind it is deleted or commented out — same convention as the EXTRA_SCREENS
-// flags above.
-// ----------------------------------------------------------------------------------------------
-export const DEMO_LAYER = true;
 
 // ----------------------------------------------------------------------------------------------
 // Where the System Trace is shown. Per view, so a view can be taken out without deleting anything.
