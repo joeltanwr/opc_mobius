@@ -114,8 +114,10 @@ const ORIGIN_LABEL = {
  * @param onRedeem  fired by the Redeem button. Omitted in the RM's preview, where the card is a
  *                  rendering of what will be sent and nothing on it should be operable.
  * @param onDetails fired by View details.
+ * @param preview   the RM/merchant "what the cardholder sees" rendering: Redeem is drawn in its live
+ *                  colour so the picture matches the app, but stays inert (no handler, no focus).
  */
-export function RewardFeedCard({ offer, clock, highlight = false, origin = null, onClaim, onRedeem, onDetails, availableNow = null, redeemTone = "brand" }) {
+export function RewardFeedCard({ offer, clock, highlight = false, origin = null, onClaim, onRedeem, onDetails, availableNow = null, redeemTone = "brand", preview = false }) {
   const days = daysRemaining(offer.expires_at, clock);
   const base = STATUS_TONE[offer.status] ?? STATUS_TONE.delivered;
   // "Available" is reserved for a card that can be used at this moment. One the cardholder holds
@@ -222,7 +224,12 @@ export function RewardFeedCard({ offer, clock, highlight = false, origin = null,
             type="button"
             onClick={onRedeem}
             disabled={!["delivered", "claimed"].includes(offer.status) || !onRedeem}
-            className={`flex-1 rounded-lg ${redeemTone === "success" ? "bg-success hover:bg-success/90" : "bg-brand"} text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border`}
+            tabIndex={preview ? -1 : undefined}
+            className={
+              preview && ["delivered", "claimed"].includes(offer.status)
+                ? `flex-1 rounded-lg ${redeemTone === "success" ? "bg-success" : "bg-brand"} text-white text-[12.5px] font-semibold py-2 cursor-default`
+                : `flex-1 rounded-lg ${redeemTone === "success" ? "bg-success hover:bg-success/90" : "bg-brand"} text-white text-[12.5px] font-semibold py-2 disabled:bg-canvas disabled:text-ink-light disabled:border disabled:border-border`
+            }
           >
             {["delivered", "claimed"].includes(offer.status) ? "Redeem" : status.label}
           </button>

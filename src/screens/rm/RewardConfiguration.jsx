@@ -858,7 +858,7 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
               merchantName={c.merchant_name}
               suppressed={actor !== "merchant" && !cfg.push_granted}
             />
-            <RewardFeedCard offer={previewOffer} clock={state.clock} highlight />
+            <RewardFeedCard offer={previewOffer} clock={state.clock} highlight preview redeemTone="success" />
           </PhoneFrame>
           <p className="text-[11px] text-ink-light mt-3 leading-snug">
             {actor !== "merchant" && !cfg.push_granted && "Push is not granted, so the notification above is shown as it would be withheld."}
