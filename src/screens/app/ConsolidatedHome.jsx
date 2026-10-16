@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, BellOff, FlaskConical } from "lucide-react";
 import { useMobiusState } from "../../state/StateProvider";
 import { CONSOLIDATED_CARDHOLDERS, DEMO_CAMPAIGN_ID, DEMO_LAYER } from "../../data/constants";
@@ -103,6 +104,10 @@ export default function ConsolidatedHome() {
 
 function Tile({ tile }) {
   const { holder, caption, inScope, offer, chip } = tile;
+  const navigate = useNavigate();
+  // "View the offer" on a tile switches to the individual view as this cardholder, on the offer's
+  // own page (Joel, 16 Oct). The frame picks the cardholder up from the navigation state.
+  const viewOffer = (offerId) => navigate(`/app/rewards/${encodeURIComponent(offerId)}`, { state: { cardholderId: holder?.id } });
   if (!holder) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-canvas/60 p-4 text-[12.5px] text-ink-light">
@@ -144,7 +149,7 @@ function Tile({ tile }) {
             can be read in full; only the children stop taking pointer events. */}
         <div className="rounded-[18px] overflow-hidden h-[40rem] overflow-y-auto no-scrollbar">
           <div className="pointer-events-none select-none">
-            <BankingHome cardholderId={holder.id} compact />
+            <BankingHome cardholderId={holder.id} compact onViewOffer={viewOffer} />
           </div>
         </div>
       </div>

@@ -56,6 +56,12 @@ export default function AppFrame() {
   // Which phone the individual view is showing. Initialised from the module-level value so a hop
   // out to the RM view and back does not land the presenter on the wrong cardholder mid-story.
   const [cardholderId, setHolderId] = useState(getCardholderId);
+  // A tile in the consolidated view can open one cardholder's offer page; it says whose by
+  // navigation state, and the individual view switches to that phone.
+  const askedFor = location.state?.cardholderId ?? null;
+  useEffect(() => {
+    if (askedFor && askedFor !== cardholderId) { setCardholderId(askedFor); setHolderId(askedFor); }
+  }, [askedFor]); // eslint-disable-line react-hooks/exhaustive-deps
   const timer = useRef(null);
   const seq = useRef(0);
   const header = useRef(null);
