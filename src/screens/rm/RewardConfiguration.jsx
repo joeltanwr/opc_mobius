@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Lock, RotateCcw, AlertTriangle, Send, Ban, Sparkles, CheckCircle2, Users, Radio, Ticket, ChevronRight } from "lucide-react";
 import { useDemoData, merchantById, usePrivacyRules, natureOf } from "../../data/DataProvider";
@@ -101,6 +101,20 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
   // every edit, so by the time a campaign is configured it pushes the submit button off the
   // screen. Declared here with the other hooks, above the early returns.
   const [logOpen, setLogOpen] = useState(false);
+  // The merchant goes straight into configuration after signing up (Joel, 16 Oct): no
+  // "Nothing is configured yet / Start configuring" stop. Arriving on this tab with an application
+  // that has nothing configured opens the draft, as the merchant — the same logged, attributed
+  // ADVANCE the old button fired, once per campaign. The RM side keeps its pending-brief route.
+  const pendingStatus = m?.state?.campaigns?.[campaignId]?.status;
+  // The form opens at its top. The app is a single page, so arriving from the bottom of Customer
+  // Profile (where the sign-up button sits) used to keep that scroll and land on the end of the form.
+  useEffect(() => { window.scrollTo(0, 0); }, [campaignId]);
+  const opened = useRef(new Set());
+  useEffect(() => {
+    if (actor !== "merchant" || pendingStatus !== "applied" || opened.current.has(campaignId)) return;
+    opened.current.add(campaignId);
+    m.dispatch({ type: "ADVANCE", campaign_id: campaignId, to: "draft", by: "merchant", note: "merchant opened configuration" });
+  }, [actor, pendingStatus, campaignId, m]);
   if (!m) return null;
   const { state, dispatch, display, displayOf } = m;
   const c = state.campaigns[campaignId];
@@ -182,24 +196,16 @@ export default function RewardConfiguration({ campaignId: campaignIdProp, actor 
   // opening configuration is a logged, attributed transition, and a screen that mutates the
   // ladder just by being rendered would put an event in the log that nobody performed.
   if (c.status === "applied") {
+    // The merchant never sees this state: the effect above opens the draft on arrival.
+    if (actor === "merchant") return null;
     return (
       <div className="max-w-container mx-auto px-6 py-16 text-center">
         <h2 className="text-[16px] font-bold text-ink">Nothing is configured yet</h2>
         <p className="text-[13px] text-ink-secondary mt-1 max-w-lg mx-auto">
-          {actor === "merchant"
-            ? <>Your application is in.<InfoTip title="What opening does" className="ml-1">Opening configuration moves it to a draft. Nothing reaches a cardholder from these screens.</InfoTip></>
-            : "Configuration starts from the pending brief, with the owner on the phone. Opening it there is what moves this to a draft — that order is the product, not a formality."}
+          Configuration starts from the pending brief, with the owner on the phone. Opening it there is what moves this to a
+          draft — that order is the product, not a formality.
         </p>
-        {actor === "merchant" ? (
-          <button
-            onClick={() => dispatch({ type: "ADVANCE", campaign_id: c.id, to: "draft", by: "merchant", note: "merchant opened configuration" })}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover"
-          >
-            Start configuring this reward
-          </button>
-        ) : (
-          <Link to={`/rm/pending/${c.id}`} className="inline-block mt-3 text-[13px] font-semibold text-brand hover:underline">Open the brief →</Link>
-        )}
+        <Link to={`/rm/pending/${c.id}`} className="inline-block mt-3 text-[13px] font-semibold text-brand hover:underline">Open the brief →</Link>
       </div>
     );
   }
