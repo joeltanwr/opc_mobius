@@ -93,7 +93,14 @@ export default function RewardDetail() {
         {/* Claim locks one of the merchant's N in for this cardholder and is offered whenever the
             card is still only delivered, in or out of the redemption window. Once claimed, the
             window governs redeeming and nothing else. */}
-        {offer.status === "delivered" ? (
+        {offer.status === "delivered" && o.availableNow ? (
+          // Redeemable right now: one green Redeem, the same as on a reward the cardholder found by
+          // asking (Joel, 16 Oct). Redeeming from delivered claims and redeems in one event.
+          <button onClick={() => navigate(`/app/redeem/${encodeURIComponent(offer.id)}`)}
+                  className="w-full rounded-lg bg-success hover:bg-success/90 py-3 text-[14px] font-bold text-white">
+            Redeem
+          </button>
+        ) : offer.status === "delivered" ? (
           <div className="space-y-2">
             <button onClick={() => m.dispatch({ type: "CLAIMED", offer_id: offer.id })}
                     className="w-full rounded-lg bg-brand py-3 text-[14px] font-bold text-white">
@@ -106,7 +113,7 @@ export default function RewardDetail() {
         ) : offer.status === "claimed" ? (
           o.availableNow ? (
             <button onClick={() => navigate(`/app/redeem/${encodeURIComponent(offer.id)}`)}
-                    className="w-full rounded-lg bg-brand py-3 text-[14px] font-bold text-white">
+                    className="w-full rounded-lg bg-success hover:bg-success/90 py-3 text-[14px] font-bold text-white">
               Redeem
             </button>
           ) : (

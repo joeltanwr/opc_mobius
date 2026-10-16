@@ -48,7 +48,7 @@ const QUICK = [
 // props at all, and the fallback used to be the Kelly constant: switching the chrome to Charles
 // left his Rewards tab correct and his home screen still greeting Kelly with her offers on it.
 // Reading the context is what makes the switch mean anything.
-export default function BankingHome({ cardholderId: cardholderIdProp, compact = false }) {
+export default function BankingHome({ cardholderId: cardholderIdProp, compact = false, onViewOffer = null }) {
   const contextCardholderId = useCardholderId();
   const cardholderId = cardholderIdProp ?? contextCardholderId;
   const navigate = useNavigate();
@@ -103,8 +103,10 @@ export default function BankingHome({ cardholderId: cardholderIdProp, compact = 
               {pushed.categoryLabel ? ` · ${pushed.categoryLabel}` : ""}.
             </p>
             <div className="mt-3 flex gap-2">
-              <button onClick={() => navigate(`/app/rewards/${encodeURIComponent(pushed.id)}`)}
-                      className="flex-1 rounded-lg bg-brand py-2 text-[12.5px] font-semibold text-white">
+              {/* In the consolidated view this is the one live control on a tile (pointer-events-auto
+                  inside an otherwise inert phone): it opens this cardholder's own offer page. */}
+              <button onClick={() => (onViewOffer ? onViewOffer(pushed.id) : navigate(`/app/rewards/${encodeURIComponent(pushed.id)}`))}
+                      className="flex-1 rounded-lg bg-brand py-2 text-[12.5px] font-semibold text-white pointer-events-auto">
                 View the offer
               </button>
               <button onClick={() => { setDismissed([...dismissed, notification.offer_id]); toast("Dismissed. The offer is still in your Rewards."); }}

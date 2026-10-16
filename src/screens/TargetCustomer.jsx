@@ -519,7 +519,13 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
     return next.length ? WEEKDAYS.filter((x) => next.includes(x)) : cur;   // never an empty selection
   });
   const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
-  const selectionLabel = DAY_PRESETS.find((p) => same(p.days, days))?.label ?? days.join(", ");
+  // A preset for the trough's own weekdays, read from the detected gap — so it says Tue–Thu for
+  // Hanami and does not appear at all for a merchant with no trough.
+  const presets = troughDays.length
+    ? [...DAY_PRESETS, { id: "trough", label: `Trough days (${troughDays.length > 1 ? `${troughDays[0]}–${troughDays[troughDays.length - 1]}` : troughDays[0]})`,
+                         days: WEEKDAYS.filter((d) => troughDays.includes(d)), trough: true }]
+    : DAY_PRESETS;
+  const selectionLabel = presets.find((p) => same(p.days, days))?.label ?? days.join(", ");
   const cardMix = profile.card_mix;
   const ageTotal = AGE_BANDS.reduce((a, b) => a + (cellCount(profile.age_bands[b]) ?? 0), 0);
 
@@ -531,14 +537,16 @@ function TradingPattern({ profile, gap, trailingWeeks, floor }) {
         <h4 className="text-[14px] font-semibold text-ink mb-1">Hourly transaction intensity</h4>
         {byDay && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3" role="group" aria-label="Days of the week">
-            {DAY_PRESETS.map((p) => (
+            {presets.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 aria-pressed={same(p.days, days)}
                 onClick={() => setDays(p.days)}
                 className={`rounded-full border px-2.5 py-1 text-[11.5px] font-semibold ${
-                  same(p.days, days) ? "border-ink bg-ink text-white" : "border-border bg-white text-ink-secondary hover:text-ink"
+                  same(p.days, days)
+                    ? (p.trough ? "border-brand bg-brand text-white" : "border-ink bg-ink text-white")
+                    : (p.trough ? "border-brand/40 bg-white text-brand hover:bg-[#FDECEC]" : "border-border bg-white text-ink-secondary hover:text-ink")
                 }`}
               >
                 {p.label}

@@ -156,7 +156,7 @@ function Confirmation({ campaignId, onClose }) {
                 body={cfg.offer_terms}
                 merchantName={campaign.merchant_name}
               />
-              <RewardFeedCard offer={offer} clock={state.clock} highlight />
+              <RewardFeedCard offer={offer} clock={state.clock} highlight preview redeemTone="success" />
             </PhoneFrame>
           </div>
         </div>
